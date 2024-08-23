@@ -1,0 +1,15 @@
+{
+  "users": [
+    {
+      "id": "6ae9",
+      "email": "diego@ufpr.br",
+      "password": "1234"
+    },
+    {
+      "email": "thiago1@ufpr.br",
+      "password": "123456",
+      "gender": "masculino",
+      "id": "7203"
+    }
+  ]
+}
