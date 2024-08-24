@@ -11,5 +11,36 @@
       "gender": "masculino",
       "id": "7203"
     }
+  ],
+  "achievements": [
+    {
+      "id": 1,
+      "userId": 7203,
+      "title": "Primeira Inscrição",
+      "description": "Conquista obtida ao se inscrever em uma modalidade."
+    },
+    {
+      "id": 2,
+      "userId": 7203,
+      "title": "Primeira Vitória",
+      "description": "Conquista obtida ao ganhar uma competição."
+    }
+    
+  ],
+  "goals": [
+    {
+      "id": 1,
+      "title": "Correr 5km",
+      "description": "Meta de correr 5km todos os dias",
+      "status": "in_progress",
+      "userId": 7203
+    },
+    {
+      "id": 2,
+      "title": "Aprender React",
+      "description": "Completar um curso de React em 1 mês",
+      "status": "completed",
+      "userId": 7203
+    }
   ]
 }

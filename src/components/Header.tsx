@@ -1,5 +1,3 @@
-'use client';
-
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -12,24 +10,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from 'lucide-react';
-import { ModeToggle } from './theme'; // Certifique-se de que este componente existe
+import { ModeToggle } from './theme'; 
 
 export default function Header() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Atualize com a lógica de autenticação real
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem('userId'); // Limpa o ID do usuário ao sair
-    router.push('/auth'); // Redireciona para a página de login
+    localStorage.removeItem('userId');
+    router.push('/auth');
   };
 
   const goToProfile = () => {
-    router.push('/profile/edit'); // Redireciona para a página de edição de perfil
+    router.push('/profile/edit');
   };
 
   const goToSettings = () => {
-    router.push('/settings'); // Redireciona para a página de configurações
+    router.push('/settings');
+  };
+
+  const goToAchievements = () => {
+    router.push('/achievements');
+  };
+
+  const goToGoals = () => {
+    router.push('/goals'); // Nova rota para metas
   };
 
   return (
@@ -40,7 +46,7 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar>
-                <AvatarImage src="https://github.com/IamThiago-IT.png" />
+                <AvatarImage src="https://github.com/shadcn.png" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
@@ -49,6 +55,8 @@ export default function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={goToProfile}>Perfil</DropdownMenuItem>
               <DropdownMenuItem onClick={goToSettings}>Configurações</DropdownMenuItem>
+              <DropdownMenuItem onClick={goToAchievements}>Conquistas</DropdownMenuItem>
+              <DropdownMenuItem onClick={goToGoals}>Metas</DropdownMenuItem> {/* Opção de metas */}
               <DropdownMenuItem><ModeToggle /></DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
