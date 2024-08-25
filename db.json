@@ -25,7 +25,6 @@
       "title": "Primeira Vitória",
       "description": "Conquista obtida ao ganhar uma competição."
     }
-    
   ],
   "goals": [
     {
@@ -41,6 +40,59 @@
       "description": "Completar um curso de React em 1 mês",
       "status": "completed",
       "userId": 7203
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "Equipe A",
+      "members": [
+        "Alice",
+        "Bob",
+        "Charlie"
+      ],
+      "competition": "Campeonato de Verão",
+      "status": "Concluída"
+    },
+    {
+      "id": 2,
+      "name": "Equipe B",
+      "members": [
+        "David",
+        "Eve",
+        "Frank"
+      ],
+      "competition": "Torneio de Inverno",
+      "status": "Em Andamento"
+    }
+  ],
+  "posts": [
+    {
+      "id": 7203,
+      "author": "Thiago",
+      "date": "2024-08-24",
+      "content": "Hoje participei de uma competição incrível! 🎉",
+      "image": "https://via.placeholder.com/400x200"
+    },
+    {
+      "id": 2,
+      "author": "Maria",
+      "date": "2024-08-23",
+      "content": "Não vejo a hora do próximo torneio!",
+      "image": "https://via.placeholder.com/400x200"
+    },
+    {
+      "id": 3,
+      "author": "Carlos",
+      "date": "2024-08-22",
+      "content": "Treinando duro para alcançar minhas metas!",
+      "image": "https://via.placeholder.com/400x200"
+    },
+    {
+      "id": 1,
+      "author": "thiago1",
+      "date": "2024-08-24T22:27:39.180Z",
+      "content": "teste"
     }
   ]
 }

@@ -1,3 +1,4 @@
+'use client'
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -46,7 +47,7 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarImage src="https://github.com/IamThiago-IT.png" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
@@ -56,7 +57,7 @@ export default function Header() {
               <DropdownMenuItem onClick={goToProfile}>Perfil</DropdownMenuItem>
               <DropdownMenuItem onClick={goToSettings}>Configurações</DropdownMenuItem>
               <DropdownMenuItem onClick={goToAchievements}>Conquistas</DropdownMenuItem>
-              <DropdownMenuItem onClick={goToGoals}>Metas</DropdownMenuItem> {/* Opção de metas */}
+              <DropdownMenuItem onClick={goToGoals}>Metas</DropdownMenuItem>
               <DropdownMenuItem><ModeToggle /></DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
