@@ -1,5 +1,3 @@
-// app/settings/page.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -45,41 +43,31 @@ export default function SettingsPage() {
   return (
     <>
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-[#202024] transition-colors">
-        <div className="w-full max-w-md p-8 bg-gray-100 dark:bg-gray-800 rounded shadow-md transition-colors">
-          <h1 className="text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-[#202024] transition-colors p-4">
+        <div className="w-full max-w-md bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md p-6 m-4 sm:w-4/5 md:w-3/4 lg:w-1/2 xl:w-1/3 transition-colors">
+          <h1 className="text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-6">
             Configurações do Sistema
           </h1>
 
-          <div className="mb-4">
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Tema:</label>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o Tema" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Claro</SelectItem>
-                <SelectItem value="dark">Escuro</SelectItem>
-                <SelectItem value="system">Sistema</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
 
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2 dark:text-white">Notificações:</label>
-            <input
-              type="checkbox"
-              checked={notifications}
-              onChange={(e) => setNotifications(e.target.checked)}
-              className="ml-2"
-            />
-            <span className="ml-2 dark:text-white">Ativar Notificações</span>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={notifications}
+                onChange={(e) => setNotifications(e.target.checked)}
+                className="mr-2"
+              />
+              <span className="dark:text-white">Ativar Notificações</span>
+            </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-6">
             <label className="block text-sm font-semibold mb-2 dark:text-white">Idioma:</label>
             <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o Idioma" />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +83,7 @@ export default function SettingsPage() {
             <AlertDialogTrigger asChild>
               <Button
                 onClick={handleSave}
-                className="w-full p-2 font-semibold text-white bg-green-500"
+                className="w-full p-2 font-semibold text-white bg-green-500 mt-4"
               >
                 Salvar Configurações
               </Button>
