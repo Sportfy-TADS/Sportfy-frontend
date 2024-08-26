@@ -1,6 +1,8 @@
+// app/settings/page.tsx
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -20,6 +22,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 import Header from '@/components/Header';
 import { ModeToggle } from '@/components/theme';
 import { useTheme } from 'next-themes';
@@ -28,16 +37,47 @@ export default function SettingsPage() {
   const { setTheme, theme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [language, setLanguage] = useState('pt');
+  const [preferences, setPreferences] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
 
-  const handleSave = () => {
+  // Carregar dados do json-server
+  useEffect(() => {
+    // Função para buscar configurações do usuário
+    const fetchSettings = async () => {
+      const response = await fetch('http://localhost:3001/settings/1'); // ID 1 como exemplo
+      const data = await response.json();
+      setNotifications(data.notifications);
+      setPreferences(data.preferences);
+      setLanguage(data.language);
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
     setShowDialog(true); // Mostra o diálogo de confirmação ao clicar em salvar
   };
 
-  const confirmSave = () => {
+  const confirmSave = async () => {
     setShowDialog(false); // Fecha o diálogo
     alert('Configurações salvas com sucesso!');
-    // Adicione aqui a lógica para salvar as configurações em um backend ou localStorage
+    
+    // Salvar configurações no json-server
+    const response = await fetch('http://localhost:3001/settings/1', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        notifications,
+        preferences,
+        language,
+      }),
+    });
+
+    if (!response.ok) {
+      alert('Erro ao salvar configurações');
+    }
   };
 
   return (
@@ -49,35 +89,64 @@ export default function SettingsPage() {
             Configurações do Sistema
           </h1>
 
-
-
           <div className="mb-4">
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Notificações:</label>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={notifications}
-                onChange={(e) => setNotifications(e.target.checked)}
-                className="mr-2"
-              />
-              <span className="dark:text-white">Ativar Notificações</span>
-            </div>
+            <ModeToggle />
           </div>
 
-          <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Idioma:</label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o Idioma" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pt">Português</SelectItem>
-                <SelectItem value="en">Inglês</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="mt-4">
+                <label className="block text-sm font-semibold mb-2 dark:text-white">Idioma:</label>
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o Idioma" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pt">Português</SelectItem>
+                    <SelectItem value="en">Inglês</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <ModeToggle />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="w-full mb-4">Configurações de Preferências</Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Preferências</SheetTitle>
+              </SheetHeader>
+              
+              <div className="mt-4">
+                <label className="block text-sm font-semibold mb-2 dark:text-white">Preferência:</label>
+                <input
+                  type="checkbox"
+                  checked={preferences}
+                  onChange={(e) => setPreferences(e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="dark:text-white">Ativar Preferência</span>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="w-full mb-4">Configurações de Notificações</Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Notificações</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4">
+                <input
+                  type="checkbox"
+                  checked={notifications}
+                  onChange={(e) => setNotifications(e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="dark:text-white">Ativar Notificações</span>
+              </div>
+            </SheetContent>
+          </Sheet>
 
           <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
             <AlertDialogTrigger asChild>

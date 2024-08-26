@@ -66,6 +66,15 @@
       "status": "Em Andamento"
     }
   ],
+  "settings": [
+    {
+      "id": 1,
+      "userId": 7203,
+      "notifications": true,
+      "preferences": false,
+      "language": "pt"
+    }
+  ],
   "posts": [
     {
       "id": 7203,
