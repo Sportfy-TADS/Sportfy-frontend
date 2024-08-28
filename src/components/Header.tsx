@@ -35,6 +35,10 @@ export default function Header() {
     router.push('/achievements');
   };
 
+  const goToHealth = () => {
+    router.push('/healthWarning');
+  };
+
   const goToGoals = () => {
     router.push('/goals'); // Nova rota para metas
   };
@@ -58,7 +62,7 @@ export default function Header() {
               <DropdownMenuItem onClick={goToSettings}>Configurações</DropdownMenuItem>
               <DropdownMenuItem onClick={goToAchievements}>Conquistas</DropdownMenuItem>
               <DropdownMenuItem onClick={goToGoals}>Metas</DropdownMenuItem>
-              <DropdownMenuItem><ModeToggle /></DropdownMenuItem>
+              <DropdownMenuItem onClick={goToHealth}>Saude</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 Logout

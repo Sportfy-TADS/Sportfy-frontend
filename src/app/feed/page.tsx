@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Header from "@/components/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from 'next/link';
 
 interface Post {
   id: number;
@@ -29,6 +30,15 @@ export default function FeedPage() {
   return (
     <>
       <Header />
+
+      <div className="health-warning-button">
+        <Link href="/healthWarning">
+          <Button className="bg-emerald-600 hover:bg-emerald-500">
+            Saúde + 
+          </Button>
+        </Link>
+      </div>
+
       <div className="flex flex-col items-center justify-start min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Bem-vindo ao Feed!</h1>
         <div className="w-full max-w-2xl space-y-6">

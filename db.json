@@ -14,13 +14,13 @@
   ],
   "achievements": [
     {
-      "id": 1,
+      "id": "1",
       "userId": 7203,
       "title": "Primeira Inscrição",
       "description": "Conquista obtida ao se inscrever em uma modalidade."
     },
     {
-      "id": 2,
+      "id": "2",
       "userId": 7203,
       "title": "Primeira Vitória",
       "description": "Conquista obtida ao ganhar uma competição."
@@ -28,14 +28,14 @@
   ],
   "goals": [
     {
-      "id": 1,
+      "id": "1",
       "title": "Correr 5km",
       "description": "Meta de correr 5km todos os dias",
       "status": "in_progress",
       "userId": 7203
     },
     {
-      "id": 2,
+      "id": "2",
       "title": "Aprender React",
       "description": "Completar um curso de React em 1 mês",
       "status": "completed",
@@ -44,7 +44,7 @@
   ],
   "teams": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Equipe A",
       "members": [
         "Alice",
@@ -55,7 +55,7 @@
       "status": "Concluída"
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Equipe B",
       "members": [
         "David",
@@ -68,37 +68,45 @@
   ],
   "settings": [
     {
-      "id": 1,
+      "id": "1",
       "userId": 7203,
       "notifications": true,
       "preferences": false,
-      "language": "pt"
+      "language": "pt",
+      "notifyNewPosts": false,
+      "notifyLikes": false,
+      "notifyNewChampionships": false,
+      "notifyComments": false,
+      "privacyDetails": true,
+      "privacyHistory": true,
+      "privacyStats": true,
+      "privacyAchievements": true
     }
   ],
   "posts": [
     {
-      "id": 7203,
+      "id": "7203",
       "author": "Thiago",
       "date": "2024-08-24",
       "content": "Hoje participei de uma competição incrível! 🎉",
       "image": "https://via.placeholder.com/400x200"
     },
     {
-      "id": 2,
+      "id": "2",
       "author": "Maria",
       "date": "2024-08-23",
       "content": "Não vejo a hora do próximo torneio!",
       "image": "https://via.placeholder.com/400x200"
     },
     {
-      "id": 3,
+      "id": "3",
       "author": "Carlos",
       "date": "2024-08-22",
       "content": "Treinando duro para alcançar minhas metas!",
       "image": "https://via.placeholder.com/400x200"
     },
     {
-      "id": 1,
+      "id": "1",
       "author": "thiago1",
       "date": "2024-08-24T22:27:39.180Z",
       "content": "teste"
