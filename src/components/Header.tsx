@@ -55,7 +55,7 @@ export default function Header() {
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white text-black dark:bg-gray-800 dark:text-white">
+            <DropdownMenuContent align="end" className="bg-white text-black dark:bg-gray-800 dark:text-white w-56">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={goToProfile}>Perfil</DropdownMenuItem>

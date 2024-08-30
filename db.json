@@ -49,6 +49,25 @@
       "location": "Quadra Coberta"
     }
   ],
+  "tournaments": [
+    {
+      "id": 1,
+      "name": "Torneio de Verão",
+      "date": "2024-08-01",
+      "status": "Concluído",
+      "location": "Estádio UFPR",
+      "userId": 7203
+    },
+    {
+      "id": 2,
+      "name": "Torneio de Inverno",
+      "date": "2024-12-01",
+      "status": "Em Andamento",
+      "location": "Ginásio UFPR",
+      "userId": 7203
+    }
+
+  ],
   "goals": [
     {
       "id": "1",
