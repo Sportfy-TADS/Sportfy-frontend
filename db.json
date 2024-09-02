@@ -9,6 +9,7 @@
       "email": "thiago1@ufpr.br",
       "password": "123456",
       "gender": "masculino",
+      "profileImage": "https://www.github.com/IamThiago-IT.png",
       "id": "7203"
     }
   ],
@@ -28,21 +29,21 @@
   ],
   "sports": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Futebol",
       "description": "Esporte de equipe jogado com uma bola em um campo retangular.",
       "schedule": "Segunda e Quarta - 18:00 às 20:00",
       "location": "Campo Principal"
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Basquete",
       "description": "Esporte de equipe onde o objetivo é marcar pontos jogando a bola através do aro.",
       "schedule": "Terça e Quinta - 16:00 às 18:00",
       "location": "Ginásio"
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "Vôlei",
       "description": "Esporte de equipe jogado com uma bola, onde o objetivo é fazer a bola tocar o chão do adversário.",
       "schedule": "Sexta - 18:00 às 20:00",
@@ -51,7 +52,7 @@
   ],
   "tournaments": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Torneio de Verão",
       "date": "2024-08-01",
       "status": "Concluído",
@@ -59,14 +60,13 @@
       "userId": 7203
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Torneio de Inverno",
       "date": "2024-12-01",
       "status": "Em Andamento",
       "location": "Ginásio UFPR",
       "userId": 7203
     }
-
   ],
   "goals": [
     {
@@ -152,6 +152,12 @@
       "author": "thiago1",
       "date": "2024-08-24T22:27:39.180Z",
       "content": "teste"
+    },
+    {
+      "id": 2,
+      "author": "thiago1",
+      "date": "2024-09-02T20:55:57.312Z",
+      "content": "Conquistas Primeira Inscrição Conquista obtida ao se inscrever em uma modalidade.  Primeira Vitória Conquista obtida ao ganhar uma competição."
     }
   ]
 }

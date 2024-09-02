@@ -11,7 +11,7 @@ import { twMerge } from 'tailwind-merge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Pizza } from 'lucide-react';
+import { Medal } from 'lucide-react';
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -34,19 +34,30 @@ export default function SignInPage() {
     },
   });
 
-
-
+  // Função para autenticar o usuário
   async function handleAuthenticate({ email, password }: SignInSchema) {
     try {
+      // Fetch para obter os usuários do json-server
+      const res = await fetch('http://localhost:3001/users');
+      const users = await res.json();
 
-      toast.success('Login realizado com sucesso!', {
-        action: {
-          label: 'Ir para o painel',
-          onClick: () => router.push('/feed'),
-        },
-      });
+      // Encontrar o usuário com o email e senha correspondentes
+      const user = users.find(
+        (user: { email: string; password: string }) => user.email === email && user.password === password
+      );
 
-      router.push('/feed');
+      if (user) {
+        localStorage.setItem('userId', user.id); // Salvar o ID do usuário
+        toast.success('Login realizado com sucesso!', {
+          action: {
+            label: 'Ir para o painel',
+            onClick: () => router.push('/feed'),
+          },
+        });
+        router.push('/feed');      
+      } else {
+        throw new Error('Credenciais inválidas');
+      }
     } catch (err) {
       toast.error('Credenciais inválidas');
     }
