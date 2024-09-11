@@ -8,10 +8,11 @@ import QueryProvider from '@/components/QueryProvider'; // Importe o QueryProvid
 
 const inter = Inter({ subsets: ['latin'] });
 
-export async function generateMetadata() {
-  return {
-    title: 'Sportfy',
-  };
+export const metadata: Metadata = {
+  title: {
+    template: '%s | Sportfy',
+    default: 'Sportfy',
+  },
 }
 
 export default function RootLayout({

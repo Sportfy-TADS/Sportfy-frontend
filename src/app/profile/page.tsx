@@ -151,7 +151,7 @@ export default function ProfilePage() {
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 placeholder="No que você está pensando?"
-                className="w-full mb-2"
+                className="w-full mb-2 -"
               />
               <Button onClick={handleNewPost} className="w-full">Publicar</Button>
             </CardContent>

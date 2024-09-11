@@ -11,20 +11,37 @@
       "gender": "masculino",
       "profileImage": "https://www.github.com/IamThiago-IT.png",
       "id": "7203"
+    },
+    {
+      "id": "1",
+      "name": "Admin User",
+      "email": "admin@ufpr.br",
+      "password": "admin123",
+      "isAdmin": true,
+      "profileImage": "https://exemplo.com/admin.jpg"
     }
   ],
   "achievements": [
     {
-      "id": "1",
-      "userId": 7203,
+      "id": 1,
+      "userId": 1,
       "title": "Primeira Inscrição",
-      "description": "Conquista obtida ao se inscrever em uma modalidade."
+      "description": "Inscreva-se em uma modalidade pela primeira vez.",
+      "category": "Modalidades"
     },
     {
-      "id": "2",
-      "userId": 7203,
-      "title": "Primeira Vitória",
-      "description": "Conquista obtida ao ganhar uma competição."
+      "id": 2,
+      "userId": 1,
+      "title": "Primeira Meta Concluída",
+      "description": "Complete sua primeira meta.",
+      "category": "Metas"
+    },
+    {
+      "id": 3,
+      "userId": null,
+      "title": "Campeão de Torneio",
+      "description": "Vença um torneio oficial.",
+      "category": "Sistema"
     }
   ],
   "sports": [
@@ -154,7 +171,7 @@
       "content": "teste"
     },
     {
-      "id": 2,
+      "id": "2",
       "author": "thiago1",
       "date": "2024-09-02T20:55:57.312Z",
       "content": "Conquistas Primeira Inscrição Conquista obtida ao se inscrever em uma modalidade.  Primeira Vitória Conquista obtida ao ganhar uma competição."

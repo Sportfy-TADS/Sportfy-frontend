@@ -1,33 +1,40 @@
-// app/achievements/page.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import AchievementCard from '@/components/AchievementCard';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Header from '@/components/Header';
 
 interface Achievement {
   id: number;
+  userId: string | null;
   title: string;
   description: string;
-  achieved: boolean;
+  category: string;
 }
 
 export default function AchievementsPage() {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [userAchievements, setUserAchievements] = useState<Achievement[]>([]);
+  const [globalAchievements, setGlobalAchievements] = useState<Achievement[]>([]);
+  const [userId, setUserId] = useState<string | null>(null); // Para armazenar o ID do usuário logado
 
   useEffect(() => {
-    // Suponha que você tenha uma API ou um json-server que retorna as conquistas do usuário
     const fetchAchievements = async () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId) return;
-      
+      const storedUserId = localStorage.getItem('userId'); // Obtém o ID do usuário logado do localStorage
+      setUserId(storedUserId);
+
       try {
-        const res = await fetch(`http://localhost:3001/achievements?userId=${userId}`);
-        const data = await res.json();
-        setAchievements(data);
+        // Buscando todas as conquistas
+        const response = await fetch('http://localhost:3001/achievements');
+        const achievementsData = await response.json();
+
+        // Separando conquistas do usuário e conquistas globais
+        const userSpecific = achievementsData.filter((ach: Achievement) => ach.userId === storedUserId);
+        const global = achievementsData.filter((ach: Achievement) => ach.userId === null);
+
+        setUserAchievements(userSpecific);
+        setGlobalAchievements(global);
       } catch (error) {
-        console.error('Erro ao carregar as conquistas:', error);
+        console.error('Erro ao carregar conquistas:', error);
       }
     };
 
@@ -37,18 +44,52 @@ export default function AchievementsPage() {
   return (
     <>
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <h1 className="text-2xl font-bold text-center mb-4">Suas Conquistas</h1>
-        <div className="w-full max-w-2xl space-y-4">
-          {achievements.map((achievement) => (
-            <AchievementCard
-              key={achievement.id}
-              title={achievement.title}
-              description={achievement.description}
-              achieved={achievement.achieved}
-            />
-          ))}
-        </div>
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-6 text-center">Suas Conquistas</h1>
+
+        {/* Conquistas do Usuário */}
+        {userAchievements.length > 0 ? (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Conquistas Pessoais</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userAchievements.map((achievement) => (
+                <Card key={achievement.id} className="shadow-lg border border-emerald-500">
+                  <CardHeader className="bg-emerald-50">
+                    <CardTitle className="text-xl font-bold text-emerald-700">
+                      {achievement.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="bg-emerald-100">
+                    <p>{achievement.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">Nenhuma conquista pessoal encontrada.</p>
+        )}
+
+        {/* Conquistas Globais */}
+        {globalAchievements.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Conquistas do Sistema</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {globalAchievements.map((achievement) => (
+                <Card key={achievement.id} className="shadow-lg border border-blue-500">
+                  <CardHeader className="bg-blue-50">
+                    <CardTitle className="text-xl font-bold text-blue-700">
+                      {achievement.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="bg-blue-100">
+                    <p>{achievement.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
