@@ -51,8 +51,12 @@ export default function Header() {
     router.push('/auth');
   };
 
+  const goToFeed = () => {
+    router.push('/feed');
+  };
+
   const goToProfile = () => {
-    router.push('/profile/edit');
+    router.push('/profile');
   };
 
   const goToSettings = () => {
@@ -78,7 +82,7 @@ export default function Header() {
 
   return (
     <header className="w-full p-4 flex justify-between items-center bg-gray-300 text-black dark:bg-gray-900 dark:text-white shadow-md">
-      <h1 className="text-xl font-bold">Sportfy</h1>
+      <h1 className="text-xl font-bold" onClick={goToFeed}>Sportfy</h1>
       {isLoggedIn && (
         <div className="flex items-center space-x-4">
           <DropdownMenu>

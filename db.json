@@ -7,6 +7,7 @@
     },
     {
       "email": "thiago1@ufpr.br",
+      "username": "thiago1",
       "password": "123456",
       "gender": "masculino",
       "profileImage": "https://www.github.com/IamThiago-IT.png",
@@ -15,10 +16,11 @@
     {
       "id": "1",
       "name": "Admin User",
+      "username": "admin",
       "email": "admin@ufpr.br",
-      "password": "admin123",
+      "password": "123456",
       "isAdmin": true,
-      "profileImage": "https://exemplo.com/admin.jpg"
+      "profileImage": "https://www.github.com/IamThiago-IT.png"
     }
   ],
   "achievements": [
@@ -132,9 +134,9 @@
       "notifications": true,
       "preferences": false,
       "language": "pt",
-      "notifyNewPosts": false,
+      "notifyNewPosts": true,
       "notifyLikes": false,
-      "notifyNewChampionships": false,
+      "notifyNewChampionships": true,
       "notifyComments": false,
       "privacyDetails": true,
       "privacyHistory": true,
@@ -158,23 +160,16 @@
       "image": "https://via.placeholder.com/400x200"
     },
     {
-      "id": "3",
-      "author": "Carlos",
-      "date": "2024-08-22",
-      "content": "Treinando duro para alcançar minhas metas!",
-      "image": "https://via.placeholder.com/400x200"
-    },
-    {
-      "id": "1",
-      "author": "thiago1",
-      "date": "2024-08-24T22:27:39.180Z",
-      "content": "teste"
-    },
-    {
       "id": "2",
       "author": "thiago1",
       "date": "2024-09-02T20:55:57.312Z",
       "content": "Conquistas Primeira Inscrição Conquista obtida ao se inscrever em uma modalidade.  Primeira Vitória Conquista obtida ao ganhar uma competição."
+    },
+    {
+      "id": 3,
+      "author": "thiago1",
+      "date": "2024-09-11T21:28:00.176Z",
+      "content": "123546"
     }
   ]
 }

@@ -1,21 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { twMerge } from 'tailwind-merge';
+import { z } from 'zod';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Medal } from 'lucide-react';
+import { Medal } from 'lucide-react'; // Ícone Medal para o estilo
 
+// Esquema de validação usando zod para username e password
 const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, 'A senha é obrigatória'), // Adiciona senha para maior segurança
+  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
 type SignInSchema = z.infer<typeof signInSchema>;
@@ -29,46 +29,46 @@ export default function SignInPage() {
     formState: { isSubmitting },
   } = useForm<SignInSchema>({
     resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: '',
-    },
   });
 
   // Função para autenticar o usuário
-  async function handleAuthenticate({ email, password }: SignInSchema) {
-    try {
-      // Fetch para obter os usuários do json-server
-      const res = await fetch('http://localhost:3001/users');
+  const { mutateAsync: authenticateUser } = useMutation({
+    mutationFn: async ({ username, password }: SignInSchema) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users?username=${username}&password=${password}`);
       const users = await res.json();
 
-      // Encontrar o usuário com o email e senha correspondentes
-      const user = users.find(
-        (user: { email: string; password: string }) => user.email === email && user.password === password
-      );
-
-      if (user) {
-        localStorage.setItem('userId', user.id); // Salvar o ID do usuário
-        toast.success('Login realizado com sucesso!', {
-          action: {
-            label: 'Ir para o painel',
-            onClick: () => router.push('/feed'),
-          },
-        });
-        router.push('/feed');      
-      } else {
-        throw new Error('Credenciais inválidas');
+      if (!res.ok || users.length === 0) {
+        throw new Error('Nome de usuário ou senha inválidos');
       }
+      
+      // Salvar o ID do usuário no localStorage para manter a sessão ativa
+      localStorage.setItem('userId', users[0].id);
+    },
+  });
+
+  const handleLogin = async (data: SignInSchema) => {
+    try {
+      await authenticateUser(data);
+
+      toast.success('Login realizado com sucesso!', {
+        action: {
+          label: 'Ir para o painel',
+          onClick: () => router.push('/feed'),
+        },
+      });
+
+      router.push('/feed');
     } catch (err) {
-      toast.error('Credenciais inválidas');
+      toast.error(err instanceof Error ? err.message : 'Erro inesperado');
     }
-  }
+  };
 
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center antialiased lg:grid lg:grid-cols-2 lg:px-0">
       {/* Barra lateral esquerda para telas maiores */}
       <div className="relative hidden h-full flex-col border-r border-foreground/5 bg-muted p-10 text-muted-foreground dark:border-r lg:flex">
         <div className="flex items-center gap-3 text-lg font-medium text-foreground">
-          <Medal className="h-5 w-5" />
+          <Medal className="h-5 w-5" /> {/* Ícone Medal */}
           <span className="font-semibold">sportfy.app</span>
         </div>
         <div className="mt-auto">
@@ -88,31 +88,27 @@ export default function SignInPage() {
               'absolute right-4 top-4 md:right-8 md:top-8'
             )}
           >
-            Novo cadastro
+            Criar conta
           </a>
 
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Acessar Painel
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Entre com suas credenciais para acessar o painel de controle!
-              </p>
+              <h1 className="text-2xl font-semibold tracking-tight">Login</h1>
+              <p className="text-sm text-muted-foreground">Acesse sua conta Sportfy</p>
             </div>
 
             <div className="grid gap-6">
-              <form onSubmit={handleSubmit(handleAuthenticate)}>
+              <form onSubmit={handleSubmit(handleLogin)}>
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Seu e-mail</Label>
+                    <Label htmlFor="username">Nome de Usuário</Label>
                     <Input
-                      id="email"
-                      type="email"
+                      id="username"
+                      type="text"
                       autoCapitalize="none"
-                      autoComplete="email"
+                      autoComplete="username"
                       autoCorrect="off"
-                      {...register('email')}
+                      {...register('username')}
                     />
                   </div>
 
@@ -129,7 +125,7 @@ export default function SignInPage() {
                   </div>
 
                   <Button type="submit" disabled={isSubmitting}>
-                    Acessar Painel
+                    Entrar
                   </Button>
                 </div>
               </form>

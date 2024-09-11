@@ -10,16 +10,18 @@ import { z } from 'zod';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Medal } from 'lucide-react'; // Importando o ícone Medal
+import { Medal } from 'lucide-react';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"; // Importando Select do shadcnUI
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
+// Adicionando username ao esquema
 const signUpSchema = z.object({
+  username: z.string().min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
   email: z.string().email().regex(/@ufpr\.br$/, "Email deve ser do domínio @ufpr.br"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   gender: z.enum(["masculino", "feminino", "outros"], "Escolha um gênero válido"),
@@ -39,11 +41,11 @@ export default function RegisterPage() {
   });
 
   const { mutateAsync: registerUser } = useMutation({
-    mutationFn: async ({ email, password, gender }: SignUpSchema) => {
-      const res = await fetch('http://localhost:3001/users', {
+    mutationFn: async ({ username, email, password, gender }: SignUpSchema) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, gender }),
+        body: JSON.stringify({ username, email, password, gender }),
       });
 
       if (!res.ok) {
@@ -60,7 +62,7 @@ export default function RegisterPage() {
         action: {
           label: 'Login',
           onClick: () => {
-            router.push(`/auth?email=${data.email}`);
+            router.push(`/auth?username=${data.username}`);
           },
         },
       });
@@ -110,6 +112,18 @@ export default function RegisterPage() {
             <div className="grid gap-6">
               <form onSubmit={handleSubmit(handleRegister)}>
                 <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="username">Nome de Usuário</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      autoCapitalize="none"
+                      autoComplete="username"
+                      autoCorrect="off"
+                      {...register('username')}
+                    />
+                  </div>
+
                   <div className="grid gap-2">
                     <Label htmlFor="email">Seu e-mail</Label>
                     <Input
