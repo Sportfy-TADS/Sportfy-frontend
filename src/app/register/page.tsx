@@ -19,12 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Adicionando username ao esquema
+// Esquema de validação para username, email, password e gender
 const signUpSchema = z.object({
   username: z.string().min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
   email: z.string().email().regex(/@ufpr\.br$/, "Email deve ser do domínio @ufpr.br"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  gender: z.enum(["masculino", "feminino", "outros"], "Escolha um gênero válido"),
+  gender: z.enum(["masculino", "feminino", "outros"]),
 });
 
 type SignUpSchema = z.infer<typeof signUpSchema>;
@@ -42,6 +42,9 @@ export default function RegisterPage() {
 
   const { mutateAsync: registerUser } = useMutation({
     mutationFn: async ({ username, email, password, gender }: SignUpSchema) => {
+      // Verificar o que está sendo enviado ao servidor
+      console.log("Dados enviados para registro:", { username, email, password, gender });
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -49,13 +52,17 @@ export default function RegisterPage() {
       });
 
       if (!res.ok) {
+        console.error("Erro ao registrar:", await res.text()); // Logar o erro da API
         throw new Error('Erro no registro');
       }
+
+      console.log("Registro realizado com sucesso.");
     },
   });
 
   const handleRegister = async (data: SignUpSchema) => {
     try {
+      console.log("Iniciando registro com os dados:", data);
       await registerUser(data);
 
       toast.success('Registro bem-sucedido!', {
@@ -67,6 +74,7 @@ export default function RegisterPage() {
         },
       });
     } catch (err) {
+      console.error("Erro no processo de registro:", err);
       toast.error(err instanceof Error ? err.message : 'Erro inesperado');
     }
   };

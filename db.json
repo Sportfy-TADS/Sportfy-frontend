@@ -6,6 +6,7 @@
       "password": "1234"
     },
     {
+      "name": "Thiago dos Santos",
       "email": "thiago1@ufpr.br",
       "username": "thiago1",
       "password": "123456",
@@ -25,21 +26,21 @@
   ],
   "achievements": [
     {
-      "id": 1,
+      "id": "1",
       "userId": 1,
       "title": "Primeira Inscrição",
       "description": "Inscreva-se em uma modalidade pela primeira vez.",
       "category": "Modalidades"
     },
     {
-      "id": 2,
+      "id": "2",
       "userId": 1,
       "title": "Primeira Meta Concluída",
       "description": "Complete sua primeira meta.",
       "category": "Metas"
     },
     {
-      "id": 3,
+      "id": "3",
       "userId": null,
       "title": "Campeão de Torneio",
       "description": "Vença um torneio oficial.",
@@ -96,11 +97,23 @@
       "userId": 7203
     },
     {
-      "id": "2",
       "title": "Aprender React",
       "description": "Completar um curso de React em 1 mês",
-      "status": "completed",
-      "userId": 7203
+      "status": "in_progress",
+      "id": "2"
+    },
+    {
+      "id": "b9aa",
+      "title": "Beber",
+      "description": "Água ",
+      "status": "in_progress",
+      "userId": "1"
+    },
+    {
+      "title": "Beber Água ",
+      "description": "Tomar pelo menos 1 litro de água",
+      "status": "in_progress",
+      "id": "a2a2"
     }
   ],
   "teams": [
@@ -133,7 +146,7 @@
       "userId": 7203,
       "notifications": true,
       "preferences": false,
-      "language": "pt",
+      "language": "en",
       "notifyNewPosts": true,
       "notifyLikes": false,
       "notifyNewChampionships": true,
@@ -166,10 +179,356 @@
       "content": "Conquistas Primeira Inscrição Conquista obtida ao se inscrever em uma modalidade.  Primeira Vitória Conquista obtida ao ganhar uma competição."
     },
     {
-      "id": 3,
+      "id": "3",
       "author": "thiago1",
       "date": "2024-09-11T21:28:00.176Z",
       "content": "123546"
+    },
+    {
+      "id": "3",
+      "author": "thiago1",
+      "date": "2024-09-14T15:06:15.204Z",
+      "content": "ok"
+    },
+    {
+      "id": "4",
+      "author": "thiago1",
+      "date": "2024-09-14T15:06:19.724Z",
+      "content": "dasdas"
+    },
+    {
+      "id": "1",
+      "author": "Anônimo",
+      "date": "2024-09-14T16:09:21.744Z",
+      "content": "fsfs"
+    },
+    {
+      "id": "2",
+      "author": "Anônimo",
+      "date": "2024-09-14T16:09:23.860Z",
+      "content": "dasdas"
+    },
+    {
+      "id": "3",
+      "author": "Anônimo",
+      "date": "2024-09-14T16:09:26.068Z",
+      "content": "fsdfasd"
     }
-  ]
+  ],
+  "casasDeSaude": [
+    {
+      "id": 1,
+      "nome": "Casa de Saúde 1",
+      "endereco": "Rua Exemplo, 123",
+      "telefone": "(41) 1234-5678",
+      "horario": "08:00 - 18:00"
+    },
+    {
+      "id": 2,
+      "nome": "Casa de Saúde 2",
+      "endereco": "Avenida Exemplo, 456",
+      "telefone": "(41) 8765-4321",
+      "horario": "07:00 - 19:00"
+    },
+    {
+      "id": 3,
+      "nome": "Casa de Saúde 3",
+      "endereco": "Rua Modelo, 789",
+      "telefone": "(41) 1122-3344",
+      "horario": "09:00 - 17:00"
+    }
+  ],
+  "competitions": [
+    {
+      "id": 1,
+      "name": "Campeonato UFPR",
+      "date": "2024-09-14",
+      "teams": 8,
+      "competitionType": "grupo",
+      "confrontos": [
+        {
+          "fase": "Quartas de Final",
+          "time1": "Time A",
+          "time2": "Time B"
+        },
+        {
+          "fase": "Quartas de Final",
+          "time1": "Time C",
+          "time2": "Time D"
+        },
+        {
+          "fase": "Semifinal",
+          "time1": "Vencedor A x B",
+          "time2": "Vencedor C x D"
+        },
+        {
+          "fase": "Final",
+          "time1": "Vencedor Semifinal 1",
+          "time2": "Vencedor Semifinal 2"
+        }
+      ]
+    },
+    {
+      "id": "33c9",
+      "name": "Teste",
+      "date": "2024-09-16T03:00:00.000Z",
+      "teams": 10,
+      "competitionType": "grupo",
+      "confrontos": [
+        {
+          "fase": "Quartas de Final",
+          "time1": "Time A",
+          "time2": "Time B"
+        },
+        {
+          "fase": "Quartas de Final",
+          "time1": "Time C",
+          "time2": "Time D"
+        },
+        {
+          "fase": "Semifinal",
+          "time1": "Vencedor A x B",
+          "time2": "Vencedor C x D"
+        },
+        {
+          "fase": "Final",
+          "time1": "Vencedor Semifinal 1",
+          "time2": "Vencedor Semifinal 2"
+        }
+      ]
+    },
+    {
+      "id": "591e",
+      "name": "teeste",
+      "date": "2024-09-17T03:00:00.000Z",
+      "people": 25,
+      "competitionType": "individual",
+      "confrontos": [
+        {
+          "fase": "Rodada 1",
+          "time1": "Pessoa 1",
+          "time2": "Pessoa 2"
+        },
+        {
+          "fase": "Rodada 1",
+          "time1": "Pessoa 3",
+          "time2": "Pessoa 4"
+        }
+      ]
+    }
+  ],
+  "canal": {
+    "listar": [
+      {
+        "name": "listar",
+        "id": "027713b0-d2f1-4ff8-9932-60bf6a11d7f3",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": "http://localhost:8081/canal/listar"
+        },
+        "response": [],
+        "uid": "37338207-027713b0-d2f1-4ff8-9932-60bf6a11d7f3"
+      }
+    ],
+    "cadastrarPublicacao": [
+      {
+        "name": "cadastrarPublicacao",
+        "id": "8ec5869d-aee1-437a-9ab5-d4fafe2c033c",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"idPublicacao\": 0,\n    \"descricao\": \"new\",\n    \"dataPublicacao\": null,\n    \"idCanal\": 1,\n    \"Usuario\": {\n        \"idUsuario\": 10,\n        \"username\": \"111\",\n        \"nome\": \"111\",\n        \"foto\": null,\n        \"permissao\": \"ACADEMICO\"\n    }\n}\n",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "url": "http://localhost:8081/canal/cadastrarPublicacao"
+        },
+        "response": [],
+        "uid": "37338207-8ec5869d-aee1-437a-9ab5-d4fafe2c033c"
+      }
+    ],
+    "cadastrarComentario": [
+      {
+        "name": "cadastrarComentario",
+        "id": "c198fcf5-43f0-4a40-b4a3-112950160d18",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"idComentario\": 0,\n    \"descricao\": \"Eu consigo amanhã, bora bora\",\n    \"dataComentario\": null,\n    \"idPublicacao\": 5,\n    \"Usuario\": {\n        \"idUsuario\": 6,\n        \"username\": \"maria_gn\",\n        \"nome\": \"Maria Gabriela Naste\",\n        \"foto\": null,\n        \"permissao\": \"ACADEMICO\"\n    }\n}\n",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "url": "http://localhost:8081/canal/cadastrarComentario"
+        },
+        "response": [],
+        "uid": "37338207-c198fcf5-43f0-4a40-b4a3-112950160d18"
+      }
+    ],
+    "atualizarPublicacao": [
+      {
+        "name": "atualizarPublicacao",
+        "id": "dd480f73-8138-4f58-b956-22493fe8aafa",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "PUT",
+          "header": [],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"idPublicacao\": 3,\n    \"descricao\": \"newwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\",\n    \"dataPublicacao\": null,\n    \"idCanal\": 4,\n    \"Usuario\": {\n        \"idUsuario\": 11,\n        \"username\": \"111\",\n        \"nome\": \"111\",\n        \"foto\": null,\n        \"permissao\": \"ACADEMICO\"\n    }\n}\n",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "url": "http://localhost:8081/canal/atualizarPublicacao/3?Content-Type=application/json"
+        },
+        "response": [],
+        "uid": "37338207-dd480f73-8138-4f58-b956-22493fe8aafa"
+      }
+    ],
+    "atualizarComentario": [
+      {
+        "name": "atualizarComentario",
+        "id": "fe9a6a3b-2919-439e-bc17-c178d06e30e7",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "PUT",
+          "header": [],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"idComentario\": 3,\n    \"descricao\": \"aaaaaaaaaaaaaaaa\",\n    \"dataComentario\": null,\n    \"idPublicacao\": 5,\n    \"Usuario\": {\n        \"idUsuario\": 6,\n        \"username\": \"maria_gn\",\n        \"nome\": \"Maria Gabriela Naste\",\n        \"foto\": null,\n        \"permissao\": \"ACADEMICO\"\n    }\n}\n",
+            "options": {
+              "raw": {
+                "language": "json"
+              }
+            }
+          },
+          "url": "http://localhost:8081/canal/atualizarComentario/3?Content-Type=application/json"
+        },
+        "response": [],
+        "uid": "37338207-fe9a6a3b-2919-439e-bc17-c178d06e30e7"
+      }
+    ],
+    "removerPublicacao": [
+      {
+        "name": "removerPublicacao",
+        "id": "4123308e-f899-4572-87cf-bea756f1c6ee",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": "http://localhost:8081/canal/removerPublicacao/3"
+        },
+        "response": [],
+        "uid": "37338207-4123308e-f899-4572-87cf-bea756f1c6ee"
+      }
+    ],
+    "removerComentario": [
+      {
+        "name": "removerComentario",
+        "id": "dae9f891-44a5-4b97-ac40-ed66df6c41f7",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": "http://localhost:8081/canal/removerComentario/10"
+        },
+        "response": [],
+        "uid": "37338207-dae9f891-44a5-4b97-ac40-ed66df6c41f7"
+      }
+    ],
+    "curtirPublicacao": [
+      {
+        "name": "curtirPublicacao",
+        "id": "1f888576-8501-4ef0-91e9-162d2b171581",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [],
+          "url": "http://localhost:8081/canal/curtirPublicacao/1/1"
+        },
+        "response": [],
+        "uid": "37338207-1f888576-8501-4ef0-91e9-162d2b171581"
+      }
+    ],
+    "curtirComentario": [
+      {
+        "name": "curtirComentario",
+        "id": "4f12e0a2-3be1-4c0e-941e-13cf4f581161",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [],
+          "url": "http://localhost:8081/canal/curtirComentario/1/1"
+        },
+        "response": [],
+        "uid": "37338207-4f12e0a2-3be1-4c0e-941e-13cf4f581161"
+      }
+    ],
+    "removerCurtidaPublicacao": [
+      {
+        "name": "removerCurtidaPublicacao",
+        "id": "464bd530-7965-47d6-8cb9-fdf8981eee0c",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": "http://localhost:8081/canal/removerCurtidaPublicacao/1/1"
+        },
+        "response": [],
+        "uid": "37338207-464bd530-7965-47d6-8cb9-fdf8981eee0c"
+      }
+    ],
+    "removerCurtidaComentario": [
+      {
+        "name": "removerCurtidaComentario",
+        "id": "b4f04505-c760-418a-9e1f-24f810c7b02d",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": "http://localhost:8081/canal/removerCurtidaComentario/1/1"
+        },
+        "response": [],
+        "uid": "37338207-b4f04505-c760-418a-9e1f-24f810c7b02d"
+      }
+    ]
+  }
 }

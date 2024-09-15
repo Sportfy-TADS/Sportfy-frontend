@@ -50,7 +50,7 @@ export default function TournamentHistory() {
     <>
       <Header />
       <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold tracking-tight mb-4">Histórico de Torneios</h1>
+        <h1 className="text-2xl font-bold tracking-tight mb-4">Histórico de Campeonatos</h1>
         {isFetching && <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />}
         
         <div className="space-y-2.5">

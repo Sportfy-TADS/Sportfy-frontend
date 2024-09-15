@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Pencil, UploadCloud } from 'lucide-react'; // Importando ícones
 import Header from '@/components/Header';
 import {
   Select,
@@ -26,18 +28,18 @@ export default function EditProfilePage() {
     const fetchUserData = async () => {
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        router.push('/auth'); // Redireciona para login se não houver ID do usuário
+        router.push('/auth');
         return;
       }
       
       try {
-        const res = await fetch(`http://localhost:3001/users/${userId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
         const user = await res.json();
         setName(user.name);
         setEmail(user.email);
         setPassword(user.password);
         setGender(user.gender);
-        setProfileImage(user.profileImage || ''); // Caso não tenha imagem, seta uma string vazia
+        setProfileImage(user.profileImage || '');
       } catch (e) {
         setError('Erro ao carregar os dados do usuário');
       }
@@ -53,7 +55,7 @@ export default function EditProfilePage() {
     }
 
     try {
-      const res = await fetch(`http://localhost:3001/users/${userId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, gender, profileImage }),
@@ -73,63 +75,103 @@ export default function EditProfilePage() {
     <>
       <Header />
 
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-full max-w-md bg-white p-8 rounded-md shadow-md dark:bg-gray-800">
-          <h2 className="mb-4 text-2xl font-semibold text-center text-black dark:text-white">Editar Perfil</h2>
-          {error && <div className="mb-4 text-red-500 text-center">{error}</div>}
-          
-          <Input
-            type="text"
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="Nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          
-          <Input
-            type="email"
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          
-          <Input
-            type="password"
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <div className="mb-4">
-            <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Gênero:</label>
-            <Select onValueChange={setGender} value={gender}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Escolha um gênero" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="masculino">Masculino</SelectItem>
-                <SelectItem value="feminino">Feminino</SelectItem>
-                <SelectItem value="outros">Outros</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
+        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Coluna da Imagem de Perfil */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <Avatar className="w-32 h-32 rounded-full">
+                {profileImage ? (
+                  <AvatarImage src={profileImage} alt="Profile Image" />
+                ) : (
+                  <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+                )}
+              </Avatar>
+              {/* Ícone para upload da imagem */}
+              <Button variant="ghost" size="icon" className="absolute bottom-0 right-0 bg-white shadow-md rounded-full">
+                <UploadCloud className="h-5 w-5" />
+              </Button>
+            </div>
+            <h2 className="text-lg font-semibold text-black dark:text-white">{name}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{email}</p>
           </div>
-          
-          <Input
-            type="text"
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="URL da Imagem de Perfil"
-            value={profileImage}
-            onChange={(e) => setProfileImage(e.target.value)}
-          />
 
-          <Button
-            onClick={handleUpdate}
-            className="w-full p-2 font-semibold text-white bg-blue-500 hover:bg-blue-600"
-          >
-            Atualizar
-          </Button>
+          {/* Coluna de Edição */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Editar Informações</h2>
+              {error && <div className="mb-4 text-red-500">{error}</div>}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Nome</label>
+                  <Input
+                    type="text"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Nome"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Email</label>
+                  <Input
+                    type="email"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Senha</label>
+                  <Input
+                    type="password"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Gênero</label>
+                  <Select onValueChange={setGender} value={gender}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Escolha um gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-semibold mb-2 text-black dark:text-white">URL da Imagem de Perfil</label>
+                <Input
+                  type="text"
+                  className="w-full p-2 text-black dark:text-white"
+                  placeholder="URL da Imagem de Perfil"
+                  value={profileImage}
+                  onChange={(e) => setProfileImage(e.target.value)}
+                />
+              </div>
+
+              <Button
+                onClick={handleUpdate}
+                className="w-full p-2 mt-4 font-semibold text-white bg-blue-500 hover:bg-blue-600"
+              >
+                Atualizar Perfil
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </>

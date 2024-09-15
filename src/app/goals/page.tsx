@@ -1,66 +1,118 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; 
+import { useRouter } from 'next/navigation'; // Para navegação
 
 interface Goal {
   id: number;
   title: string;
   description: string;
-  status: 'in_progress' | 'completed';
-  userId: number;
+  status: string;
+  userId: string;
 }
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [filter, setFilter] = useState<'all' | 'in_progress' | 'completed'>('all');
+  const [filteredGoals, setFilteredGoals] = useState<Goal[]>([]);
+  const [filter, setFilter] = useState('all'); 
   const router = useRouter();
 
   useEffect(() => {
     const fetchGoals = async () => {
-      const userId = localStorage.getItem('userId'); // Obtém o ID do usuário do localStorage
+      const userId = localStorage.getItem('userId');
       if (!userId) {
-        router.push('/auth'); // Redireciona para login se não houver ID do usuário
         return;
       }
-      
-      try {
-        const res = await fetch(`http://localhost:3001/goals?userId=${userId}`);
-        const data = await res.json();
-        setGoals(data);
-      } catch (e) {
-        console.error('Erro ao carregar as metas do usuário', e);
-      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals?userId=${userId}`);
+      const data = await res.json();
+      setGoals(data);
+      setFilteredGoals(data);
     };
 
     fetchGoals();
-  }, [router]);
+  }, []);
 
-  const filteredGoals = goals.filter(goal => filter === 'all' || goal.status === filter);
+  useEffect(() => {
+    if (filter === 'completed') {
+      setFilteredGoals(goals.filter((goal) => goal.status === 'completed'));
+    } else if (filter === 'in_progress') {
+      setFilteredGoals(goals.filter((goal) => goal.status === 'in_progress'));
+    } else {
+      setFilteredGoals(goals); 
+    }
+  }, [filter, goals]);
+
+  const goToCreateGoalPage = () => {
+    router.push('/goals/create'); 
+  };
+
+  const goToEditGoalPage = (id: number) => {
+    router.push(`/goals/edit/${id}`); // Redireciona para a página de edição da meta
+  };
 
   return (
     <>
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <h1 className="text-2xl font-bold text-emerald-600 mb-4">Minhas Metas</h1>
-        <div className="mb-4">
-          <Button variant="outline" onClick={() => setFilter('all')}>Todas</Button>
-          <Button variant="outline" onClick={() => setFilter('in_progress')}>Em andamento</Button>
-          <Button variant="outline" onClick={() => setFilter('completed')}>Concluídas</Button>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
+        <div className="w-full max-w-7xl">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Minhas Metas</h1>
+            
+            <div className="flex space-x-4">
+              <div className="w-48">
+                <Select onValueChange={(value) => setFilter(value)} defaultValue="all">
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filtrar metas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="completed">Concluídas</SelectItem>
+                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={goToCreateGoalPage} className="bg-blue-500 hover:bg-blue-600">
+                Criar Nova Meta
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredGoals.length > 0 ? (
+              filteredGoals.map((goal) => (
+                <Card key={goal.id} className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">{goal.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-800 dark:text-gray-200 mb-2">{goal.description}</p>
+                    <p className="font-semibold">
+                      Status: <span className={goal.status === 'completed' ? 'text-green-500' : 'text-yellow-500'}>
+                        {goal.status === 'completed' ? 'Concluída' : 'Em Andamento'}
+                      </span>
+                    </p>
+                    <Button onClick={() => goToEditGoalPage(goal.id)} className="mt-4 w-full">
+                      Editar Meta
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-center col-span-full text-gray-700 dark:text-gray-300">Nenhuma meta encontrada.</p>
+            )}
+          </div>
         </div>
-        <ul className="w-full max-w-md">
-          {filteredGoals.map(goal => (
-            <li key={goal.id} className="mb-4 p-4 bg-white dark:bg-gray-800 rounded shadow-md">
-              <h2 className="text-lg font-semibold">{goal.title}</h2>
-              <p>{goal.description}</p>
-              <span className={`mt-2 block text-sm ${goal.status === 'completed' ? 'text-green-500' : 'text-yellow-500'}`}>
-                {goal.status === 'completed' ? 'Concluída' : 'Em andamento'}
-              </span>
-            </li>
-          ))}
-        </ul>
       </div>
     </>
   );
