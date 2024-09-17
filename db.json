@@ -3,6 +3,7 @@
     {
       "id": "6ae9",
       "email": "diego@ufpr.br",
+      "username": "diego",
       "password": "1234"
     },
     {
@@ -315,6 +316,23 @@
           "time2": "Pessoa 4"
         }
       ]
+    }
+  ],
+  "inscricoes": [
+    {
+      "id": "1",
+      "userId": "7203",
+      "modalidadeId": "1"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "modalidadeId": "2"
+    },
+    {
+      "id": "cb45",
+      "userId": "1",
+      "modalidadeId": "1"
     }
   ],
   "canal": {
