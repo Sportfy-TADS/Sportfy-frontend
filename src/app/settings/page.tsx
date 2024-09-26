@@ -26,14 +26,14 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox do shadcnUI
+import { Checkbox } from "@/components/ui/checkbox"; 
 import Header from '@/components/Header';
 import { ModeToggle } from '@/components/theme';
 import { useTheme } from 'next-themes';
 import { CheckedState } from '@radix-ui/react-checkbox';
 
-// Simulando o ID do usuário legado
-const userId = 1; // Em uma aplicação real, você obteria isso de uma autenticação, contexto ou props
+// ID do usuário autenticado
+const userId = 7203; // Em uma aplicação real, o ID viria de um contexto ou autenticação
 
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme();
@@ -52,11 +52,11 @@ export default function SettingsPage() {
   
   const [showDialog, setShowDialog] = useState(false);
 
-  // Carregar dados do json-server usando o ID do usuário
+  // Carregar as configurações do json-server
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/settings/${userId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`);
         const data = await response.json();
         setNotifications(data.notifications);
         setLanguage(data.language);
@@ -78,17 +78,17 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
+  // Função para salvar as configurações no json-server
   const handleSave = async () => {
-    setShowDialog(true); // Mostra o diálogo de confirmação ao clicar em salvar
+    setShowDialog(true); 
   };
 
   const confirmSave = async () => {
-    setShowDialog(false); // Fecha o diálogo
+    setShowDialog(false); 
     alert('Configurações salvas com sucesso!');
     
-    // Salvar configurações no json-server usando o ID do usuário
     try {
-      const response = await fetch(`http://localhost:3001/settings/${userId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export default function SettingsPage() {
     }
   };
 
-  // Função para adaptar o CheckedState para booleano
+  // Função para converter CheckedState em booleano
   const handleCheckedChange = (setState: (value: boolean) => void) => (checked: CheckedState) => {
     setState(checked === true);
   };
@@ -146,6 +146,7 @@ export default function SettingsPage() {
             </Select>
           </div>
 
+          {/* Configurações de Notificações */}
           <Sheet>
             <SheetTrigger asChild>
               <Button className="w-full mb-4">Configurações das Modalidades</Button>
@@ -161,7 +162,7 @@ export default function SettingsPage() {
                   onCheckedChange={handleCheckedChange(setNotifyNewChampionships)}
                   className="mr-2"
                 />
-                <span className="dark:text-white">Notificar sobre novos campeonatos criados nas modalidades que estou inscrito</span>
+                <span className="dark:text-white">Notificar sobre novos campeonatos nas modalidades que estou inscrito</span>
               </div>
               <div className="mt-2">
                 <Checkbox
@@ -169,7 +170,7 @@ export default function SettingsPage() {
                   onCheckedChange={handleCheckedChange(setNotifyNewPosts)}
                   className="mr-2"
                 />
-                <span className="dark:text-white">Notificar sobre novos posts criados nas modalidades que estou inscrito</span>
+                <span className="dark:text-white">Notificar sobre novos posts criados nas modalidades</span>
               </div>
               <div className="mt-2">
                 <Checkbox
@@ -190,6 +191,7 @@ export default function SettingsPage() {
             </SheetContent>
           </Sheet>
 
+          {/* Configurações de Privacidade */}
           <Sheet>
             <SheetTrigger asChild>
               <Button className="w-full mb-4">Configurações de Privacidade</Button>
@@ -205,7 +207,7 @@ export default function SettingsPage() {
                   onCheckedChange={handleCheckedChange(setPrivacyDetails)}
                   className="mr-2"
                 />
-                <span className="dark:text-white">Permitir que outros usuários vejam detalhes das minhas modalidades esportivas</span>
+                <span className="dark:text-white">Permitir que outros usuários vejam detalhes das minhas modalidades</span>
               </div>
               <div className="mt-2">
                 <Checkbox
@@ -213,7 +215,7 @@ export default function SettingsPage() {
                   onCheckedChange={handleCheckedChange(setPrivacyHistory)}
                   className="mr-2"
                 />
-                <span className="dark:text-white">Permitir que outros usuários acessem o meu histórico de campeonatos</span>
+                <span className="dark:text-white">Permitir que outros usuários acessem meu histórico de campeonatos</span>
               </div>
               <div className="mt-2">
                 <Checkbox
@@ -221,7 +223,7 @@ export default function SettingsPage() {
                   onCheckedChange={handleCheckedChange(setPrivacyStats)}
                   className="mr-2"
                 />
-                <span className="dark:text-white">Permitir que outros usuários vejam as minhas estatísticas nas modalidades esportivas</span>
+                <span className="dark:text-white">Permitir que outros usuários vejam minhas estatísticas esportivas</span>
               </div>
               <div className="mt-2">
                 <Checkbox
@@ -229,7 +231,7 @@ export default function SettingsPage() {
                   onCheckedChange={handleCheckedChange(setPrivacyAchievements)}
                   className="mr-2"
                 />
-                <span className="dark:text-white">Permitir que outros usuários vejam as minhas conquistas</span>
+                <span className="dark:text-white">Permitir que outros usuários vejam minhas conquistas</span>
               </div>
             </SheetContent>
           </Sheet>
