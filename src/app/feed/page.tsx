@@ -92,6 +92,10 @@ export default function FeedPage() {
           <Heart className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Saúde</span>
         </li>
+        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/Modality')}>
+          <Heart className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Modalidade</span>
+        </li>
         <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/settings')}>
           <Settings className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Configurações</span>

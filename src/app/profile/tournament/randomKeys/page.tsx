@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"; // Importando o Select do ShadCN UI
+import Header from "@/components/Header";
 
 export default function Component() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -106,110 +107,114 @@ export default function Component() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-12 px-4 md:px-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Gerador de Chaves dos Campeonatos</h1>
-        <p className="text-muted-foreground">Crie facilmente as chaves de competições amistosas com este sistema.</p>
-      </div>
+    <>
+    <Header />
+    
+      <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-12 px-4 md:px-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Gerador de Chaves dos Campeonatos</h1>
+          <p className="text-muted-foreground">Crie facilmente as chaves de competições amistosas com este sistema.</p>
+        </div>
 
-      <div className="w-full mt-8 bg-background rounded-lg border p-6 space-y-6">
-        <form onSubmit={generateKeys} className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome da Competição</Label>
-            <Input
-              id="name"
-              value={competitionName}
-              onChange={(e) => setCompetitionName(e.target.value)}
-              placeholder="Digite o nome da competição"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="date">Data da Competição</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start font-normal">
-                  {selectedDate ? selectedDate.toLocaleDateString() : "Selecione a data"}
-                  <div className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Campo Dinâmico: Individual ou Grupo */}
-          <div className="space-y-2">
-            <Label htmlFor="type">Tipo de Competição</Label>
-            <Select onValueChange={setCompetitionType} value={competitionType}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Escolha o tipo de competição" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="individual">Individual</SelectItem>
-                <SelectItem value="grupo">Em Grupo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Campo para número de pessoas ou times */}
-          {competitionType === "individual" ? (
+        <div className="w-full mt-8 bg-background rounded-lg border p-6 space-y-6">
+          <form onSubmit={generateKeys} className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="people">Número de Pessoas</Label>
+              <Label htmlFor="name">Nome da Competição</Label>
               <Input
-                id="people"
-                type="number"
-                value={people}
-                onChange={(e) => setPeople(parseInt(e.target.value))}
-                placeholder="Digite o número de participantes"
+                id="name"
+                value={competitionName}
+                onChange={(e) => setCompetitionName(e.target.value)}
+                placeholder="Digite o nome da competição"
               />
             </div>
-          ) : (
+
             <div className="space-y-2">
-              <Label htmlFor="teams">Número de Times (Máximo 16)</Label>
-              <Input
-                id="teams"
-                type="number"
-                value={teams}
-                onChange={(e) => setTeams(parseInt(e.target.value))}
-                placeholder="Digite o número de times"
-              />
+              <Label htmlFor="date">Data da Competição</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start font-normal">
+                    {selectedDate ? selectedDate.toLocaleDateString() : "Selecione a data"}
+                    <div className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Campo Dinâmico: Individual ou Grupo */}
+            <div className="space-y-2">
+              <Label htmlFor="type">Tipo de Competição</Label>
+              <Select onValueChange={setCompetitionType} value={competitionType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Escolha o tipo de competição" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Individual</SelectItem>
+                  <SelectItem value="grupo">Em Grupo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Campo para número de pessoas ou times */}
+            {competitionType === "individual" ? (
+              <div className="space-y-2">
+                <Label htmlFor="people">Número de Pessoas</Label>
+                <Input
+                  id="people"
+                  type="number"
+                  value={people}
+                  onChange={(e) => setPeople(parseInt(e.target.value))}
+                  placeholder="Digite o número de participantes"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="teams">Número de Times (Máximo 16)</Label>
+                <Input
+                  id="teams"
+                  type="number"
+                  value={teams}
+                  onChange={(e) => setTeams(parseInt(e.target.value))}
+                  placeholder="Digite o número de times"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2 flex items-end">
+              <Button type="submit" className="w-full">
+                Gerar Chaves
+              </Button>
+            </div>
+          </form>
+
+          {/* Exibe a tabela de confrontos se houver confrontos gerados */}
+          {confrontos.length > 0 && (
+            <div className="border rounded-lg overflow-auto mt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Confronto</TableHead>
+                    <TableHead>Participante 1</TableHead>
+                    <TableHead>Participante 2</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {confrontos.map((confronto, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{confronto.fase}</TableCell>
+                      <TableCell>{confronto.time1}</TableCell>
+                      <TableCell>{confronto.time2}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
-
-          <div className="space-y-2 flex items-end">
-            <Button type="submit" className="w-full">
-              Gerar Chaves
-            </Button>
-          </div>
-        </form>
-
-        {/* Exibe a tabela de confrontos se houver confrontos gerados */}
-        {confrontos.length > 0 && (
-          <div className="border rounded-lg overflow-auto mt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Confronto</TableHead>
-                  <TableHead>Participante 1</TableHead>
-                  <TableHead>Participante 2</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {confrontos.map((confronto, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{confronto.fase}</TableCell>
-                    <TableCell>{confronto.time1}</TableCell>
-                    <TableCell>{confronto.time2}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -4,13 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"; 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; 
 import { useRouter } from 'next/navigation'; // Para navegação
 
 interface Goal {
@@ -58,7 +52,7 @@ export default function GoalsPage() {
   };
 
   const goToEditGoalPage = (id: number) => {
-    router.push(`/goals/edit/${id}`); // Redireciona para a página de edição da meta
+    router.push(`/goals/edit/${id}`); 
   };
 
   return (
@@ -68,7 +62,6 @@ export default function GoalsPage() {
         <div className="w-full max-w-7xl">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Minhas Metas</h1>
-            
             <div className="flex space-x-4">
               <div className="w-48">
                 <Select onValueChange={(value) => setFilter(value)} defaultValue="all">

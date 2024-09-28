@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"; // Usando Textarea para mel
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface User {
   id: string;
@@ -152,7 +153,25 @@ export default function ProfilePage() {
                     <p className="text-sm">{achievement.description}</p>
                   </div>
                 ))}
+                <Link href="profile/tournament" >Conquistas</Link>
               </CardContent>
+            </Card>
+
+            {/* Conquistas */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold">Competições</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {achievements.map(achievement => (
+                  <div key={achievement.id} className="mb-2">
+                    <h3 className="font-semibold">{achievement.title}</h3>
+                    <p className="text-sm">{achievement.description}</p>
+                  </div>
+                ))}
+                <Link href="profile/tournament" >Historico</Link>
+              </CardContent>
+              
             </Card>
 
             {/* Metas */}
@@ -168,6 +187,7 @@ export default function ProfilePage() {
                     <p className="text-sm">Status: {goal.status === "completed" ? "Concluída" : "Em Andamento"}</p>
                   </div>
                 ))}
+                <Link href="profile/tournament" >Ver Metas</Link>
               </CardContent>
             </Card>
           </div>
