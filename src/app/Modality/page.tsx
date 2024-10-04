@@ -1,10 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import Header from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useForm } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
+import Header from '@/components/Header';
+import { Label } from '@/components/ui/label';
 
 interface Modalidade {
   id: string;
@@ -15,103 +22,141 @@ interface Modalidade {
   inscrito: boolean;
 }
 
+// Função para buscar modalidades
+async function getModalidades(userId: string) {
+  const [sportsRes, inscricoesRes] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/inscricoes?userId=${userId}`)
+  ]);
+
+  if (!sportsRes.ok || !inscricoesRes.ok) {
+    throw new Error('Erro ao buscar modalidades ou inscrições');
+  }
+
+  const [sports, inscricoes] = await Promise.all([sportsRes.json(), inscricoesRes.json()]);
+
+  // Verificar inscrição do usuário
+  return sports.map((modalidade: Modalidade) => ({
+    ...modalidade,
+    inscrito: inscricoes.some((inscricao: any) => inscricao.modalidadeId === modalidade.id)
+  }));
+}
+
+// Função para inscrever o usuário em uma modalidade
+async function inscreverUsuario(data: { userId: string; modalidadeId: string }) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inscricoes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Erro ao realizar inscrição');
+  }
+
+  return await response.json();
+}
+
 export default function ModalidadeInscricaoPage() {
-  const [modalidades, setModalidades] = useState<Modalidade[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-  const router = useRouter();
+  const [filter, setFilter] = useState('all');
+  const queryClient = useQueryClient();
 
-  // Buscar modalidades e verificar se o usuário já está inscrito
+  // Verificar se o `localStorage` está disponível no lado do cliente
   useEffect(() => {
-    const fetchModalidades = async () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        router.push('/auth'); // Redireciona para login se não houver ID do usuário
-        return;
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
       }
-      setUserId(userId);
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`);
-      const data = await res.json();
-
-      // Verificar se o usuário já está inscrito em cada modalidade
-      const inscricoesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inscricoes?userId=${userId}`);
-      const inscricoesData = await inscricoesRes.json();
-
-      const modalidadesComInscricao = data.map((modalidade: Modalidade) => ({
-        ...modalidade,
-        inscrito: inscricoesData.some((inscricao: any) => inscricao.modalidadeId === modalidade.id),
-      }));
-
-      setModalidades(modalidadesComInscricao);
-    };
-
-    fetchModalidades();
-  }, [router]);
-
-  // Função para inscrever o usuário em uma modalidade
-  const handleInscricao = async (modalidadeId: string) => {
-    if (!userId) return;
-
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inscricoes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, modalidadeId }),
-      });
-
-      if (res.ok) {
-        const updatedModalidades = modalidades.map((modalidade) =>
-          modalidade.id === modalidadeId ? { ...modalidade, inscrito: true } : modalidade
-        );
-        setModalidades(updatedModalidades);
-        alert('Inscrição realizada com sucesso!');
-      } else {
-        alert('Erro ao realizar inscrição.');
-      }
-    } catch (e) {
-      console.error('Erro ao realizar inscrição:', e);
     }
+  }, []);
+
+  // Query para buscar modalidades com inscrição
+  const { data: modalidades = [], isLoading } = useQuery({
+    queryKey: ['modalidades', userId],
+    queryFn: () => getModalidades(userId!),
+    enabled: !!userId, // Executa a query apenas se houver userId
+  });
+
+  // Mutation para inscrever o usuário
+  const { mutate } = useMutation({
+    mutationFn: (modalidadeId: string) => inscreverUsuario({ userId: userId!, modalidadeId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['modalidades', userId]);
+      toast.success('Inscrição realizada com sucesso!');
+    },
+    onError: () => {
+      toast.error('Erro ao realizar inscrição.');
+    },
+  });
+
+  const handleInscricao = (modalidadeId: string) => {
+    mutate(modalidadeId);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
+  const filteredModalidades = modalidades.filter((modalidade: { inscrito: boolean; }) => {
+    if (filter === 'all') return true;
+    return filter === 'inscrito' ? modalidade.inscrito : !modalidade.inscrito;
+  });
 
   return (
     <>
-      <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
-        <div className="w-full max-w-7xl">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Modalidades Disponíveis</h1>
+     <Header />
+    
+    <div className="container mx-auto p-4">
+     
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Modalidades</h1>
+        <div className="flex space-x-4">
+          <Select onValueChange={setFilter} defaultValue="all">
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="inscrito">Inscritas</SelectItem>
+              <SelectItem value="nao_inscrito">Não inscritas</SelectItem>
+            </SelectContent>
+          </Select>
 
-          {/* Exibição das modalidades disponíveis */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-            {modalidades.length > 0 ? (
-              modalidades.map((modalidade) => (
-                <Card key={modalidade.id} className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-xl font-bold">{modalidade.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-800 dark:text-gray-200 mb-2">{modalidade.description}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      <strong>Horário:</strong> {modalidade.schedule}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      <strong>Local:</strong> {modalidade.location}
-                    </p>
-                    <Button
-                      onClick={() => handleInscricao(modalidade.id)}
-                      className="w-full"
-                      disabled={modalidade.inscrito}
-                    >
-                      {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <p className="text-center col-span-full text-gray-700 dark:text-gray-300">Nenhuma modalidade disponível.</p>
-            )}
-          </div>
+         
         </div>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {filteredModalidades.length ? (
+          filteredModalidades.map((modalidade: { id: Key | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; schedule: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; location: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; inscrito: boolean | undefined; }) => (
+            <Card key={modalidade.id}>
+              <CardHeader>
+                <CardTitle>{modalidade.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">Horário: {modalidade.schedule}</p>
+                <p className="text-sm">Local: {modalidade.location}</p>
+                <Button
+                  onClick={() => handleInscricao(modalidade.id)}
+                  className="mt-4 w-full"
+                  disabled={modalidade.inscrito}
+                >
+                  {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
+                </Button>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <p className="text-center col-span-full">Nenhuma modalidade disponível.</p>
+        )}
+      </div>
+    </div>
     </>
   );
 }

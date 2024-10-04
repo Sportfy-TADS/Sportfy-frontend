@@ -134,6 +134,21 @@
       "title": "Projeto API: adonisJS",
       "description": "Praticar Projeto API: adonisJS 5x por semana",
       "userId": "7203"
+    },
+    {
+      "id": "46ab",
+      "title": "Projeto API: adonisJS",
+      "frequency": 1
+    },
+    {
+      "id": "82a1",
+      "title": "Codetalks - Introdução #00",
+      "frequency": 4
+    },
+    {
+      "id": "3ccd",
+      "title": "Teste",
+      "frequency": 3
     }
   ],
   "teams": [
