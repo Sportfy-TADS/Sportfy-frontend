@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -108,6 +108,7 @@ export default function UserProfile() {
     <div>
       <Header />
       <div className="container mx-auto p-4">
+        {/* Perfil do Usuário */}
         <div className="relative mb-6">
           <div className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg" />
           <div className="absolute -bottom-12 left-4">
@@ -125,7 +126,7 @@ export default function UserProfile() {
           <p className="text-gray-600 dark:text-gray-300"><strong>Gênero:</strong> {user?.gender}</p>
         </div>
 
-        {/* Modalidades Inscritas */}
+        {/* Modalidades Inscritas (HU15) */}
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Modalidades Inscritas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -148,7 +149,7 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Histórico de Partidas */}
+        {/* Histórico de Partidas (HU16) */}
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Histórico de Partidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -171,7 +172,7 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Postagens do Usuário */}
+        {/* Postagens do Usuário (HU17) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {posts.length > 0 ? (
             posts.map((post) => (

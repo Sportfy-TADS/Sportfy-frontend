@@ -2,58 +2,124 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import Header from '@/components/Header';
 
 // Tipagem para Modalidade Esportiva
 interface Modalidade {
-  id: number;
-  nome: string;
+  id: string;
+  name: string;
+  description: string;
+}
+
+// Tipagem para Inscrição
+interface Inscricao {
+  id: string;
+  userId: string;
+  modalidadeId: string;
+}
+
+// Função para buscar as modalidades em que o usuário está inscrito
+async function getInscricoes(userId: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inscricoes?userId=${userId}`);
+  if (!res.ok) throw new Error('Erro ao buscar inscrições.');
+  return await res.json();
+}
+
+// Função para buscar modalidades
+async function getModalidades() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`);
+  if (!res.ok) throw new Error('Erro ao buscar modalidades.');
+  return await res.json();
+}
+
+// Função para criar partida
+async function createMatch(data: any) {
+  console.log("Dados enviados para o servidor:", data); // Adicionando log de depuração
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/matches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) throw new Error('Erro ao criar partida.');
+  return res.json();
 }
 
 export default function CreateMatchPage() {
-  const [modalidades, setModalidades] = useState<Modalidade[]>([]);
-  const [selectedModalidade, setSelectedModalidade] = useState('');
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [localizacao, setLocalizacao] = useState('');
-  const [error, setError] = useState('');
+  const [selectedModalidade, setSelectedModalidade] = useState('');
+  const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
+  const [modalidadesFiltradas, setModalidadesFiltradas] = useState<Modalidade[]>([]);
+  
   const router = useRouter();
+  const queryClient = useQueryClient();
+  
+  const userId = localStorage.getItem('userId'); // Pegando o ID do usuário logado
 
-  // Buscar modalidades esportivas do json-server
+  // Carregar as modalidades e inscrições
   useEffect(() => {
-    const fetchModalidades = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/modalidades`);
-      const data = await res.json();
-      setModalidades(data);
+    const fetchData = async () => {
+      if (!userId) {
+        toast.error('Usuário não autenticado.');
+        return;
+      }
+
+      try {
+        const inscricoesData = await getInscricoes(userId);
+        const modalidadesData = await getModalidades();
+        
+        // Filtrar as modalidades em que o usuário está inscrito
+        const modalidadesInscritas = modalidadesData.filter((modalidade: Modalidade) =>
+          inscricoesData.some((inscricao: Inscricao) => inscricao.modalidadeId === modalidade.id)
+        );
+
+        setInscricoes(inscricoesData);
+        setModalidadesFiltradas(modalidadesInscritas);
+      } catch (error) {
+        console.error(error);
+        toast.error('Erro ao carregar modalidades e inscrições.');
+      }
     };
 
-    fetchModalidades();
-  }, []);
+    fetchData();
+  }, [userId]);
 
-  // Função para criar a partida
+  const mutation = useMutation({
+    mutationFn: createMatch,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['modalidades']);
+      toast.success('Partida criada com sucesso!');
+      router.push('/feed'); // Redireciona para o feed após criar a partida
+    },
+    onError: (error) => {
+      console.error('Erro ao criar a partida:', error); // Log de erro
+      toast.error('Erro ao criar a partida.');
+    },
+  });
+
   const handleCreateMatch = async () => {
     if (!nome || !descricao || !localizacao || !selectedModalidade) {
-      setError('Todos os campos são obrigatórios.');
+      toast.error('Todos os campos são obrigatórios.');
       return;
     }
 
-    const userId = localStorage.getItem('userId');
     if (!userId) {
-      setError('Usuário não autenticado.');
+      toast.error('Usuário não autenticado.');
       return;
     }
 
-    const newMatch = {
+    const matchData = {
       nome,
       descricao,
       localizacao,
@@ -62,94 +128,82 @@ export default function CreateMatchPage() {
       date: new Date().toISOString(),
     };
 
-    try {
-      // Enviar a partida para o json-server
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/matches`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newMatch),
-      });
-
-      if (res.ok) {
-        // Após a criação, envie para o feed da comunidade
-        const feedPost = {
-          author: userId,
-          content: `Partida criada: ${nome} na modalidade ${selectedModalidade}. Descrição: ${descricao}. Localização: ${localizacao}`,
-          date: new Date().toISOString(),
-        };
-
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/feed`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(feedPost),
-        });
-
-        alert('Partida criada e enviada para o feed da comunidade!');
-        router.push('/feed'); // Redireciona para o feed
-      } else {
-        setError('Erro ao criar a partida.');
-      }
-    } catch (e) {
-      setError('Erro ao criar a partida.');
-    }
+    console.log("Preparando para enviar a partida:", matchData); // Log dos dados antes de enviar
+    mutation.mutate(matchData);
   };
 
   return (
     <>
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
-        <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-6">
-            Criar Nova Partida
-          </h1>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Criar Partida</h1>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="bg-blue-500 hover:bg-blue-600">Criar Nova Partida</Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Cadastrar Nova Partida</SheetTitle>
+              </SheetHeader>
+              <form className="space-y-4 mt-8">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">
+                    Modalidade Esportiva
+                  </label>
+                  <Select onValueChange={setSelectedModalidade} value={selectedModalidade}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Escolha uma modalidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modalidadesFiltradas.map((modalidade: Modalidade) => (
+                        <SelectItem key={modalidade.id} value={modalidade.name}>
+                          {modalidade.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                <div>
+                  <Input
+                    type="text"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Nome da Partida"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Modalidade Esportiva</label>
-            <Select onValueChange={setSelectedModalidade} value={selectedModalidade}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Escolha uma modalidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {modalidades.map(modalidade => (
-                  <SelectItem key={modalidade.id} value={modalidade.nome}>
-                    {modalidade.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                <div>
+                  <Textarea
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Descrição da Partida"
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                  />
+                </div>
 
-          <Input
-            type="text"
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="Nome da Partida"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-          />
+                <div>
+                  <Input
+                    type="text"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Localização"
+                    value={localizacao}
+                    onChange={(e) => setLocalizacao(e.target.value)}
+                  />
+                </div>
 
-          <Textarea
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="Descrição da Partida"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-          />
-
-          <Input
-            type="text"
-            className="w-full p-2 mb-4 text-black dark:text-white"
-            placeholder="Localização"
-            value={localizacao}
-            onChange={(e) => setLocalizacao(e.target.value)}
-          />
-
-          <Button
-            onClick={handleCreateMatch}
-            className="w-full p-2 font-semibold text-white bg-blue-500 hover:bg-blue-600"
-          >
-            Criar Partida
-          </Button>
+                <Button
+                  type="button"
+                  onClick={handleCreateMatch}
+                  className="w-full bg-green-500 hover:bg-green-600"
+                >
+                  Salvar Partida
+                </Button>
+              </form>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </>

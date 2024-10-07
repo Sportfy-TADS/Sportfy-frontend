@@ -31,6 +31,7 @@ import Header from '@/components/Header';
 import { ModeToggle } from '@/components/theme';
 import { useTheme } from 'next-themes';
 import { CheckedState } from '@radix-ui/react-checkbox';
+import { toast } from 'sonner'; // Usar para notificação de sucesso
 
 // ID do usuário autenticado
 const userId = 7203; // Em uma aplicação real, o ID viria de um contexto ou autenticação
@@ -72,6 +73,7 @@ export default function SettingsPage() {
         setPrivacyAchievements(data.privacyAchievements);
       } catch (error) {
         console.error("Erro ao buscar configurações: ", error);
+        toast.error("Erro ao carregar as configurações.");
       }
     };
 
@@ -79,14 +81,12 @@ export default function SettingsPage() {
   }, []);
 
   // Função para salvar as configurações no json-server
-  const handleSave = async () => {
+  const handleSave = () => {
     setShowDialog(true); 
   };
 
   const confirmSave = async () => {
     setShowDialog(false); 
-    alert('Configurações salvas com sucesso!');
-    
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`, {
         method: 'PATCH',
@@ -110,8 +110,10 @@ export default function SettingsPage() {
       if (!response.ok) {
         throw new Error('Erro ao salvar configurações');
       }
+
+      toast.success('Configurações salvas com sucesso!');
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 

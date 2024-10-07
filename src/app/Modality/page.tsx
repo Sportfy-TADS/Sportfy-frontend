@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -35,7 +35,6 @@ async function getModalidades(userId: string) {
 
   const [sports, inscricoes] = await Promise.all([sportsRes.json(), inscricoesRes.json()]);
 
-  // Verificar inscrição do usuário
   return sports.map((modalidade: Modalidade) => ({
     ...modalidade,
     inscrito: inscricoes.some((inscricao: any) => inscricao.modalidadeId === modalidade.id)
@@ -57,17 +56,48 @@ async function inscreverUsuario(data: { userId: string; modalidadeId: string }) 
   return await response.json();
 }
 
+// Função para criar/editar modalidades
+async function salvarModalidade(data: Modalidade, isEdit: boolean) {
+  const method = isEdit ? 'PATCH' : 'POST';
+  const url = isEdit
+    ? `${process.env.NEXT_PUBLIC_API_URL}/sports/${data.id}`
+    : `${process.env.NEXT_PUBLIC_API_URL}/sports`;
+
+  const response = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Erro ao salvar modalidade');
+  }
+
+  return await response.json();
+}
+
 export default function ModalidadeInscricaoPage() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false); // Verificar se o usuário é admin
   const [filter, setFilter] = useState('all');
   const queryClient = useQueryClient();
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<Modalidade>();
 
   // Verificar se o `localStorage` está disponível no lado do cliente
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUserId = localStorage.getItem('userId');
+      const adminStatus = localStorage.getItem('isAdmin'); // Pega o valor de `isAdmin` do localStorage
+      
+      console.log('UserId no localStorage:', storedUserId); // Verificando UserId
+      console.log('AdminStatus no localStorage:', adminStatus); // Verificando AdminStatus
+
       if (storedUserId) {
         setUserId(storedUserId);
+        setIsAdmin(adminStatus === 'true'); // Verifica se o valor de `isAdmin` é "true"
+        
+        console.log('isAdmin após verificação:', adminStatus === 'true'); // Verificando se isAdmin está correto
       }
     }
   }, []);
@@ -80,7 +110,7 @@ export default function ModalidadeInscricaoPage() {
   });
 
   // Mutation para inscrever o usuário
-  const { mutate } = useMutation({
+  const { mutate: inscreverMutate } = useMutation({
     mutationFn: (modalidadeId: string) => inscreverUsuario({ userId: userId!, modalidadeId }),
     onSuccess: () => {
       queryClient.invalidateQueries(['modalidades', userId]);
@@ -91,8 +121,25 @@ export default function ModalidadeInscricaoPage() {
     },
   });
 
+  // Mutation para criar/editar modalidades
+  const { mutate: salvarModalidadeMutate } = useMutation({
+    mutationFn: (data: Modalidade) => salvarModalidade(data, !!data.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['modalidades', userId]);
+      toast.success('Modalidade salva com sucesso!');
+      reset();
+    },
+    onError: () => {
+      toast.error('Erro ao salvar modalidade.');
+    },
+  });
+
   const handleInscricao = (modalidadeId: string) => {
-    mutate(modalidadeId);
+    inscreverMutate(modalidadeId);
+  };
+
+  const handleSalvarModalidade = (data: Modalidade) => {
+    salvarModalidadeMutate(data);
   };
 
   if (isLoading) {
@@ -103,60 +150,94 @@ export default function ModalidadeInscricaoPage() {
     );
   }
 
-  const filteredModalidades = modalidades.filter((modalidade: { inscrito: boolean; }) => {
+  const filteredModalidades = modalidades.filter((modalidade: { inscrito: boolean }) => {
     if (filter === 'all') return true;
     return filter === 'inscrito' ? modalidade.inscrito : !modalidade.inscrito;
   });
 
   return (
     <>
-     <Header />
-    
-    <div className="container mx-auto p-4">
-     
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Modalidades</h1>
-        <div className="flex space-x-4">
-          <Select onValueChange={setFilter} defaultValue="all">
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="inscrito">Inscritas</SelectItem>
-              <SelectItem value="nao_inscrito">Não inscritas</SelectItem>
-            </SelectContent>
-          </Select>
+      <Header />
 
-         
+      <div className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Modalidades</h1>
+          <div className="flex space-x-4">
+            <Select onValueChange={setFilter} defaultValue="all">
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="inscrito">Inscritas</SelectItem>
+                <SelectItem value="nao_inscrito">Não inscritas</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Verificação de admin e exibição do botão de Nova Modalidade */}
+            {isAdmin && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button className="bg-blue-500 hover:bg-blue-600">Nova Modalidade</Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Nova Modalidade</SheetTitle>
+                  </SheetHeader>
+                  <form onSubmit={handleSubmit(handleSalvarModalidade)} className="space-y-4 mt-8">
+                    <div>
+                      <Label htmlFor="name">Nome</Label>
+                      <Input id="name" {...register('name', { required: true })} />
+                      {errors.name && <p className="text-red-500">Campo obrigatório</p>}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="schedule">Horário</Label>
+                      <Input id="schedule" {...register('schedule', { required: true })} />
+                      {errors.schedule && <p className="text-red-500">Campo obrigatório</p>}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="location">Local</Label>
+                      <Input id="location" {...register('location', { required: true })} />
+                      {errors.location && <p className="text-red-500">Campo obrigatório</p>}
+                    </div>
+
+                    <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
+                      Salvar Modalidade
+                    </Button>
+                  </form>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {filteredModalidades.length ? (
+            filteredModalidades.map((modalidade: Modalidade) => (
+              <Card key={modalidade.id}>
+                <CardHeader>
+                  <CardTitle>{modalidade.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">Horário: {modalidade.schedule}</p>
+                  <p className="text-sm">Local: {modalidade.location}</p>
+                  <Button
+                    onClick={() => handleInscricao(modalidade.id)}
+                    className="mt-4 w-full"
+                    disabled={modalidade.inscrito}
+                  >
+                    {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <p className="text-center col-span-full">Nenhuma modalidade disponível.</p>
+          )}
         </div>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {filteredModalidades.length ? (
-          filteredModalidades.map((modalidade: { id: Key | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; schedule: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; location: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; inscrito: boolean | undefined; }) => (
-            <Card key={modalidade.id}>
-              <CardHeader>
-                <CardTitle>{modalidade.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">Horário: {modalidade.schedule}</p>
-                <p className="text-sm">Local: {modalidade.location}</p>
-                <Button
-                  onClick={() => handleInscricao(modalidade.id)}
-                  className="mt-4 w-full"
-                  disabled={modalidade.inscrito}
-                >
-                  {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
-                </Button>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <p className="text-center col-span-full">Nenhuma modalidade disponível.</p>
-        )}
-      </div>
-    </div>
     </>
   );
 }
