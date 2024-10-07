@@ -70,13 +70,6 @@
       "description": "Esporte de equipe onde o objetivo é marcar pontos jogando a bola através do aro.",
       "schedule": "Terça e Quinta - 16:00 às 18:00",
       "location": "Ginásio"
-    },
-    {
-      "id": "3",
-      "name": "Vôlei",
-      "description": "Esporte de equipe jogado com uma bola, onde o objetivo é fazer a bola tocar o chão do adversário.",
-      "schedule": "Sexta - 18:00 às 20:00",
-      "location": "Quadra Coberta"
     }
   ],
   "tournaments": [
