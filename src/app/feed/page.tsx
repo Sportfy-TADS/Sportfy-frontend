@@ -6,8 +6,7 @@ import Header from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
-import { Home, User, Trophy, Heart, Settings, BarChart, Activity } from 'lucide-react'; // Importando ícones do lucide-react
+import Sidebar from '@/components/Sidebar';  // Importando o Sidebar
 
 interface Post {
   id: number;
@@ -68,49 +67,13 @@ export default function FeedPage() {
     }
   };
 
-  // Barra lateral de navegação com ícones (estilo Twitter)
-  const Sidebar = () => (
-    <nav className="w-full max-w-xs bg-gray-200 dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-      <ul className="space-y-6">
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/feed')}>
-          <Home className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Home</span>
-        </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/profile')}>
-          <User className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Perfil</span>
-        </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/goals')}>
-          <Activity className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Metas</span>
-        </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/achievements')}>
-          <Trophy className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Conquistas</span>
-        </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/healthWarning')}>
-          <Heart className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Saúde</span>
-        </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/Modality')}>
-          <Heart className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Modalidade</span>
-        </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/settings')}>
-          <Settings className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Configurações</span>
-        </li>
-      </ul>
-    </nav>
-  );
-
   return (
     <div>
       <Header />
       <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 p-4 lg:p-6">
-        {/* Barra lateral de navegação com ícones */}
+        {/* Barra lateral de navegação com ícones */} 
         <div className="lg:w-1/4 lg:pr-6">
-          <Sidebar />
+          <Sidebar /> {/* Utilizando o Sidebar */}
         </div>
 
         {/* Feed de Posts */}

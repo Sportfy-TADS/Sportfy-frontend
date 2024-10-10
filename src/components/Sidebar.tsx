@@ -1,10 +1,34 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, User, Trophy, Heart, Settings, Activity } from 'lucide-react'; // Ícones do lucide-react
+import { Home, User, Trophy, Heart, Settings, Activity, Shield } from 'lucide-react'; // Ícones
+
+async function fetchIsAdmin(userId: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
+  const user = await res.json();
+  return user.isAdmin;
+}
 
 const Sidebar = () => {
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        try {
+          const adminStatus = await fetchIsAdmin(storedUserId);
+          setIsAdmin(adminStatus);
+        } catch (error) {
+          console.error('Erro ao verificar status de administrador:', error);
+        }
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
 
   return (
     <nav className="w-full max-w-xs bg-gray-200 dark:bg-gray-800 p-4 rounded-lg shadow-lg">
@@ -37,6 +61,24 @@ const Sidebar = () => {
           <Settings className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Configurações</span>
         </li>
+
+        {/* Opções de Admin - Visível apenas para Administradores */}
+        {isAdmin && (
+          <>
+            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/users')}>
+              <Shield className="w-6 h-6 text-red-500" />
+              <span className="text-lg font-semibold">Gerenciar Usuários</span>
+            </li>
+            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/modalidades')}>
+              <Shield className="w-6 h-6 text-red-500" />
+              <span className="text-lg font-semibold">Gerenciar Modalidades</span>
+            </li>
+            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/health-centers')}>
+              <Shield className="w-6 h-6 text-red-500" />
+              <span className="text-lg font-semibold">Gerenciar Casas de Saúde</span>
+            </li>
+          </>
+        )}
       </ul>
     </nav>
   );

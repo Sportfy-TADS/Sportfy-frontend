@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';  // Importando Sidebar
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea"; // Usando Textarea para melhorar o campo de texto
+import { Textarea } from "@/components/ui/textarea"; 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
 import { useRouter } from 'next/navigation';
@@ -120,9 +121,14 @@ export default function ProfilePage() {
   return (
     <div>
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4 lg:p-6">
-        <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Seção de informações do usuário */}
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 p-4 lg:p-6">
+        {/* Barra lateral de navegação */}
+        <div className="lg:w-1/4 lg:pr-6">
+          <Sidebar /> {/* Usando o Sidebar */}
+        </div>
+
+        {/* Conteúdo do perfil */}
+        <div className="lg:w-3/4 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <Card className="shadow-lg">
               <CardHeader className="flex items-center space-x-4">
@@ -153,25 +159,18 @@ export default function ProfilePage() {
                     <p className="text-sm">{achievement.description}</p>
                   </div>
                 ))}
-                <Link href="profile/tournament" >Conquistas</Link>
+                <Link href="/profile/tournament" >Conquistas</Link>
               </CardContent>
             </Card>
 
-            {/* Conquistas */}
+            {/* Competições */}
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="text-xl font-bold">Competições</CardTitle>
               </CardHeader>
               <CardContent>
-                {achievements.map(achievement => (
-                  <div key={achievement.id} className="mb-2">
-                    <h3 className="font-semibold">{achievement.title}</h3>
-                    <p className="text-sm">{achievement.description}</p>
-                  </div>
-                ))}
-                <Link href="profile/tournament" >Historico</Link>
+                <Link href="/profile/tournament" >Ver Competição</Link>
               </CardContent>
-              
             </Card>
 
             {/* Metas */}
@@ -187,13 +186,13 @@ export default function ProfilePage() {
                     <p className="text-sm">Status: {goal.status === "completed" ? "Concluída" : "Em Andamento"}</p>
                   </div>
                 ))}
-                <Link href="profile/tournament" >Ver Metas</Link>
+                <Link href="/profile/goals" >Ver Metas</Link>
               </CardContent>
             </Card>
           </div>
 
           {/* Feed de Posts */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-1 space-y-4">
             <Card className="shadow-lg">
               <CardContent>
                 <Textarea
