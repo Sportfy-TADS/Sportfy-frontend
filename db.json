@@ -176,6 +176,12 @@
       "date": "2024-08-23",
       "content": "Não vejo a hora do próximo torneio!",
       "image": "https://via.placeholder.com/400x200"
+    },
+    {
+      "id": 3,
+      "author": "Usuário Atual",
+      "date": "2024-10-10T01:55:32.848Z",
+      "content": "teste"
     }
   ],
   "inscricoes": [

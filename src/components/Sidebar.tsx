@@ -31,7 +31,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <nav className="w-full max-w-xs bg-gray-200 dark:bg-gray-800 p-4 rounded-lg shadow-lg">
+    <nav className="w-full max-w-xs bg-gray-200 dark:bg-gray-900 p-4 border-none shadow-none">
       <ul className="space-y-6">
         <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/feed')}>
           <Home className="w-6 h-6 text-blue-500" />
@@ -65,9 +65,9 @@ const Sidebar = () => {
         {/* Opções de Admin - Visível apenas para Administradores */}
         {isAdmin && (
           <>
-            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/users')}>
+            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin')}>
               <Shield className="w-6 h-6 text-red-500" />
-              <span className="text-lg font-semibold">Gerenciar Usuários</span>
+              <span className="text-lg font-semibold">Gerenciar Administradores</span>
             </li>
             <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/modalidades')}>
               <Shield className="w-6 h-6 text-red-500" />
