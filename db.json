@@ -31,6 +31,14 @@
       "username": "LuizAdmin",
       "password": "123456",
       "isAdmin": true
+    },
+    {
+      "id": "35f9",
+      "name": "Rafaela",
+      "email": "rafaela@ufpr.br",
+      "username": "rafaela1",
+      "password": "123456",
+      "isAdmin": true
     }
   ],
   "achievements": [
@@ -61,7 +69,7 @@
       "id": "1",
       "name": "Futebol",
       "description": "Esporte de equipe jogado com uma bola em um campo retangular.",
-      "schedule": "Segunda e Quarta - 18:00 às 20:00",
+      "schedule": "Segunda e Quarta - 18:00 às 22:00",
       "location": "Campo Principal"
     },
     {
