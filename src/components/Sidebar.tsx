@@ -25,4 +25,21 @@ const Sidebar = () => {
           <Trophy className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Conquistas</span>
         </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/healthWarning
+        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/healthWarning')}>
+          <Heart className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Saúde</span>
+        </li>
+        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/Modality')}>
+          <Heart className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Modalidade</span>
+        </li>
+        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/settings')}>
+          <Settings className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Configurações</span>
+        </li>
+      </ul>
+    </nav>
+  );
+};
+
+export default Sidebar;
