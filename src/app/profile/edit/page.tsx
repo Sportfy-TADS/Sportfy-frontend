@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Pencil, UploadCloud } from 'lucide-react'; // Importando ícones
+import { UploadCloud } from 'lucide-react'; // Importando ícones
 import Header from '@/components/Header';
 import {
   Select,
@@ -20,26 +20,32 @@ export default function EditProfilePage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [gender, setGender] = useState('');
+  const [phone, setPhone] = useState('');
+  const [course, setCourse] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [profileImage, setProfileImage] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
+      const academicoId = localStorage.getItem('academicoId');
+      if (!academicoId) {
         router.push('/auth');
         return;
       }
       
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${academicoId}`);
         const user = await res.json();
-        setName(user.name);
+        setName(user.nome);
         setEmail(user.email);
         setPassword(user.password);
-        setGender(user.gender);
-        setProfileImage(user.profileImage || '');
+        setGender(user.genero);
+        setPhone(user.telefone);
+        setCourse(user.curso);
+        setBirthDate(user.dataNascimento);
+        setProfileImage(user.foto || '');
       } catch (e) {
         setError('Erro ao carregar os dados do usuário');
       }
@@ -48,22 +54,39 @@ export default function EditProfilePage() {
   }, [router]);
 
   const handleUpdate = async () => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
+    const academicoId = localStorage.getItem('academicoId');
+    if (!academicoId) {
       setError('Usuário não autenticado');
       return;
     }
 
+    const updatedUserData = {
+      idAcademico: parseInt(academicoId, 10),
+      curso: course || 'N/A',  // Certificando-se de que o curso não está vazio
+      email: email,
+      username: name, // Certifique-se de que o username está correto
+      password: password,
+      nome: name,
+      genero: gender || 'outros',  // Definindo um valor padrão
+      telefone: phone || '',  // Definindo telefone como vazio se não preenchido
+      dataNascimento: birthDate || null,  // Permitir nulo para data de nascimento
+      foto: profileImage || null,  // Enviando `null` se não houver imagem
+      ativo: true,  // Definindo como ativo
+    };
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/atualizar/${academicoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, gender, profileImage }),
+        body: JSON.stringify(updatedUserData),
       });
+
       if (res.ok) {
         alert('Perfil atualizado com sucesso!');
         router.push('/profile');
       } else {
+        const errorData = await res.json();
+        console.error('Erro ao atualizar o perfil:', errorData);
         setError('Erro ao atualizar o perfil');
       }
     } catch (e) {
@@ -153,12 +176,46 @@ export default function EditProfilePage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Telefone</label>
+                  <Input
+                    type="text"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Telefone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Curso</label>
+                  <Input
+                    type="text"
+                    className="w-full p-2 text-black dark:text-white"
+                    placeholder="Curso"
+                    value={course}
+                    onChange={(e) => setCourse(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Data de Nascimento</label>
+                <Input
+                  type="date"
+                  className="w-full p-2 text-black dark:text-white"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                />
+              </div>
+
               <div className="mt-4">
                 <label className="block text-sm font-semibold mb-2 text-black dark:text-white">URL da Imagem de Perfil</label>
                 <Input
                   type="text"
                   className="w-full p-2 text-black dark:text-white"
-                  placeholder="URL da Imagem de Perfil"
+                  placeholder="URL da Imagem"
                   value={profileImage}
                   onChange={(e) => setProfileImage(e.target.value)}
                 />

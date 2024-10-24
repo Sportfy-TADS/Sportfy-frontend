@@ -1,209 +1,198 @@
 {
-  "users": [
+  "academicos": [
     {
-      "id": "6ae9",
-      "email": "diego@ufpr.br",
-      "username": "diego",
-      "password": "1234"
-    },
-    {
-      "name": "Thiago dos Santos",
-      "email": "thiago1@ufpr.br",
+      "idAcademico": 1,
+      "nome": "Thiago dos Santos",
       "username": "thiago1",
-      "password": "123456",
-      "gender": "masculino",
-      "profileImage": "https://www.github.com/IamThiago-IT.png",
-      "id": "7203"
+      "telefone": "123456789",
+      "dataNascimento": "1990-05-10",
+      "email": "thiago1@ufpr.br",
+      "foto": "https://www.github.com/IamThiago-IT.png"
     },
     {
-      "id": "1",
-      "name": "Admin User",
-      "username": "admin",
-      "email": "admin@ufpr.br",
-      "password": "123456",
-      "isAdmin": true,
-      "profileImage": "https://www.github.com/IamThiago-IT.png"
-    },
-    {
-      "id": "544f",
-      "name": "Luiz",
-      "email": "luiz@ufpr.br",
+      "idAcademico": 2,
+      "nome": "Luiz Admin",
       "username": "LuizAdmin",
-      "password": "123456",
-      "isAdmin": true
-    },
-    {
-      "id": "35f9",
-      "name": "Rafaela",
-      "email": "rafaela@ufpr.br",
-      "username": "rafaela1",
-      "password": "123456",
-      "isAdmin": true
+      "telefone": "987654321",
+      "dataNascimento": "1988-09-15",
+      "email": "luiz@ufpr.br",
+      "foto": "https://via.placeholder.com/150"
     }
   ],
-  "achievements": [
+  "administradores": [
     {
-      "id": "1",
-      "userId": 1,
-      "title": "Primeira Inscrição",
-      "description": "Inscreva-se em uma modalidade pela primeira vez.",
-      "category": "Modalidades"
+      "idAdministrador": 1,
+      "usuario": {
+        "idAcademico": 1,
+        "username": "thiago1",
+        "nome": "Thiago dos Santos",
+        "telefone": "123456789",
+        "dataNascimento": "1990-05-10",
+        "foto": "https://www.github.com/IamThiago-IT.png"
+      }
     },
     {
-      "id": "2",
-      "userId": 1,
-      "title": "Primeira Meta Concluída",
-      "description": "Complete sua primeira meta.",
-      "category": "Metas"
-    },
-    {
-      "id": "3",
-      "userId": null,
-      "title": "Campeão de Torneio",
-      "description": "Vença um torneio oficial.",
-      "category": "Sistema"
+      "idAdministrador": 2,
+      "usuario": {
+        "idAcademico": 2,
+        "username": "LuizAdmin",
+        "nome": "Luiz Admin",
+        "telefone": "987654321",
+        "dataNascimento": "1988-09-15",
+        "foto": "https://via.placeholder.com/150"
+      }
     }
   ],
-  "sports": [
+  "apoiosSaude": [
     {
-      "id": "1",
-      "name": "Futebol",
-      "description": "Esporte de equipe jogado com uma bola em um campo retangular.",
-      "schedule": "Segunda e Quarta - 18:00 às 22:00",
-      "location": "Campo Principal"
-    },
-    {
-      "id": "2",
-      "name": "Basquete",
-      "description": "Esporte de equipe onde o objetivo é marcar pontos jogando a bola através do aro.",
-      "schedule": "Terça e Quinta - 16:00 às 18:00",
-      "location": "Ginásio"
+      "idApoioSaude": 1,
+      "nome": "Clínica Saúde Bem",
+      "email": "contato@clinicasaudebem.com",
+      "telefone": "987654321",
+      "descricao": "Oferecemos apoio psicológico e nutricional.",
+      "dataPublicacao": "2024-09-20T10:00:00Z",
+      "administrador": {
+        "idAdministrador": 1,
+        "usuario": {
+          "idAcademico": 1,
+          "username": "thiago1",
+          "nome": "Thiago dos Santos",
+          "telefone": "123456789",
+          "dataNascimento": "1990-05-10",
+          "foto": "https://www.github.com/IamThiago-IT.png"
+        }
+      }
     }
   ],
-  "tournaments": [
+  "campeonatos": [
     {
-      "id": "1",
-      "name": "Torneio de Verão",
-      "date": "2024-08-01",
-      "status": "Concluído",
-      "location": "Estádio UFPR",
-      "userId": 7203
-    },
-    {
-      "id": "2",
-      "name": "Torneio de Inverno",
-      "date": "2024-12-01",
-      "status": "Em Andamento",
-      "location": "Ginásio UFPR",
-      "userId": 7203
+      "idCampeonato": 1,
+      "codigo": "CAM2024",
+      "titulo": "Campeonato de Futebol",
+      "descricao": "Campeonato regional de futebol.",
+      "aposta": "R$ 10,00",
+      "dataCriacao": "2024-09-20T10:00:00Z",
+      "dataInicio": "2024-10-01T10:00:00Z",
+      "dataFim": "2024-11-30T10:00:00Z",
+      "limiteTimes": 16,
+      "limiteParticipantes": 100,
+      "ativo": true,
+      "endereco": {
+        "idEndereco": 1,
+        "rua": "Avenida Principal",
+        "numero": "123",
+        "cidade": "Cidade Exemplo",
+        "estado": "Estado Exemplo",
+        "cep": "12345-678"
+      },
+      "privacidadeCampeonato": "PUBLICO",
+      "academico": {
+        "idAcademico": 1,
+        "nome": "Thiago dos Santos",
+        "telefone": "123456789",
+        "dataNascimento": "1990-05-10",
+        "foto": "https://www.github.com/IamThiago-IT.png"
+      },
+      "modalidadeEsportiva": {
+        "idModalidadeEsportiva": 1,
+        "nome": "Futebol"
+      },
+      "situacaoCampeonato": "EM_ANDAMENTO",
+      "partidas": [
+        {
+          "idPartida": 1,
+          "dataPartida": "2024-10-05T10:00:00Z",
+          "local": "Estádio Municipal"
+        }
+      ]
     }
   ],
-  "matches": [
+  "canais": [
     {
-      "id": "1",
-      "sport": "Futebol",
-      "opponent": "Equipe B",
-      "date": "2024-09-14",
-      "result": "Vencido"
-    },
-    {
-      "id": "2",
-      "sport": "Basquete",
-      "opponent": "Time C",
-      "date": "2024-09-16",
-      "result": "Perdido"
-    },
-    {
-      "id": "3",
-      "sport": "Vôlei",
-      "opponent": "Equipe A",
-      "date": "2024-09-17",
-      "result": "Empate"
-    }
-  ],
-  "teams": [
-    {
-      "id": "1",
-      "name": "Equipe A",
-      "members": [
-        "Alice",
-        "Bob",
-        "Charlie"
+      "idCanal": 1,
+      "tipoCanal": "CANAL_PUBLICO",
+      "listaUsuarioCanal": [
+        {
+          "idUsuarioCanal": 1,
+          "usuario": {
+            "idAcademico": 1,
+            "username": "thiago1"
+          }
+        }
       ],
-      "competition": "Campeonato de Verão",
-      "status": "Concluída"
-    },
-    {
-      "id": "2",
-      "name": "Equipe B",
-      "members": [
-        "David",
-        "Eve",
-        "Frank"
-      ],
-      "competition": "Torneio de Inverno",
-      "status": "Em Andamento"
+      "listaPublicacao": [
+        {
+          "idPublicacao": 1,
+          "titulo": "Publicação 1",
+          "conteudo": "Conteúdo da publicação 1"
+        }
+      ]
     }
   ],
-  "settings": [
+  "comentarios": [
     {
-      "id": "1",
-      "userId": 7203,
-      "notifications": true,
-      "preferences": false,
-      "language": "en",
-      "notifyNewPosts": true,
-      "notifyLikes": false,
-      "notifyNewChampionships": true,
-      "notifyComments": false,
-      "privacyDetails": true,
-      "privacyHistory": true,
-      "privacyStats": true,
-      "privacyAchievements": true
+      "idComentario": 1,
+      "descricao": "Ótimo campeonato!",
+      "dataComentario": "2024-09-20T10:00:00Z",
+      "publicacao": {
+        "idPublicacao": 1,
+        "titulo": "Publicação 1"
+      },
+      "usuario": {
+        "idAcademico": 1,
+        "username": "thiago1"
+      },
+      "listaCurtidaComentario": [
+        {
+          "idCurtidaComentario": 1,
+          "usuario": {
+            "idAcademico": 1,
+            "username": "thiago1"
+          }
+        }
+      ]
     }
   ],
-  "posts": [
+  "conquistas": [
     {
-      "id": "7203",
-      "author": "Thiago1",
-      "date": "2024-08-24",
-      "content": "Hoje participei de uma competição incrível! 🎉",
-      "image": "https://via.placeholder.com/400x200"
-    },
-    {
-      "id": "2",
-      "author": "Maria",
-      "date": "2024-08-23",
-      "content": "Não vejo a hora do próximo torneio!",
-      "image": "https://via.placeholder.com/400x200"
-    },
-    {
-      "id": 3,
-      "author": "Usuário Atual",
-      "date": "2024-10-10T01:55:32.848Z",
-      "content": "teste"
+      "idConquista": 1,
+      "dataConquista": "2024-09-20T10:00:00Z",
+      "academico": {
+        "idAcademico": 1,
+        "nome": "Thiago dos Santos",
+        "telefone": "123456789",
+        "dataNascimento": "1990-05-10",
+        "foto": "https://www.github.com/IamThiago-IT.png"
+      },
+      "metaEsportiva": {
+        "idMetaEsportiva": 1,
+        "descricao": "Completar 10 treinos de natação em um mês",
+        "dataMeta": "2024-10-01"
+      }
     }
   ],
-  "inscricoes": [
+  "notificacoes": [
     {
-      "id": "1",
-      "userId": "7203",
-      "modalidadeId": "1"
-    },
+      "idNotificacao": 1,
+      "titulo": "Nova Atualização",
+      "mensagem": "O campeonato começará em breve.",
+      "dataNotificacao": "2024-09-20T10:00:00Z",
+      "academico": {
+        "idAcademico": 1,
+        "nome": "Thiago dos Santos"
+      }
+    }
+  ],
+  "privacidades": [
     {
-      "id": "2",
-      "userId": "1",
-      "modalidadeId": "2"
-    },
+      "idPrivacidade": 1,
+      "nivelPrivacidade": "PUBLICO"
+    }
+  ],
+  "times": [
     {
-      "id": "cb45",
-      "userId": "1",
-      "modalidadeId": "1"
-    },
-    {
-      "id": "8be3",
-      "userId": "7203",
-      "modalidadeId": "2"
+      "idTime": 1,
+      "nome": "Time A"
     }
   ]
 }

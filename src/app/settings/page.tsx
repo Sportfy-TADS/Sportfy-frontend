@@ -32,6 +32,7 @@ import { ModeToggle } from '@/components/theme';
 import { useTheme } from 'next-themes';
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { toast } from 'sonner'; // Usar para notificação de sucesso
+import Sidebar from '@/components/Sidebar'; // Importando a Sidebar
 
 // ID do usuário autenticado
 const userId = 7203; // Em uma aplicação real, o ID viria de um contexto ou autenticação
@@ -125,137 +126,147 @@ export default function SettingsPage() {
   return (
     <>
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-[#202024] transition-colors p-4">
-        <div className="w-full max-w-md bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md p-6 m-4 sm:w-4/5 md:w-3/4 lg:w-1/2 xl:w-1/3 transition-colors">
-          <h1 className="text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-6">
-            Configurações do Sistema
-          </h1>
+      <div className="flex min-h-screen bg-white dark:bg-gray-800 transition-colors">
+        {/* Sidebar */}
+        <Sidebar />
 
-          <div className="mb-4">
-            <ModeToggle />
+        {/* Conteúdo da Página */}
+        <div className="flex flex-col items-center justify-center w-full p-4">
+          <div className="w-full max-w-md bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md p-6 m-4 sm:w-4/5 md:w-3/4 lg:w-1/2 xl:w-1/3 transition-colors">
+            <h1 className="text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-6">
+              Configurações do Sistema
+            </h1>
+
+            <div className="mb-4">
+              <ModeToggle />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-semibold mb-2 dark:text-white">Idioma:</label>
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o Idioma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="en">Inglês</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Configurações de Notificações */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button className="w-full mb-4">Configurações das Modalidades</Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Modalidades</SheetTitle>
+                </SheetHeader>
+                
+                <div className="mt-4">
+                  <Checkbox
+                    checked={notifyNewChampionships}
+                    onCheckedChange={handleCheckedChange(setNotifyNewChampionships)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Notificar sobre novos campeonatos nas modalidades que estou inscrito</span>
+                </div>
+                <div className="mt-2">
+                  <Checkbox
+                    checked={notifyNewPosts}
+                    onCheckedChange={handleCheckedChange(setNotifyNewPosts)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Notificar sobre novos posts criados nas modalidades</span>
+                </div>
+                <div className="mt-2">
+                  <Checkbox
+                    checked={notifyComments}
+                    onCheckedChange={handleCheckedChange(setNotifyComments)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Notificar sobre comentários feitos nos meus posts</span>
+                </div>
+                <div className="mt-2">
+                  <Checkbox
+                    checked={notifyLikes}
+                    onCheckedChange={handleCheckedChange(setNotifyLikes)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Notificar sobre likes nos meus posts</span>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Configurações de Privacidade */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button className="w-full mb-4">Configurações de Privacidade</Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Privacidade</SheetTitle>
+                </SheetHeader>
+                
+                <div className="mt-4">
+                  <Checkbox
+                    checked={privacyDetails}
+                    onCheckedChange={handleCheckedChange(setPrivacyDetails)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Permitir que outros usuários vejam detalhes das minhas modalidades</span>
+                </div>
+                <div className="mt-2">
+                  <Checkbox
+                    checked={privacyHistory}
+                    onCheckedChange={handleCheckedChange(setPrivacyHistory)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Permitir que outros usuários acessem meu histórico de campeonatos</span>
+                </div>
+                <div className="mt-2">
+                  <Checkbox
+                    checked={privacyStats}
+                    onCheckedChange={handleCheckedChange(setPrivacyStats)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Permitir que outros usuários vejam minhas estatísticas esportivas</span>
+                </div>
+                <div className="mt-2">
+                  <Checkbox
+                    checked={privacyAchievements}
+                    onCheckedChange={handleCheckedChange(setPrivacyAchievements)}
+                    className="mr-2"
+                  />
+                  <span className="dark:text-white">Permitir que outros usuários vejam minhas conquistas</span>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Button onClick={handleSave} className="w-full bg-emerald-600 hover:bg-emerald-500">
+              Salvar Configurações
+            </Button>
+            
+            <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar Salvamento</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza de que deseja salvar as configurações?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowDialog(false)}>
+                    Cancelar
+                  </AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmSave}>
+                    Confirmar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-semibold mb-2 dark:text-white">Idioma:</label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o Idioma" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pt">Português</SelectItem>
-                <SelectItem value="en">Inglês</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Configurações de Notificações */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="w-full mb-4">Configurações das Modalidades</Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Modalidades</SheetTitle>
-              </SheetHeader>
-              
-              <div className="mt-4">
-                <Checkbox
-                  checked={notifyNewChampionships}
-                  onCheckedChange={handleCheckedChange(setNotifyNewChampionships)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Notificar sobre novos campeonatos nas modalidades que estou inscrito</span>
-              </div>
-              <div className="mt-2">
-                <Checkbox
-                  checked={notifyNewPosts}
-                  onCheckedChange={handleCheckedChange(setNotifyNewPosts)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Notificar sobre novos posts criados nas modalidades</span>
-              </div>
-              <div className="mt-2">
-                <Checkbox
-                  checked={notifyComments}
-                  onCheckedChange={handleCheckedChange(setNotifyComments)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Notificar sobre comentários feitos nos meus posts</span>
-              </div>
-              <div className="mt-2">
-                <Checkbox
-                  checked={notifyLikes}
-                  onCheckedChange={handleCheckedChange(setNotifyLikes)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Notificar sobre likes nos meus posts</span>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          {/* Configurações de Privacidade */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="w-full mb-4">Configurações de Privacidade</Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Privacidade</SheetTitle>
-              </SheetHeader>
-              
-              <div className="mt-4">
-                <Checkbox
-                  checked={privacyDetails}
-                  onCheckedChange={handleCheckedChange(setPrivacyDetails)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Permitir que outros usuários vejam detalhes das minhas modalidades</span>
-              </div>
-              <div className="mt-2">
-                <Checkbox
-                  checked={privacyHistory}
-                  onCheckedChange={handleCheckedChange(setPrivacyHistory)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Permitir que outros usuários acessem meu histórico de campeonatos</span>
-              </div>
-              <div className="mt-2">
-                <Checkbox
-                  checked={privacyStats}
-                  onCheckedChange={handleCheckedChange(setPrivacyStats)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Permitir que outros usuários vejam minhas estatísticas esportivas</span>
-              </div>
-              <div className="mt-2">
-                <Checkbox
-                  checked={privacyAchievements}
-                  onCheckedChange={handleCheckedChange(setPrivacyAchievements)}
-                  className="mr-2"
-                />
-                <span className="dark:text-white">Permitir que outros usuários vejam minhas conquistas</span>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <Button onClick={handleSave} className="w-full bg-emerald-600 hover:bg-emerald-500">
-            Salvar Configurações
-          </Button>
-          
-          <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar Salvamento</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tem certeza de que deseja salvar as configurações?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setShowDialog(false)}>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmSave}>Confirmar</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
     </>

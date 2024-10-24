@@ -18,13 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { format } from 'date-fns';
 
-// Esquema de validação para username, email, password e gender
+// Esquema de validação
 const signUpSchema = z.object({
+  curso: z.string().min(3, "O curso deve ter pelo menos 3 caracteres"),
   username: z.string().min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
   email: z.string().email().regex(/@ufpr\.br$/, "Email deve ser do domínio @ufpr.br"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  gender: z.enum(["masculino", "feminino", "outros"]),
+  nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  telefone: z.string().min(10, "Telefone deve ter pelo menos 10 caracteres"),
+  dataNascimento: z.string(),
 });
 
 type SignUpSchema = z.infer<typeof signUpSchema>;
@@ -40,19 +43,31 @@ export default function RegisterPage() {
     resolver: zodResolver(signUpSchema),
   });
 
-  const { mutateAsync: registerUser } = useMutation({
-    mutationFn: async ({ username, email, password, gender }: SignUpSchema) => {
-      // Verificar o que está sendo enviado ao servidor
-      console.log("Dados enviados para registro:", { username, email, password, gender });
+  // Mutação para registrar o acadêmico
+  const { mutateAsync: registerAcademico } = useMutation({
+    mutationFn: async ({ curso, username, email, nome, telefone, dataNascimento }: SignUpSchema) => {
+      const payload = {
+        curso,
+        nome,
+        username,
+        telefone,
+        dataNascimento: format(new Date(dataNascimento), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
+        email,
+        foto: null,
+      };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+      // Log dos dados enviados ao backend
+      console.log("Enviando dados ao backend:", payload);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/cadastrar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, gender }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        console.error("Erro ao registrar:", await res.text()); // Logar o erro da API
+        const error = await res.json();
+        console.error("Erro ao registrar:", error);
         throw new Error('Erro no registro');
       }
 
@@ -62,19 +77,22 @@ export default function RegisterPage() {
 
   const handleRegister = async (data: SignUpSchema) => {
     try {
-      console.log("Iniciando registro com os dados:", data);
-      await registerUser(data);
+      // Envio dos dados para o backend
+      await registerAcademico(data);
 
+      // Exibe notificação de sucesso com o Sonner
       toast.success('Registro bem-sucedido!', {
         action: {
           label: 'Login',
-          onClick: () => {
-            router.push(`/auth?username=${data.username}`);
-          },
+          onClick: () => router.push(`/auth?username=${data.username}`),  // Redireciona para login
         },
       });
+
+      // Redireciona para a página de login
+      setTimeout(() => {
+        router.push('/auth');
+      }, 2000);  // Espera 2 segundos antes de redirecionar
     } catch (err) {
-      console.error("Erro no processo de registro:", err);
       toast.error(err instanceof Error ? err.message : 'Erro inesperado');
     }
   };
@@ -84,7 +102,7 @@ export default function RegisterPage() {
       {/* Barra lateral esquerda para telas maiores */}
       <div className="relative hidden h-full flex-col border-r border-foreground/5 bg-muted p-10 text-muted-foreground dark:border-r lg:flex">
         <div className="flex items-center gap-3 text-lg font-medium text-foreground">
-          <Medal className="h-5 w-5" /> {/* Ícone Medal do lucide-react */}
+          <Medal className="h-5 w-5" />
           <span className="font-semibold">sportfy.app</span>
         </div>
         <div className="mt-auto">
@@ -120,6 +138,20 @@ export default function RegisterPage() {
             <div className="grid gap-6">
               <form onSubmit={handleSubmit(handleRegister)}>
                 <div className="grid gap-4">
+                  {/* Curso */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="curso">Curso</Label>
+                    <Input
+                      id="curso"
+                      type="text"
+                      autoCapitalize="none"
+                      autoComplete="curso"
+                      autoCorrect="off"
+                      {...register('curso')}
+                    />
+                  </div>
+
+                  {/* Nome de usuário */}
                   <div className="grid gap-2">
                     <Label htmlFor="username">Nome de Usuário</Label>
                     <Input
@@ -132,6 +164,7 @@ export default function RegisterPage() {
                     />
                   </div>
 
+                  {/* Email */}
                   <div className="grid gap-2">
                     <Label htmlFor="email">Seu e-mail</Label>
                     <Input
@@ -144,33 +177,47 @@ export default function RegisterPage() {
                     />
                   </div>
 
+                  {/* Nome completo */}
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Sua senha</Label>
+                    <Label htmlFor="nome">Nome Completo</Label>
                     <Input
-                      id="password"
-                      type="password"
+                      id="nome"
+                      type="text"
                       autoCapitalize="none"
-                      autoComplete="current-password"
+                      autoComplete="nome"
                       autoCorrect="off"
-                      {...register('password')}
+                      {...register('nome')}
                     />
                   </div>
 
+                  {/* Telefone */}
                   <div className="grid gap-2">
-                    <Label htmlFor="gender">Gênero</Label>
-                    <Select onValueChange={value => register('gender').onChange({ target: { value } })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Escolha seu gênero" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="masculino">Masculino</SelectItem>
-                        <SelectItem value="feminino">Feminino</SelectItem>
-                        <SelectItem value="outros">Outros</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="telefone">Telefone</Label>
+                    <Input
+                      id="telefone"
+                      type="tel"
+                      autoCapitalize="none"
+                      autoComplete="telefone"
+                      autoCorrect="off"
+                      {...register('telefone')}
+                    />
                   </div>
 
-                  <Button type="submit" disabled={isSubmitting}>
+                  {/* Data de nascimento */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                    <Input
+                      id="dataNascimento"
+                      type="date"
+                      {...register('dataNascimento')}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    onClick={() => console.log("Botão de registro clicado!")}
+                  >
                     Registrar
                   </Button>
                 </div>

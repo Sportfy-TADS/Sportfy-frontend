@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';  // Importando Sidebar
+import Sidebar from '@/components/Sidebar'; // Importando Sidebar
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea"; 
 import { Button } from "@/components/ui/button";
@@ -51,27 +51,36 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId) return;
+      const academicoId = localStorage.getItem('academicoId'); // Use 'academicoId' do localStorage
+      if (!academicoId) return;
 
       try {
-        const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
+        // Buscar dados do acadêmico
+        const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${academicoId}`);
+        if (!userResponse.ok) throw new Error("Erro ao buscar dados do acadêmico");
         const userData = await userResponse.json();
         setUser(userData);
 
-        const achievementsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/achievements?userId=${userId}`);
+        // Buscando conquistas do acadêmico
+        const achievementsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conquistas?academicoId=${academicoId}`);
+        if (!achievementsResponse.ok) throw new Error("Erro ao buscar conquistas");
         const achievementsData = await achievementsResponse.json();
         setAchievements(achievementsData);
 
-        const goalsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals?userId=${userId}`);
+        // Buscando metas do acadêmico
+        const goalsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/metas?userId=${academicoId}`);
+        if (!goalsResponse.ok) throw new Error("Erro ao buscar metas");
         const goalsData = await goalsResponse.json();
         setGoals(goalsData);
 
-        const postsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`);
+        // Buscando posts do acadêmico
+        const postsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts?author=${userData.username}`);
+        if (!postsResponse.ok) throw new Error("Erro ao buscar posts");
         const postsData = await postsResponse.json();
-        setPosts(postsData.filter((post: Post) => post.author === userData.username));
+        setPosts(postsData);
+
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
+        console.error('Erro ao buscar dados do acadêmico:', error);
       }
     };
 
@@ -143,6 +152,10 @@ export default function ProfilePage() {
                   <CardTitle className="text-xl font-bold">{user.username}</CardTitle>
                   <p className="text-sm text-gray-500">{user.email}</p>
                   <p className="text-sm text-gray-500">{user.gender?.charAt(0).toUpperCase() + user.gender?.slice(1)}</p>
+                  {/* Botão para editar o perfil */}
+                  <Button onClick={() => router.push('/profile/edit')} className="mt-2 bg-blue-500 hover:bg-blue-600 text-white">
+                    Editar Perfil
+                  </Button>
                 </div>
               </CardHeader>
             </Card>
@@ -159,7 +172,7 @@ export default function ProfilePage() {
                     <p className="text-sm">{achievement.description}</p>
                   </div>
                 ))}
-                <Link href="/profile/tournament" >Conquistas</Link>
+                <Link href="/profile/tournament">Conquistas</Link>
               </CardContent>
             </Card>
 
@@ -169,7 +182,7 @@ export default function ProfilePage() {
                 <CardTitle className="text-xl font-bold">Competições</CardTitle>
               </CardHeader>
               <CardContent>
-                <Link href="/profile/tournament" >Ver Competição</Link>
+                <Link href="/profile/tournament">Ver Competição</Link>
               </CardContent>
             </Card>
 
@@ -186,7 +199,7 @@ export default function ProfilePage() {
                     <p className="text-sm">Status: {goal.status === "completed" ? "Concluída" : "Em Andamento"}</p>
                   </div>
                 ))}
-                <Link href="/profile/goals" >Ver Metas</Link>
+                <Link href="/profile/goals">Ver Metas</Link>
               </CardContent>
             </Card>
           </div>

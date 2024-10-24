@@ -57,6 +57,10 @@ const Sidebar = () => {
           <Heart className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Modalidade</span>
         </li>
+        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/championship')}> {/* Novo item "Campeonato" */}
+          <Trophy className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Campeonato</span>
+        </li>
         <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/settings')}>
           <Settings className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Configurações</span>

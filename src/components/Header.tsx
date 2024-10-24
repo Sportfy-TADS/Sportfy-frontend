@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,56 +17,59 @@ import { LogOut } from 'lucide-react';
 export default function Header() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [userName, setUserName] = useState(''); // Nome do usuário logado
-  const [userImage, setUserImage] = useState(''); // URL da imagem de perfil do usuário logado
+  const [userName, setUserName] = useState(''); // Nome do acadêmico logado
+  const [userImage, setUserImage] = useState(''); // URL da imagem de perfil do acadêmico logado
   const [searchTerm, setSearchTerm] = useState(''); // Para armazenar o valor da busca
   const [searchResults, setSearchResults] = useState<any[]>([]); // Resultados da busca
 
-  // Carregar os dados do usuário logado
+  // Carregar os dados do acadêmico logado
   useEffect(() => {
     const fetchUserData = async () => {
-      const userId = localStorage.getItem('userId');
+      const userId = localStorage.getItem('academicoId');
+      console.log("ID do usuário logado no localStorage:", userId); // Verificar se o userId foi recuperado corretamente
+
       if (!userId) {
         setIsLoggedIn(false);
         return;
       }
 
       try {
-        const response = await fetch(`http://localhost:3001/users/${userId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`);
         if (response.ok) {
           const userData = await response.json();
-          setUserName(userData.name);
-          setUserImage(userData.profileImage);
+          console.log("Dados do usuário logado:", userData); // Verificar os dados do usuário
+          setUserName(userData.nome);
+          setUserImage(userData.foto || ''); // Definir uma URL de imagem ou deixar vazio se não houver
         } else {
-          console.error('Erro ao buscar dados do usuário:', response.statusText);
+          console.error('Erro ao buscar dados do acadêmico:', response.statusText);
         }
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
+        console.error('Erro ao buscar dados do acadêmico:', error);
       }
     };
 
     fetchUserData();
   }, []);
 
-  // Função para realizar a busca de usuários
+  // Função para realizar a busca de acadêmicos
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
     if (term.length > 2) {
       try {
-        const response = await fetch(`http://localhost:3001/users?name_like=${term}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/listar?nome_like=${term}`);
         if (response.ok) {
           const data = await response.json();
           setSearchResults(data);
         }
       } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
+        console.error('Erro ao buscar acadêmicos:', error);
       }
     } else {
       setSearchResults([]);
     }
   };
 
-  // Redireciona para o perfil de um usuário
+  // Redireciona para o perfil de um acadêmico
   const handleUserSelect = (userId: string) => {
     setSearchResults([]);
     router.push(`/profile/${userId}`);
@@ -74,7 +77,9 @@ export default function Header() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem('userId');
+    localStorage.removeItem('token'); // Remove o token JWT
+    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('academicoId');
     router.push('/auth');
   };
 
@@ -84,6 +89,8 @@ export default function Header() {
 
   // Função para pegar as iniciais do nome
   const getInitials = (name: string) => {
+    console.log("Nome recebido para as iniciais:", name); // Verifique o nome recebido
+    if (!name) return ''; // Evita erro caso o nome não esteja disponível
     return name.split(' ').map((n) => n[0]).join('');
   };
 
@@ -95,7 +102,7 @@ export default function Header() {
       <div className="relative">
         <Input
           type="text"
-          placeholder="Buscar usuário..."
+          placeholder="Buscar acadêmico..."
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           className="w-64"
@@ -108,7 +115,7 @@ export default function Header() {
                 onClick={() => handleUserSelect(user.id)}
                 className="px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
               >
-                {user.name} ({user.username})
+                {user.nome} ({user.username})
               </div>
             ))}
           </div>
@@ -135,6 +142,7 @@ export default function Header() {
               <DropdownMenuItem onClick={() => router.push('/achievements')}>Conquistas</DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/goals')}>Metas</DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/healthWarning')}>Saúde</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/championships')}>Campeonatos</DropdownMenuItem> {/* Nova opção para Campeonato */}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-500">
                 Logout
