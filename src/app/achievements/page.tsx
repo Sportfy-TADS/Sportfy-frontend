@@ -4,60 +4,43 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
-
-interface Achievement {
-  id: number;
-  userId: string | null;
-  title: string;
-  description: string;
-  category: string;
-}
+import { Achievement } from '@/interface/types'
+import { fetchAchievements } from '@/http/achievements'
 
 export default function AchievementsPage() {
   const [userAchievements, setUserAchievements] = useState<Achievement[]>([]);
   const [globalAchievements, setGlobalAchievements] = useState<Achievement[]>([]);
-  const [userId, setUserId] = useState<string | null>(null); // Para armazenar o ID do usuário logado
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAchievements = async () => {
-      const storedUserId = localStorage.getItem('userId'); // Obtém o ID do usuário logado do localStorage
+    const fetchData = async () => {
+      const storedUserId = localStorage.getItem('userId');
       setUserId(storedUserId);
-
-      try {
-        // Buscando conquistas do backend
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conquista/listarConquistas/1`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Adicionando o token aqui
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Erro ao carregar conquistas');
+      const token = localStorage.getItem('token');
+      
+      if (storedUserId && token) {
+        try {
+          const achievementsData = await fetchAchievements(storedUserId, token);
+          const userSpecific = achievementsData.filter((ach: Achievement) => ach.userId === storedUserId);
+          const global = achievementsData.filter((ach: Achievement) => ach.userId === null);
+  
+          setUserAchievements(userSpecific);
+          setGlobalAchievements(global);
+        } catch (error) {
+          console.error('Erro ao carregar conquistas:', error);
         }
-
-        const achievementsData: Achievement[] = await response.json();
-
-        // Separando conquistas do usuário e conquistas globais
-        const userSpecific = achievementsData.filter((ach: Achievement) => ach.userId === storedUserId);
-        const global = achievementsData.filter((ach: Achievement) => ach.userId === null);
-
-        setUserAchievements(userSpecific);
-        setGlobalAchievements(global);
-      } catch (error) {
-        console.error('Erro ao carregar conquistas:', error);
       }
     };
-
-    fetchAchievements();
+  
+    fetchData();
   }, []);
+  
 
   return (
     <>
       <Header />
       <div className="flex min-h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar />
         <div className="container mx-auto p-4 flex-1">
           <h1 className="text-3xl font-bold mb-6 text-center">Suas Conquistas</h1>
 

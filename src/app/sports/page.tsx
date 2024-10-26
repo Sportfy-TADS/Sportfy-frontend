@@ -2,20 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-
-// Definindo a interface para o tipo Sport
-interface Sport {
-  id: number;
-  name: string;
-  description: string;
-  location: string;
-  schedule: string;
-}
+import { Sport } from '@/interface/types';  
 
 export default function SportsPage() {
-  const [sports, setSports] = useState<Sport[]>([]); // Usando a interface Sport para tipar o estado
-
-  // Carregar dados das modalidades do json-server
+  const [sports, setSports] = useState<Sport[]>([]); 
+  
   useEffect(() => {
     const fetchSports = async () => {
       try {
