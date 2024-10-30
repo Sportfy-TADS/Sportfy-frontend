@@ -11,12 +11,12 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Medal } from 'lucide-react'; // Ícone Medal para o estilo
-import {jwtDecode} from 'jwt-decode';  // Importação correta de jwt-decode
+import { jwtDecode } from 'jwt-decode';  // Importação correta de jwt-decode
 
 // Esquema de validação usando zod para username e password
 const signInSchema = z.object({
   username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
-  password: z.string().min(2, 'A senha deve ter pelo menos 6 caracteres'),
+  password: z.string().min(3, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
 type SignInSchema = z.infer<typeof signInSchema>;
@@ -39,81 +39,52 @@ export default function SignInPage() {
     resolver: zodResolver(signInSchema),
   });
 
-// Durante o login, decodifique o token JWT e armazene o ID do usuário
-const { mutateAsync: authenticateAcademico } = useMutation({
-  mutationFn: async ({ username, password }: SignInSchema) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
+  const { mutateAsync: authenticateAcademico } = useMutation({
+    mutationFn: async ({ username, password }: SignInSchema) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (!res.ok) {
-      throw new Error('Nome de usuário ou senha inválidos');
+      if (!res.ok) {
+        throw new Error('Nome de usuário ou senha inválidos');
+      }
+
+      const { token } = await res.json();
+      const decoded = jwtDecode(token);
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('academicoId', decoded.idUsuario.toString());
+
+      return decoded;
+    },
+    onSuccess: (decoded: DecodedToken) => {
+      toast.success('Login bem-sucedido!'); // Adicionando toast de sucesso
+      if (decoded.role === 'ADMIN') {
+        router.push('/admin-dashboard');
+      } else if (decoded.role === 'ACADEMICO') {
+        router.push('/feed');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erro ao fazer login.'); // Adicionando toast de erro
+    },
+  });
+
+  const handleLogin = async (data: SignInSchema) => {
+    try {
+      await authenticateAcademico(data); // Chamando a mutação
+    } catch (err) {
+      console.error('Erro no login:', err);
     }
-
-    // Extrair e decodificar o token JWT
-    const { token } = await res.json();
-    const decoded = jwtDecode(token);
-
-    // Verifique os dados decodificados
-    console.log('Usuário logado encontrado:', decoded);
-
-    // Salve o ID do usuário e outros dados no localStorage
-    localStorage.setItem('token', token);
-    localStorage.setItem('academicoId', decoded.idUsuario.toString()); // Certifique-se de salvar o ID como string
-    console.log('Usuário logado salvo no localStorage:', decoded.idUsuario);
-
-    // Redirecionar com base na role
-    if (decoded.role === 'ADMIN') {
-      router.push('/admin-dashboard');
-    } else if (decoded.role === 'ACADEMICO') {
-      router.push('/feed');
-    }
-  },
-});
-
-
-// Após o login bem-sucedido:
-const handleLogin = async (data: SignInSchema) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      throw new Error('Nome de usuário ou senha inválidos');
-    }
-
-    const { token } = await res.json();
-    console.log('Token JWT recebido:', token);
-
-    // Decodificar o token JWT
-    const decoded: DecodedToken = jwtDecode(token);
-    console.log('Dados decodificados do token:', decoded);
-
-    // Salvar o ID do usuário e outros dados no localStorage
-    localStorage.setItem('token', token);
-    localStorage.setItem('academicoId', decoded.idUsuario.toString());
-    console.log('Usuário logado salvo no localStorage:', decoded.idUsuario);
-
-    // Redirecionar para a página correta
-    router.push('/feed');
-  } catch (err) {
-    console.error('Erro no login:', err);
-  }
-};
-
-
+  };
 
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center antialiased lg:grid lg:grid-cols-2 lg:px-0">
-      {/* Barra lateral esquerda para telas maiores */}
       <div className="relative hidden h-full flex-col border-r border-foreground/5 bg-muted p-10 text-muted-foreground dark:border-r lg:flex">
         <div className="flex items-center gap-3 text-lg font-medium text-foreground">
-          <Medal className="h-5 w-5" /> {/* Ícone Medal */}
+          <Medal className="h-5 w-5" />
           <span className="font-semibold">sportfy.app</span>
         </div>
         <div className="mt-auto">
@@ -123,7 +94,6 @@ const handleLogin = async (data: SignInSchema) => {
         </div>
       </div>
 
-      {/* Área de login */}
       <div className="relative flex min-h-screen flex-col items-center justify-center lg:py-12">
         <div className="lg:p-8">
           <a
