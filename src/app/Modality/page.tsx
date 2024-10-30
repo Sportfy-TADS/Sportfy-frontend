@@ -41,7 +41,7 @@ async function getModalidades() {
 
 // Função para inscrever o usuário em uma modalidade
 async function inscreverUsuario(data: { userId: string; modalidadeId: string }) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inscricoes`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${data.userId}/${data.modalidadeId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -51,8 +51,25 @@ async function inscreverUsuario(data: { userId: string; modalidadeId: string }) 
     throw new Error('Erro ao realizar inscrição');
   }
 
-  return await response.json();
+  const result = await response.json();
+  console.log(result); // Log the response
+
+  return result;
 }
+
+// Função para se inscrever na modalidade
+const handleInscricao = (modalidadeId: string) => {
+  const userId = '17'; // Replace with the actual user ID
+  inscreverUsuario({ userId, modalidadeId })
+    .then((response) => {
+      console.log(response); // Log the response
+      toast.success('Inscrição realizada com sucesso!');
+    })
+    .catch((error) => {
+      console.error(error); // Log the error
+      toast.error('Erro ao realizar inscrição.');
+    });
+};
 
 export default function ModalidadeInscricaoPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
