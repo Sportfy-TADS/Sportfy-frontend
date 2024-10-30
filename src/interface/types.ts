@@ -13,3 +13,10 @@ export interface Sport {
   location: string;
   schedule: string;
 }
+
+export interface DecodedToken {
+  sub: string;
+  role: string;
+  idUsuario: number;
+  exp: number;
+}

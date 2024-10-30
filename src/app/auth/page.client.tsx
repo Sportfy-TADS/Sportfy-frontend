@@ -12,21 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Medal } from 'lucide-react'; // Ícone Medal para o estilo
 import { jwtDecode } from 'jwt-decode';  // Importação correta de jwt-decode
+import { DecodedToken } from '@/interface/types'; // Importação do tipo DecodedToken
+import { signInSchema } from '@/schemas'; // Importação do esquema de validação
 
-// Esquema de validação usando zod para username e password
-const signInSchema = z.object({
-  username: z.string().min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
-  password: z.string().min(3, 'A senha deve ter pelo menos 6 caracteres'),
-});
 
 type SignInSchema = z.infer<typeof signInSchema>;
-
-interface DecodedToken {
-  sub: string;
-  role: string;
-  idUsuario: number;
-  exp: number;
-}
 
 export default function SignInPage() {
   const router = useRouter();
