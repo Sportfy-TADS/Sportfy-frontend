@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Home, User, Trophy, Heart, Settings, Activity, Shield } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 
-const Sidebar = () => {
+ export default function Sidebar(){
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -40,11 +40,15 @@ const Sidebar = () => {
           <Heart className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Saúde</span>
         </li>
+                <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/Modality')}>
+                <Heart className="w-6 h-6 text-blue-500" />
+                <span className="text-lg font-semibold">Modalidade</span>
+              </li>
         <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/Modality')}>
           <Heart className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Modalidade</span>
+          <span className="text-lg font-semibold">Partida</span>
         </li>
-        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/championship')}> {/* Novo item "Campeonato" */}
+        <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/championships')}> {/* Novo item "Campeonato" */}
           <Trophy className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Campeonato</span>
         </li>
@@ -75,4 +79,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+
