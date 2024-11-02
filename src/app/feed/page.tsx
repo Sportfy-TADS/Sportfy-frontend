@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';  
 import { Textarea } from "@/components/ui/textarea"; 
@@ -124,7 +125,7 @@ export default function FeedPage() {
             <div key={post.idPublicacao} className="border-b border-gray-300 dark:border-gray-700 py-4">
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0">
-                  <img
+                  <Image
                     src={`https://via.placeholder.com/50`}
                     alt="Avatar"
                     className="w-12 h-12 rounded-full"

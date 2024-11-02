@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -231,7 +232,7 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {post.image && (
-                    <img src={post.image} alt="Post image" className="w-full h-48 object-cover rounded-md mb-4" />
+                    <Image src={post.image} alt="Post image" className="w-full h-48 object-cover rounded-md mb-4" />
                   )}
                   <p className="text-gray-800 dark:text-gray-200">{post.content}</p>
                 </CardContent>
