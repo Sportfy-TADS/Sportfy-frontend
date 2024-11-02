@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UploadCloud } from 'lucide-react'; // Importando ícones
+import { UploadCloud } from 'lucide-react';
 import Header from '@/components/Header';
 import {
   Select,
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast"; // Certifique-se de que o caminho está correto
 
 export default function EditProfilePage() {
   const [name, setName] = useState('');
@@ -24,8 +25,8 @@ export default function EditProfilePage() {
   const [course, setCourse] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [profileImage, setProfileImage] = useState('');
-  const [error, setError] = useState('');
   const router = useRouter();
+  const { toast } = useToast(); // Hook do Toast
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -34,9 +35,11 @@ export default function EditProfilePage() {
         router.push('/auth');
         return;
       }
-      
+
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${academicoId}`);
+        if (!res.ok) throw new Error('Erro ao buscar dados do usuário');
+        
         const user = await res.json();
         setName(user.nome);
         setEmail(user.email);
@@ -45,33 +48,44 @@ export default function EditProfilePage() {
         setPhone(user.telefone);
         setCourse(user.curso);
         setBirthDate(user.dataNascimento);
-        setProfileImage(user.foto || '');
+        setProfileImage(user.foto || ''); // Aqui a imagem deve ser retornada corretamente
       } catch (e) {
-        setError('Erro ao carregar os dados do usuário');
+        toast({
+          title: 'Erro',
+          description: e.message || 'Erro ao carregar os dados do usuário',
+          variant: 'destructive',
+        });
       }
     };
     fetchUserData();
-  }, [router]);
+  }, [router, toast]);
 
   const handleUpdate = async () => {
     const academicoId = localStorage.getItem('academicoId');
     if (!academicoId) {
-      setError('Usuário não autenticado');
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado',
+        variant: 'destructive',
+      });
       return;
     }
 
+    const formattedBirthDate = birthDate ? `${birthDate}T00:00:00-03:00` : null;
+    const validUsername = name.replace(/\s+/g, '_');
+
     const updatedUserData = {
       idAcademico: parseInt(academicoId, 10),
-      curso: course || 'N/A',  // Certificando-se de que o curso não está vazio
+      curso: course || 'N/A',
       email: email,
-      username: name, // Certifique-se de que o username está correto
+      username: validUsername,
       password: password,
       nome: name,
-      genero: gender || 'outros',  // Definindo um valor padrão
-      telefone: phone || '',  // Definindo telefone como vazio se não preenchido
-      dataNascimento: birthDate || null,  // Permitir nulo para data de nascimento
-      foto: profileImage || null,  // Enviando `null` se não houver imagem
-      ativo: true,  // Definindo como ativo
+      genero: gender || 'outros',
+      telefone: phone || '',
+      dataNascimento: formattedBirthDate,
+      foto: profileImage || null,
+      ativo: true,
     };
 
     try {
@@ -82,25 +96,34 @@ export default function EditProfilePage() {
       });
 
       if (res.ok) {
-        alert('Perfil atualizado com sucesso!');
+        toast({
+          title: 'Sucesso',
+          description: 'Perfil atualizado com sucesso!',
+          variant: 'default',
+        });
         router.push('/profile');
       } else {
-        const errorData = await res.json();
-        console.error('Erro ao atualizar o perfil:', errorData);
-        setError('Erro ao atualizar o perfil');
+        const errorData = await res.text();
+        toast({
+          title: 'Erro',
+          description: `Erro ${res.status}: ${errorData}`,
+          variant: 'destructive',
+        });
       }
     } catch (e) {
-      setError('Erro ao atualizar o perfil');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar o perfil',
+        variant: 'destructive',
+      });
     }
   };
 
   return (
     <>
       <Header />
-
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
         <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Coluna da Imagem de Perfil */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <Avatar className="w-32 h-32 rounded-full">
@@ -110,7 +133,6 @@ export default function EditProfilePage() {
                   <AvatarFallback>{name.charAt(0)}</AvatarFallback>
                 )}
               </Avatar>
-              {/* Ícone para upload da imagem */}
               <Button variant="ghost" size="icon" className="absolute bottom-0 right-0 bg-white shadow-md rounded-full">
                 <UploadCloud className="h-5 w-5" />
               </Button>
@@ -119,12 +141,10 @@ export default function EditProfilePage() {
             <p className="text-sm text-gray-600 dark:text-gray-400">{email}</p>
           </div>
 
-          {/* Coluna de Edição */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
               <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Editar Informações</h2>
-              {error && <div className="mb-4 text-red-500">{error}</div>}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Nome</label>
@@ -136,7 +156,7 @@ export default function EditProfilePage() {
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Email</label>
                   <Input
@@ -160,7 +180,7 @@ export default function EditProfilePage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-black dark:text-white">Gênero</label>
                   <Select onValueChange={setGender} value={gender}>
@@ -210,23 +230,7 @@ export default function EditProfilePage() {
                 />
               </div>
 
-              <div className="mt-4">
-                <label className="block text-sm font-semibold mb-2 text-black dark:text-white">URL da Imagem de Perfil</label>
-                <Input
-                  type="text"
-                  className="w-full p-2 text-black dark:text-white"
-                  placeholder="URL da Imagem"
-                  value={profileImage}
-                  onChange={(e) => setProfileImage(e.target.value)}
-                />
-              </div>
-
-              <Button
-                onClick={handleUpdate}
-                className="w-full p-2 mt-4 font-semibold text-white bg-blue-500 hover:bg-blue-600"
-              >
-                Atualizar Perfil
-              </Button>
+              <Button onClick={handleUpdate} className="mt-4">Atualizar Perfil</Button>
             </div>
           </div>
         </div>

@@ -10,13 +10,17 @@ import { z } from 'zod';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Medal } from 'lucide-react'; // Ícone Medal para o estilo
-import { jwtDecode } from 'jwt-decode';  // Importação correta de jwt-decode
-import { DecodedToken } from '@/interface/types'; // Importação do tipo DecodedToken
-import { signInSchema } from '@/schemas'; // Importação do esquema de validação
-
+import { Medal } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
+import { signInSchema } from '@/schemas';
 
 type SignInSchema = z.infer<typeof signInSchema>;
+
+interface DecodedToken {
+  idUsuario: number;
+  username: string;
+  role: string;
+}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -29,7 +33,7 @@ export default function SignInPage() {
     resolver: zodResolver(signInSchema),
   });
 
-  const { mutateAsync: authenticateAcademico } = useMutation({
+  const { mutateAsync: authenticateUser } = useMutation({
     mutationFn: async ({ username, password }: SignInSchema) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`, {
         method: 'POST',
@@ -42,29 +46,34 @@ export default function SignInPage() {
       }
 
       const { token } = await res.json();
-      const decoded = jwtDecode(token);
-      
+      const decoded: DecodedToken = jwtDecode(token);
+
+      console.log('Token recebido:', token);
+      console.log('Dados decodificados:', decoded);
+
       localStorage.setItem('token', token);
-      localStorage.setItem('academicoId', decoded.idUsuario.toString());
+
+      // Salva o ID correto no localStorage, dependendo do papel
+      if (decoded.role === 'ADMINISTRADOR') {
+        localStorage.setItem('adminId', decoded.idUsuario.toString());
+      } else {
+        localStorage.setItem('academicoId', decoded.idUsuario.toString());
+      }
 
       return decoded;
     },
     onSuccess: (decoded: DecodedToken) => {
-      toast.success('Login bem-sucedido!'); // Adicionando toast de sucesso
-      if (decoded.role === 'ADMIN') {
-        router.push('/admin-dashboard');
-      } else if (decoded.role === 'ACADEMICO') {
-        router.push('/feed');
-      }
+      toast.success('Login bem-sucedido!');
+      router.push('/feed');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Erro ao fazer login.'); // Adicionando toast de erro
+      toast.error(error.message || 'Erro ao fazer login.');
     },
   });
 
   const handleLogin = async (data: SignInSchema) => {
     try {
-      await authenticateAcademico(data); // Chamando a mutação
+      await authenticateUser(data);
     } catch (err) {
       console.error('Erro no login:', err);
     }

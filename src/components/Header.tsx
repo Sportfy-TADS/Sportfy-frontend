@@ -13,43 +13,80 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { LogOut } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  idUsuario: number;
+  username: string;
+  role: string;
+}
 
 export default function Header() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [userName, setUserName] = useState(''); // Nome do acadêmico logado
-  const [userImage, setUserImage] = useState(''); // URL da imagem de perfil do acadêmico logado
-  const [searchTerm, setSearchTerm] = useState(''); // Para armazenar o valor da busca
-  const [searchResults, setSearchResults] = useState<any[]>([]); // Resultados da busca
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [userImage, setUserImage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
-  // Carregar os dados do acadêmico logado
+  // Carregar os dados do usuário logado
   useEffect(() => {
     const fetchUserData = async () => {
-      const userId = localStorage.getItem('academicoId');
-      console.log("ID do usuário logado no localStorage:", userId); // Verificar se o userId foi recuperado corretamente
+      const token = localStorage.getItem('token');
+      console.log('Token:', token); // Log do token
 
-      if (!userId) {
-        setIsLoggedIn(false);
+      if (!token) {
+        router.push('/auth');
         return;
       }
 
+      let decoded: DecodedToken;
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`);
-        if (response.ok) {
-          const userData = await response.json();
-          console.log("Dados do usuário logado:", userData); // Verificar os dados do usuário
-          setUserName(userData.nome);
-          setUserImage(userData.foto || ''); // Definir uma URL de imagem ou deixar vazio se não houver
-        } else {
-          console.error('Erro ao buscar dados do acadêmico:', response.statusText);
-        }
+        decoded = jwtDecode(token);
+        console.log('Decoded Token:', decoded); // Log do token decodificado
       } catch (error) {
-        console.error('Erro ao buscar dados do acadêmico:', error);
+        console.error('Erro ao decodificar o token:', error);
+        router.push('/auth');
+        return;
+      }
+
+      setIsLoggedIn(true);
+      const userId = decoded.idUsuario;
+      setUserName(decoded.username);
+
+      try {
+        let userResponse;
+
+        if (decoded.role === 'ADMINISTRADOR') {
+          const adminResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`);
+          const adminData = await adminResponse.json();
+          console.log('Admin Data:', adminData); // Log dos dados do administrador
+
+          const matchedAdmin = adminData.find((admin: any) => admin.username === decoded.sub);
+          console.log('Matched Admin:', matchedAdmin); // Log do administrador correspondente
+
+          if (!matchedAdmin) {
+            router.push('/auth');
+            return;
+          }
+          userResponse = { nome: matchedAdmin.nome, foto: matchedAdmin.foto };
+        } else {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`);
+          if (!response.ok) throw new Error('Erro ao buscar dados do acadêmico');
+          userResponse = await response.json();
+          console.log('User Data:', userResponse); // Log dos dados do usuário
+        }
+
+        setUserName(userResponse.nome);
+        setUserImage(userResponse.foto || '');
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+        router.push('/auth');
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [router]);
 
   // Função para realizar a busca de acadêmicos
   const handleSearch = async (term: string) => {
@@ -60,6 +97,7 @@ export default function Header() {
         if (response.ok) {
           const data = await response.json();
           setSearchResults(data);
+          console.log('Search Results:', data); // Log dos resultados da busca
         }
       } catch (error) {
         console.error('Erro ao buscar acadêmicos:', error);
@@ -77,9 +115,9 @@ export default function Header() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem('token'); // Remove o token JWT
-    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('token');
     localStorage.removeItem('academicoId');
+    localStorage.removeItem('adminId'); // Remover também o adminId ao fazer logout
     router.push('/auth');
   };
 
@@ -89,8 +127,7 @@ export default function Header() {
 
   // Função para pegar as iniciais do nome
   const getInitials = (name: string) => {
-    console.log("Nome recebido para as iniciais:", name); // Verifique o nome recebido
-    if (!name) return ''; // Evita erro caso o nome não esteja disponível
+    if (!name) return ''; // Se o nome for undefined, retorna uma string vazia
     return name.split(' ').map((n) => n[0]).join('');
   };
 

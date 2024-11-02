@@ -20,3 +20,30 @@ export interface DecodedToken {
   idUsuario: number;
   exp: number;
 }
+
+export interface Post {
+  idPublicacao: number;
+  titulo: string;
+  descricao: string;
+  Usuario: {
+    idUsuario: number;
+    username: string;
+  };
+  listaUsuarioCurtida: number[];
+  listaComentario: Comment[];
+}
+
+export interface Comment {
+  idComentario: number;
+  descricao: string;
+  Usuario: {
+    idUsuario: number;
+    username: string;
+  };
+  listaUsuarioCurtida: number[];
+}
+
+export interface User {
+  idUsuario: number;
+  username: string;
+}
