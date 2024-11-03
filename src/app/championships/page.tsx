@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import Header from '@/components/Header';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Skeleton } from "@/components/ui/skeleton"; // Importa o componente Skeleton
 import { useForm } from 'react-hook-form';
-import Sidebar from '@/components/Sidebar'; // Importa a Sidebar
+import Sidebar from '@/components/Sidebar';
 
 interface Campeonato {
   idCampeonato: number;
@@ -32,19 +33,17 @@ interface Campeonato {
   };
 }
 
-// Função para buscar campeonatos
+// Função para buscar os campeonatos
 async function getCampeonatos() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar`);
   if (!res.ok) {
     console.error('Erro ao buscar campeonatos', await res.text());
     throw new Error('Erro ao buscar campeonatos');
   }
-  const data = await res.json();
-  console.log('Campeonatos:', data); // Log dos campeonatos
-  return data;
+  return res.json();
 }
 
-// Função para criar novo campeonato
+// Função para criar um novo campeonato
 async function createCampeonato(data: Partial<Campeonato>) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos`, {
     method: 'POST',
@@ -55,7 +54,7 @@ async function createCampeonato(data: Partial<Campeonato>) {
   return res.json();
 }
 
-// Função para atualizar campeonato
+// Função para atualizar um campeonato existente
 async function updateCampeonato(idCampeonato: number, data: Partial<Campeonato>) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${idCampeonato}`, {
     method: 'PATCH',
@@ -66,7 +65,7 @@ async function updateCampeonato(idCampeonato: number, data: Partial<Campeonato>)
   return res.json();
 }
 
-// Função para excluir campeonato
+// Função para excluir um campeonato
 async function deleteCampeonato(idCampeonato: number) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${idCampeonato}`, {
     method: 'DELETE',
@@ -79,18 +78,15 @@ export default function CampeonatoPage() {
   const queryClient = useQueryClient();
   const [selectedCampeonato, setSelectedCampeonato] = useState<Campeonato | null>(null);
 
-  // React Hook Form para criar ou atualizar campeonato
   const { register, handleSubmit, reset } = useForm<Partial<Campeonato>>({
     defaultValues: selectedCampeonato || {},
   });
 
-  // Query para buscar campeonatos
   const { data: campeonatos = [], isLoading } = useQuery({
     queryKey: ['campeonatos'],
     queryFn: getCampeonatos,
   });
 
-  // Mutation para criar campeonato
   const createMutation = useMutation({
     mutationFn: createCampeonato,
     onSuccess: () => {
@@ -102,7 +98,6 @@ export default function CampeonatoPage() {
     },
   });
 
-  // Mutation para atualizar campeonato
   const updateMutation = useMutation({
     mutationFn: ({ idCampeonato, data }: { idCampeonato: number; data: Partial<Campeonato> }) =>
       updateCampeonato(idCampeonato, data),
@@ -115,7 +110,6 @@ export default function CampeonatoPage() {
     },
   });
 
-  // Mutation para excluir campeonato
   const deleteMutation = useMutation({
     mutationFn: deleteCampeonato,
     onSuccess: () => {
@@ -144,130 +138,70 @@ export default function CampeonatoPage() {
     deleteMutation.mutate(idCampeonato);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Carregando...</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <Header /> {/* Header ocupando toda a largura */}
-      <div className="flex h-screen"> {/* Flex com altura total */}
-        <Sidebar className="h-full" /> {/* Sidebar ocupando a altura total */}
-        <div className="flex-1 p-4 overflow-y-auto"> {/* Área principal com rolagem se necessário */}
-          <h1 className="text-3xl font-bold mb-6">Campeonatos</h1>
-
-          {/* Botão para cadastrar novo campeonato */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="bg-blue-500 hover:bg-blue-600">Cadastrar Campeonato</Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Cadastrar Novo Campeonato</SheetTitle>
-              </SheetHeader>
-              <form onSubmit={handleSubmit(handleCreateCampeonato)} className="space-y-4 mt-4">
-                <div>
-                  <Label htmlFor="titulo">Título</Label>
-                  <Input id="titulo" {...register('titulo')} required />
-                </div>
-                <div>
-                  <Label htmlFor="descricao">Descrição</Label>
-                  <Textarea id="descricao" {...register('descricao')} required />
-                </div>
-                <div>
-                  <Label htmlFor="aposta">Aposta</Label>
-                  <Input id="aposta" {...register('aposta')} required />
-                </div>
-                <div>
-                  <Label htmlFor="dataInicio">Data de Início</Label>
-                  <Input id="dataInicio" type="date" {...register('dataInicio')} required />
-                </div>
-                <div>
-                  <Label htmlFor="dataFim">Data de Fim</Label>
-                  <Input id="dataFim" type="date" {...register('dataFim')} required />
-                </div>
-                <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
-                  Salvar Campeonato
-                </Button>
-              </form>
-            </SheetContent>
-          </Sheet>
-
-          {/* Lista de Campeonatos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-            {campeonatos.map((campeonato: Campeonato) => (
-              <Card key={campeonato.idCampeonato}>
-                <CardHeader>
-                  <CardTitle>{campeonato.titulo}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm">Descrição: {campeonato.descricao}</p>
-                  <p className="text-sm">Aposta: {campeonato.aposta}</p>
-                  <p className="text-sm">Início: {new Date(campeonato.dataInicio).toLocaleDateString()}</p>
-                  <p className="text-sm">Fim: {new Date(campeonato.dataFim).toLocaleDateString()}</p>
-
-                  {/* Botão para atualizar campeonato */}
-                  <Button
-                    onClick={() => setSelectedCampeonato(campeonato)}
-                    className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600"
-                  >
-                    Atualizar
-                  </Button>
-
-                  {/* Botão para excluir campeonato */}
-                  <Button
-                    onClick={() => handleDeleteCampeonato(campeonato.idCampeonato)}
-                    className="mt-2 w-full bg-red-500 hover:bg-red-600"
-                  >
-                    Excluir
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Modal para atualizar campeonato */}
-          {selectedCampeonato && (
+      <Header />
+      <div className="flex h-screen">
+        <Sidebar className="h-full" />
+        <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Campeonatos</h1>
             <Sheet>
               <SheetTrigger asChild>
-                <Button className="bg-yellow-500 hover:bg-yellow-600">Atualizar Campeonato</Button>
+                <Button className="bg-blue-500 hover:bg-blue-600">Cadastrar Campeonato</Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Atualizar Campeonato</SheetTitle>
+                  <SheetTitle>Cadastrar Novo Campeonato</SheetTitle>
                 </SheetHeader>
-                <form onSubmit={handleSubmit(handleUpdateCampeonato)} className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="titulo">Título</Label>
-                    <Input id="titulo" defaultValue={selectedCampeonato.titulo} {...register('titulo')} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="descricao">Descrição</Label>
-                    <Textarea id="descricao" defaultValue={selectedCampeonato.descricao} {...register('descricao')} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="aposta">Aposta</Label>
-                    <Input id="aposta" defaultValue={selectedCampeonato.aposta} {...register('aposta')} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="dataInicio">Data de Início</Label>
-                    <Input id="dataInicio" type="date" defaultValue={selectedCampeonato.dataInicio.split('T')[0]} {...register('dataInicio')} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="dataFim">Data de Fim</Label>
-                    <Input id="dataFim" type="date" defaultValue={selectedCampeonato.dataFim.split('T')[0]} {...register('dataFim')} required />
-                  </div>
-                  <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
-                    Atualizar Campeonato
-                  </Button>
+                <form onSubmit={handleSubmit(handleCreateCampeonato)} className="space-y-4 mt-4">
+                  {/* Campos do formulário */}
                 </form>
               </SheetContent>
             </Sheet>
-          )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="p-4">
+                  <Skeleton className="h-6 w-3/4 mb-4" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-5/6 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-4" />
+                  <Skeleton className="h-10 w-full bg-gray-300" />
+                </Card>
+              ))
+            ) : (
+              campeonatos.map((campeonato: Campeonato) => (
+                <Card key={campeonato.idCampeonato}>
+                  <CardHeader>
+                    <CardTitle>{campeonato.titulo}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">Descrição: {campeonato.descricao}</p>
+                    <p className="text-sm">Aposta: {campeonato.aposta}</p>
+                    <p className="text-sm">Início: {new Date(campeonato.dataInicio).toLocaleDateString()}</p>
+                    <p className="text-sm">Fim: {new Date(campeonato.dataFim).toLocaleDateString()}</p>
+
+                    <Button
+                      onClick={() => setSelectedCampeonato(campeonato)}
+                      className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600"
+                    >
+                      Atualizar
+                    </Button>
+
+                    <Button
+                      onClick={() => handleDeleteCampeonato(campeonato.idCampeonato)}
+                      className="mt-2 w-full bg-red-500 hover:bg-red-600"
+                    >
+                      Excluir
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </>
