@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 
@@ -62,14 +62,6 @@ export default function ApoioSaudePage() {
       )
     : filteredApoios;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-gray-500" />
-      </div>
-    );
-  }
-
   return (
     <>
       <Header />
@@ -100,22 +92,38 @@ export default function ApoioSaudePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {displayedApoios.length ? (
-              displayedApoios.map((apoio: ApoioSaude) => (
-                <Card key={apoio.idApoioSaude}>
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index}>
                   <CardHeader>
-                    <CardTitle>{apoio.nome}</CardTitle>
+                    <Skeleton className="h-6 w-1/2 mb-2" />
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm">Email: {apoio.email}</p>
-                    <p className="text-sm">Telefone: {apoio.telefone}</p>
-                    <p className="text-sm mt-2">Descrição: {apoio.descricao}</p>
-                    <Button className="mt-4 w-full">Ver Detalhes</Button>
+                    <Skeleton className="h-4 w-full mb-1" />
+                    <Skeleton className="h-4 w-3/4 mb-1" />
+                    <Skeleton className="h-4 w-1/2 mb-3" />
+                    <Skeleton className="h-8 w-full" />
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <p className="text-center col-span-full">Nenhum apoio à saúde disponível.</p>
+              displayedApoios.length ? (
+                displayedApoios.map((apoio: ApoioSaude) => (
+                  <Card key={apoio.idApoioSaude}>
+                    <CardHeader>
+                      <CardTitle>{apoio.nome}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">Email: {apoio.email}</p>
+                      <p className="text-sm">Telefone: {apoio.telefone}</p>
+                      <p className="text-sm mt-2">Descrição: {apoio.descricao}</p>
+                      <Button className="mt-4 w-full">Ver Detalhes</Button>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center col-span-full">Nenhum apoio à saúde disponível.</p>
+              )
             )}
           </div>
         </div>

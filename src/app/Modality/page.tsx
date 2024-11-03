@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -51,25 +52,8 @@ async function inscreverUsuario(data: { userId: string; modalidadeId: string }) 
     throw new Error('Erro ao realizar inscrição');
   }
 
-  const result = await response.json();
-  console.log(result); // Log the response
-
-  return result;
+  return await response.json();
 }
-
-// Função para se inscrever na modalidade
-const handleInscricao = (modalidadeId: string) => {
-  const userId = '17'; // Replace with the actual user ID
-  inscreverUsuario({ userId, modalidadeId })
-    .then((response) => {
-      console.log(response); // Log the response
-      toast.success('Inscrição realizada com sucesso!');
-    })
-    .catch((error) => {
-      console.error(error); // Log the error
-      toast.error('Erro ao realizar inscrição.');
-    });
-};
 
 export default function ModalidadeInscricaoPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -78,15 +62,13 @@ export default function ModalidadeInscricaoPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
 
-  // Query para buscar modalidades
   const { data: modalidades = [], isLoading } = useQuery({
     queryKey: ['modalidades'],
     queryFn: () => getModalidades(),
   });
 
-  // Mutation para inscrever o usuário
   const { mutate } = useMutation({
-    mutationFn: (modalidadeId: string) => inscreverUsuario({ userId: '1', modalidadeId }), // Mude para obter o userId conforme necessário
+    mutationFn: (modalidadeId: string) => inscreverUsuario({ userId: '1', modalidadeId }),
     onSuccess: () => {
       queryClient.invalidateQueries(['modalidades']);
       toast.success('Inscrição realizada com sucesso!');
@@ -100,20 +82,11 @@ export default function ModalidadeInscricaoPage() {
     mutate(modalidadeId);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-gray-500" />
-      </div>
-    );
-  }
-
   const filteredModalidades = modalidades.filter((modalidade) => {
     if (filter === 'all') return true;
     return filter === 'inscrito' ? modalidade.inscrito : !modalidade.inscrito;
   });
 
-  // Filtrando com base no searchTerm
   const displayedModalidades = searchTerm
     ? filteredModalidades.filter((modalidade) =>
         modalidade.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -143,7 +116,7 @@ export default function ModalidadeInscricaoPage() {
                 placeholder="Buscar modalidade..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full" // Aumenta o tamanho para ocupar toda a largura
+                className="w-full"
               />
               <Button onClick={() => setSearchTerm(searchTerm)}>Buscar</Button>
             </div>
@@ -172,7 +145,19 @@ export default function ModalidadeInscricaoPage() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {displayedModalidades.length ? (
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-1/2 mb-2" />
+                    <Skeleton className="h-8 w-full" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : displayedModalidades.length ? (
               displayedModalidades.map((modalidade) => (
                 <Card key={modalidade.idModalidadeEsportiva}>
                   <CardHeader>
@@ -203,18 +188,6 @@ export default function ModalidadeInscricaoPage() {
           </div>
         </div>
       </div>
-
-      <Sheet open={!!selectedModalidade} onOpenChange={() => setSelectedModalidade(null)}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>{selectedModalidade?.nome || 'Detalhes da Modalidade'}</SheetTitle>
-          </SheetHeader>
-          <div>
-            <p><strong>Descrição:</strong> {selectedModalidade?.descricao || 'Nenhuma descrição disponível.'}</p>
-            <Button variant="outline" onClick={() => setSelectedModalidade(null)}>Fechar</Button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </>
   );
 }
