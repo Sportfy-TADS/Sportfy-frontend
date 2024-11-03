@@ -18,6 +18,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { jwtDecode } from 'jwt-decode'; // Certifique-se de que esta biblioteca está instalada
 
 // Função para buscar todos os usuários
 async function fetchUsers() {
@@ -35,13 +36,6 @@ async function toggleAdminStatus(userId: string, isAdmin: boolean) {
   });
   if (!res.ok) throw new Error('Erro ao atualizar status de administrador.');
   return res.json();
-}
-
-// Função para verificar se o usuário logado é administrador
-async function isAdmin(userId: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
-  const user = await res.json();
-  return user.isAdmin;
 }
 
 // Função para cadastrar um novo usuário como administrador
@@ -75,19 +69,21 @@ export default function AdminCrudPage() {
   // Verifica se o usuário logado é admin
   useEffect(() => {
     const checkAdminStatus = async () => {
-      const loggedInUserId = localStorage.getItem('userId');
-      if (!loggedInUserId) {
-        router.push('/auth'); // Redireciona para login se não houver ID do usuário
+      const token = localStorage.getItem('token'); // Obtém o token do localStorage
+      if (!token) {
+        router.push('/auth'); // Redireciona para login se não houver token
         return;
       }
-      setUserId(loggedInUserId);
-      const adminStatus = await isAdmin(loggedInUserId);
-      if (!adminStatus) {
+
+      const decoded: any = jwtDecode(token); // Decodifica o token
+      if (decoded.role !== 'ADMINISTRADOR') {
         toast.error('Acesso negado! Somente administradores podem acessar esta página.');
         router.push('/'); // Redireciona para a página principal
-      } else {
-        setIsUserAdmin(true);
+        return;
       }
+
+      setUserId(decoded.idUsuario); // Armazena o ID do usuário logado
+      setIsUserAdmin(true); // Define que o usuário é admin
     };
     checkAdminStatus();
   }, [router]);

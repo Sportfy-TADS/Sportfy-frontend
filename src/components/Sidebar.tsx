@@ -64,11 +64,11 @@ import { jwtDecode } from 'jwt-decode';
               <Shield className="w-6 h-6 text-red-500" />
               <span className="text-lg font-semibold">Gerenciar Administradores</span>
             </li>
-            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/modalidades')}>
+            <li className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/admin/modality')}>
               <Shield className="w-6 h-6 text-red-500" />
               <span className="text-lg font-semibold">Gerenciar Modalidades</span>
             </li>
-            <li className="flex items-center space-x-3 hover:bg-gray-700 cursor-pointer" onClick={() => router.push('/admin/health-centers')}>
+            <li className="flex items-center space-x-3 hover:bg-gray-700 cursor-pointer" onClick={() => router.push('/admin/health')}>
               <Shield className="w-6 h-6 text-red-500" />
               <span className="text-lg font-semibold">Gerenciar Casas de Saúde</span>
             </li>

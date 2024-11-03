@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/Header';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
+import {jwtDecode} from 'jwt-decode';
 
 interface Modalidade {
   id: string;
@@ -71,19 +72,10 @@ async function deleteModalidade(id: string) {
   return res.json();
 }
 
-// Função para verificar se o usuário é admin no backend
-async function checkIsAdmin(userId: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
-  if (!res.ok) {
-    throw new Error('Erro ao verificar status de administrador');
-  }
-  const user = await res.json();
-  return user.isAdmin;
-}
-
 export default function AdminModalidadesPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [filter, setFilter] = useState('all');
   const [modalidadeForm, setModalidadeForm] = useState<Partial<Modalidade>>({
     name: '',
@@ -98,28 +90,24 @@ export default function AdminModalidadesPage() {
 
   // Verificar se o usuário é admin e se o localStorage está disponível
   useEffect(() => {
-    const verifyAdminStatus = async () => {
-      const storedUserId = localStorage.getItem('userId');
-      if (storedUserId) {
-        setUserId(storedUserId);
-        try {
-          const isAdminStatus = await checkIsAdmin(storedUserId);
-          if (!isAdminStatus) {
-            toast.error('Acesso negado! Somente administradores podem acessar esta página.');
-            router.push('/'); // Redireciona se não for admin
-          } else {
-            setIsAdmin(true); // Usuário é admin
-          }
-        } catch (error) {
-          toast.error('Erro ao verificar status de administrador');
-          router.push('/auth');
-        }
-      } else {
-        router.push('/auth'); // Redireciona para login se não houver userId
+    const checkAdminStatus = async () => {
+      const token = localStorage.getItem('token'); // Obtém o token do localStorage
+      if (!token) {
+        router.push('/auth'); // Redireciona para login se não houver token
+        return;
       }
-    };
 
-    verifyAdminStatus();
+      const decoded: any = jwtDecode(token); // Decodifica o token
+      if (decoded.role !== 'ADMINISTRADOR') {
+        toast.error('Acesso negado! Somente administradores podem acessar esta página.');
+        router.push('/'); // Redireciona para a página principal
+        return;
+      }
+
+      setUserId(decoded.idUsuario); // Armazena o ID do usuário logado
+      setIsUserAdmin(true); // Define que o usuário é admin
+    };
+    checkAdminStatus();
   }, [router]);
 
   // Query para buscar modalidades
@@ -269,48 +257,37 @@ export default function AdminModalidadesPage() {
                   onClick={editMode ? handleUpdateModalidade : handleCreateModalidade}
                   className="w-full bg-green-500 hover:bg-green-600"
                 >
-                  {editMode ? 'Salvar Edição' : 'Salvar Modalidade'}
+                  {editMode ? 'Atualizar Modalidade' : 'Cadastrar Modalidade'}
                 </Button>
               </form>
             </SheetContent>
           </Sheet>
         )}
 
-        {/* Lista de modalidades */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-          {modalidades.length ? (
-            modalidades.map((modalidade: Modalidade) => (
-              <Card key={modalidade.id}>
-                <CardHeader>
-                  <CardTitle>{modalidade.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm">Horário: {modalidade.schedule}</p>
-                  <p className="text-sm">Local: {modalidade.location}</p>
-
-                  {/* Botões de edição e exclusão só aparecem para admin */}
-                  {isAdmin && (
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => handleEditModalidade(modalidade)}
-                        className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600"
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        onClick={() => handleDeleteModalidade(modalidade.id)}
-                        className="mt-4 w-full bg-red-500 hover:bg-red-600"
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-center col-span-full">Nenhuma modalidade disponível.</p>
-          )}
+        {/* Lista de Modalidades */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {modalidades.map((modalidade: Modalidade) => (
+            <Card key={modalidade.id}>
+              <CardHeader>
+                <CardTitle>{modalidade.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{modalidade.description}</p>
+                <p>Horário: {modalidade.schedule}</p>
+                <p>Localização: {modalidade.location}</p>
+                {isAdmin && (
+                  <div className="flex justify-end space-x-2 mt-4">
+                    <Button onClick={() => handleEditModalidade(modalidade)} className="bg-yellow-500 hover:bg-yellow-600">
+                      Editar
+                    </Button>
+                    <Button onClick={() => handleDeleteModalidade(modalidade.id)} className="bg-red-500 hover:bg-red-600">
+                      Excluir
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </>
