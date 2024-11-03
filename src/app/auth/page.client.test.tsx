@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { rest } from 'msw';
+import  rest  from 'msw';
 import { setupServer } from 'msw/node';
 import SignInPage from './page.client';
 

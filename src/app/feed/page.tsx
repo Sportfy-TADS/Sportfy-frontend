@@ -8,33 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
 import {jwtDecode} from 'jwt-decode';
-
-interface Comment {
-  idComentario: number;
-  descricao: string;
-  Usuario: {
-    idUsuario: number;
-    username: string;
-  };
-}
-
-interface Post {
-  idPublicacao: number;
-  titulo: string;
-  descricao: string;
-  Usuario: {
-    idUsuario: number;
-    username: string;
-  };
-  listaUsuarioCurtida: number[];
-  listaComentario: Comment[];
-}
-
-interface User {
-  idUsuario: number;
-  username: string;
-  role: string;
-}
+import { User, Post } from '@/interface/types';
 
 export default function FeedPage() {
   const [canal, setCanal] = useState<Post[]>([]);  

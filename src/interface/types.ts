@@ -46,4 +46,5 @@ export interface Comment {
 export interface User {
   idUsuario: number;
   username: string;
+  role: string;
 }

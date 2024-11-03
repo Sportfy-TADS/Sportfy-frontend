@@ -13,14 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Medal } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import { signInSchema } from '@/schemas';
+import { DecodedToken } from '@/interface/types';
 
 type SignInSchema = z.infer<typeof signInSchema>;
-
-interface DecodedToken {
-  idUsuario: number;
-  username: string;
-  role: string;
-}
 
 export default function SignInPage() {
   const router = useRouter();
