@@ -12,12 +12,51 @@ import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { User, Post } from '@/interface/types'
+import { User } from '@/interface/types'
+
+interface Post {
+  idPublicacao: number
+  titulo: string
+  descricao: string
+  Usuario: {
+    idUsuario: number
+    username: string
+    foto: string | null
+  }
+  listaUsuarioCurtida: {
+    idUsuario: number
+    username: string
+    nome: string
+    foto: string | null
+    permissao: string
+  }[]
+  listaComentario: {
+    idComentario: number
+    descricao: string
+    dataComentario: string
+    Usuario: {
+      idUsuario: number
+      username: string
+      nome: string
+      foto: string | null
+      permissao: string
+    }
+    listaUsuarioCurtida: {
+      idUsuario: number
+      username: string
+      nome: string
+      foto: string | null
+      permissao: string
+    }[]
+  }[]
+  dataPublicacao: string
+}
 
 export default function FeedPage() {
   const [canal, setCanal] = useState<Post[]>([])
   const [newPostTitle, setNewPostTitle] = useState('')
   const [newPostContent, setNewPostContent] = useState('')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [loggedUser, setLoggedUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -66,6 +105,94 @@ export default function FeedPage() {
     loadUser()
   }, [router])
 
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/canal/listarCanaisUsuario/1`,
+        )
+        if (response.ok) {
+          const data = await response.json()
+          // Verifica se `data` é um array de canais
+          if (Array.isArray(data) && data.length > 0) {
+            const canalData = data[0] // Supondo que você queira o primeiro canal
+            if (Array.isArray(canalData.listaPublicacao)) {
+              setCanal(canalData.listaPublicacao)
+            } else {
+              console.error('Estrutura de resposta inesperada:', data)
+            }
+          } else {
+            console.error('Estrutura de resposta inesperada:', data)
+          }
+        } else {
+          console.error('Falha ao buscar os posts:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar os posts:', error)
+      }
+    }
+
+    fetchPosts()
+  }, [])
+
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false)
+    setNewPostTitle('')
+    setNewPostContent('')
+  }
+
+  const handleCreatePost = async () => {
+    if (!newPostTitle || !newPostContent) {
+      alert('Por favor, preencha todos os campos.')
+      return
+    }
+
+    const newPost = {
+      titulo: newPostTitle,
+      descricao: newPostContent,
+      idCanal: 1, // Supondo que o idCanal seja 1
+      Usuario: loggedUser,
+      dataPublicacao: new Date().toISOString(),
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/canal/publicar`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPost),
+        },
+      )
+
+      if (response.ok) {
+        const createdPost = await response.json()
+        setCanal((prevPosts) => [createdPost, ...prevPosts])
+        handleCloseDialog()
+      } else {
+        console.error('Falha ao criar o post:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Erro ao criar o post:', error)
+    }
+  }
+
+  const handleLikePost = (postId: number) => {
+    // Lógica para curtir o post
+    console.log('Post curtido:', postId)
+  }
+
+  const handleCommentPost = (postId: number) => {
+    // Lógica para comentar no post
+    console.log('Comentário no post:', postId)
+  }
+
   return (
     <div>
       <Header />
@@ -75,7 +202,6 @@ export default function FeedPage() {
         </div>
 
         <div className="lg:w-3/4 space-y-4">
-          {/* Skeletons para formulário enquanto carregando */}
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-10 w-full" />
@@ -84,27 +210,51 @@ export default function FeedPage() {
             </div>
           ) : (
             <div className="bg-transparent mb-4">
-              <Textarea
-                value={newPostTitle}
-                onChange={(e) => setNewPostTitle(e.target.value)}
-                placeholder="Título do post"
-                className="w-full p-4 mb-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={1}
-              />
-              <Textarea
-                value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
-                placeholder="No que você está pensando?"
-                className="w-full p-4 mb-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={4}
-              />
-              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                Publicar
+              <Button
+                className="w-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-300"
+                onClick={handleOpenDialog}
+              >
+                No que você está pensando?
               </Button>
+
+              {isDialogOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-lg space-y-4">
+                    <h3 className="text-lg font-semibold">Criar Post</h3>
+                    <Textarea
+                      value={newPostTitle}
+                      onChange={(e) => setNewPostTitle(e.target.value)}
+                      placeholder="Título do post"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg"
+                      rows={1}
+                    />
+                    <Textarea
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      placeholder="Conteúdo do post"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg"
+                      rows={4}
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        className="bg-gray-300 dark:bg-gray-700"
+                        onClick={handleCloseDialog}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        className="bg-blue-500 text-white"
+                        onClick={handleCreatePost}
+                      >
+                        Publicar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Skeletons para posts enquanto os dados estão sendo carregados */}
           {loading
             ? Array.from({ length: 3 }).map((_, index) => (
                 <div
@@ -121,7 +271,7 @@ export default function FeedPage() {
                   </div>
                 </div>
               ))
-            : canal.map((post) => (
+            : canal?.map((post) => (
                 <div
                   key={post.idPublicacao}
                   className="border-b border-gray-300 dark:border-gray-700 py-4"
@@ -129,22 +279,41 @@ export default function FeedPage() {
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
                       <Image
-                        src={`https://via.placeholder.com/50`}
+                        src={post?.Usuario?.foto || '/default-avatar.png'} // Use uma imagem padrão se a foto do usuário for nula
                         alt="Avatar"
+                        width={50}
+                        height={50}
                         className="w-12 h-12 rounded-full"
                       />
                     </div>
                     <div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         <span className="font-bold">
-                          {post.Usuario.username}
+                          {post?.Usuario?.username || 'Usuário Desconhecido'}
                         </span>{' '}
-                        • {new Date(post.idPublicacao).toLocaleDateString()}
+                        •{' '}
+                        {post.dataPublicacao
+                          ? new Date(post.dataPublicacao).toLocaleDateString()
+                          : 'Data Desconhecida'}
                       </div>
                       <h3 className="font-semibold mt-2">{post.titulo}</h3>
                       <p className="text-gray-800 dark:text-gray-200 mt-2">
                         {post.descricao}
                       </p>
+                      <div className="flex space-x-4 mt-2">
+                        <Button
+                          className="bg-blue-500 text-white"
+                          onClick={() => handleLikePost(post.idPublicacao)}
+                        >
+                          Curtir
+                        </Button>
+                        <Button
+                          className="bg-gray-300 dark:bg-gray-700"
+                          onClick={() => handleCommentPost(post.idPublicacao)}
+                        >
+                          Comentar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
