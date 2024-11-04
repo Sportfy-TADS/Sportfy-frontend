@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar' // Importando o componente Sidebar
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -143,81 +144,87 @@ export default function CreateMatchPage() {
   return (
     <>
       <Header />
-      <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Criar Partida</h1>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="bg-blue-500 hover:bg-blue-600">
-                Criar Nova Partida
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Cadastrar Nova Partida</SheetTitle>
-              </SheetHeader>
-              <form className="space-y-4 mt-8">
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-black dark:text-white">
-                    Modalidade Esportiva
-                  </label>
-                  <Select
-                    onValueChange={setSelectedModalidade}
-                    value={selectedModalidade}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Escolha uma modalidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {modalidadesFiltradas.map((modalidade: Modalidade) => (
-                        <SelectItem key={modalidade.id} value={modalidade.name}>
-                          {modalidade.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Input
-                    type="text"
-                    className="w-full p-2 text-black dark:text-white"
-                    placeholder="Nome da Partida"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Textarea
-                    className="w-full p-2 text-black dark:text-white"
-                    placeholder="Descrição da Partida"
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Input
-                    type="text"
-                    className="w-full p-2 text-black dark:text-white"
-                    placeholder="Localização"
-                    value={localizacao}
-                    onChange={(e) => setLocalizacao(e.target.value)}
-                  />
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleCreateMatch}
-                  className="w-full bg-green-500 hover:bg-green-600"
-                >
-                  Salvar Partida
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 dark:bg-gray-900">
+        <Sidebar className="lg:w-1/4 lg:pr-6" />
+        <main className="lg:w-3/4 p-4">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Criar Partida</h1>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button className="bg-blue-500 hover:bg-blue-600">
+                  Criar Nova Partida
                 </Button>
-              </form>
-            </SheetContent>
-          </Sheet>
-        </div>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Cadastrar Nova Partida</SheetTitle>
+                </SheetHeader>
+                <form className="space-y-4 mt-8">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-black dark:text-white">
+                      Modalidade Esportiva
+                    </label>
+                    <Select
+                      onValueChange={setSelectedModalidade}
+                      value={selectedModalidade}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Escolha uma modalidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {modalidadesFiltradas.map((modalidade: Modalidade) => (
+                          <SelectItem
+                            key={modalidade.id}
+                            value={modalidade.name}
+                          >
+                            {modalidade.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Input
+                      type="text"
+                      className="w-full p-2 text-black dark:text-white"
+                      placeholder="Nome da Partida"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Textarea
+                      className="w-full p-2 text-black dark:text-white"
+                      placeholder="Descrição da Partida"
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      type="text"
+                      className="w-full p-2 text-black dark:text-white"
+                      placeholder="Localização"
+                      value={localizacao}
+                      onChange={(e) => setLocalizacao(e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleCreateMatch}
+                    className="w-full bg-green-500 hover:bg-green-600"
+                  >
+                    Salvar Partida
+                  </Button>
+                </form>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </main>
       </div>
     </>
   )
