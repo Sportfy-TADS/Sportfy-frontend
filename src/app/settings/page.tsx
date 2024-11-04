@@ -1,127 +1,135 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react'
+
+import { CheckedState } from '@radix-ui/react-checkbox'
+import { useTheme } from 'next-themes'
+import { toast } from 'sonner' // Usar para notificação de sucesso
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar' // Importando a Sidebar
+import { ModeToggle } from '@/components/theme'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
-import { Checkbox } from "@/components/ui/checkbox"; 
-import Header from '@/components/Header';
-import { ModeToggle } from '@/components/theme';
-import { useTheme } from 'next-themes';
-import { CheckedState } from '@radix-ui/react-checkbox';
-import { toast } from 'sonner'; // Usar para notificação de sucesso
-import Sidebar from '@/components/Sidebar'; // Importando a Sidebar
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 // ID do usuário autenticado
-const userId = 7203; // Em uma aplicação real, o ID viria de um contexto ou autenticação
+const userId = 7203 // Em uma aplicação real, o ID viria de um contexto ou autenticação
 
 export default function SettingsPage() {
-  const { setTheme, theme } = useTheme();
-  const [notifications, setNotifications] = useState(true);
-  const [language, setLanguage] = useState('pt');
-  
-  const [notifyNewChampionships, setNotifyNewChampionships] = useState(true);
-  const [notifyNewPosts, setNotifyNewPosts] = useState(true);
-  const [notifyComments, setNotifyComments] = useState(true);
-  const [notifyLikes, setNotifyLikes] = useState(true);
-  
-  const [privacyDetails, setPrivacyDetails] = useState(true);
-  const [privacyHistory, setPrivacyHistory] = useState(true);
-  const [privacyStats, setPrivacyStats] = useState(true);
-  const [privacyAchievements, setPrivacyAchievements] = useState(true);
-  
-  const [showDialog, setShowDialog] = useState(false);
+  const { setTheme, theme } = useTheme()
+  const [notifications, setNotifications] = useState(true)
+  const [language, setLanguage] = useState('pt')
+
+  const [notifyNewChampionships, setNotifyNewChampionships] = useState(true)
+  const [notifyNewPosts, setNotifyNewPosts] = useState(true)
+  const [notifyComments, setNotifyComments] = useState(true)
+  const [notifyLikes, setNotifyLikes] = useState(true)
+
+  const [privacyDetails, setPrivacyDetails] = useState(true)
+  const [privacyHistory, setPrivacyHistory] = useState(true)
+  const [privacyStats, setPrivacyStats] = useState(true)
+  const [privacyAchievements, setPrivacyAchievements] = useState(true)
+
+  const [showDialog, setShowDialog] = useState(false)
 
   // Carregar as configurações do json-server
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`);
-        const data = await response.json();
-        setNotifications(data.notifications);
-        setLanguage(data.language);
-        
-        setNotifyNewChampionships(data.notifyNewChampionships);
-        setNotifyNewPosts(data.notifyNewPosts);
-        setNotifyComments(data.notifyComments);
-        setNotifyLikes(data.notifyLikes);
-        
-        setPrivacyDetails(data.privacyDetails);
-        setPrivacyHistory(data.privacyHistory);
-        setPrivacyStats(data.privacyStats);
-        setPrivacyAchievements(data.privacyAchievements);
-      } catch (error) {
-        console.error("Erro ao buscar configurações: ", error);
-        toast.error("Erro ao carregar as configurações.");
-      }
-    };
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
+        )
+        const data = await response.json()
+        setNotifications(data.notifications)
+        setLanguage(data.language)
 
-    fetchSettings();
-  }, []);
+        setNotifyNewChampionships(data.notifyNewChampionships)
+        setNotifyNewPosts(data.notifyNewPosts)
+        setNotifyComments(data.notifyComments)
+        setNotifyLikes(data.notifyLikes)
+
+        setPrivacyDetails(data.privacyDetails)
+        setPrivacyHistory(data.privacyHistory)
+        setPrivacyStats(data.privacyStats)
+        setPrivacyAchievements(data.privacyAchievements)
+      } catch (error) {
+        console.error('Erro ao buscar configurações: ', error)
+        toast.error('Erro ao carregar as configurações.')
+      }
+    }
+
+    fetchSettings()
+  }, [])
 
   // Função para salvar as configurações no json-server
   const handleSave = () => {
-    setShowDialog(true); 
-  };
+    setShowDialog(true)
+  }
 
   const confirmSave = async () => {
-    setShowDialog(false); 
+    setShowDialog(false)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            notifications,
+            language,
+            notifyNewChampionships,
+            notifyNewPosts,
+            notifyComments,
+            notifyLikes,
+            privacyDetails,
+            privacyHistory,
+            privacyStats,
+            privacyAchievements,
+          }),
         },
-        body: JSON.stringify({
-          notifications,
-          language,
-          notifyNewChampionships,
-          notifyNewPosts,
-          notifyComments,
-          notifyLikes,
-          privacyDetails,
-          privacyHistory,
-          privacyStats,
-          privacyAchievements
-        }),
-      });
+      )
 
       if (!response.ok) {
-        throw new Error('Erro ao salvar configurações');
+        throw new Error('Erro ao salvar configurações')
       }
 
-      toast.success('Configurações salvas com sucesso!');
+      toast.success('Configurações salvas com sucesso!')
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message)
     }
-  };
+  }
 
   // Função para converter CheckedState em booleano
-  const handleCheckedChange = (setState: (value: boolean) => void) => (checked: CheckedState) => {
-    setState(checked === true);
-  };
+  const handleCheckedChange =
+    (setState: (value: boolean) => void) => (checked: CheckedState) => {
+      setState(checked === true)
+    }
 
   return (
     <>
@@ -142,7 +150,9 @@ export default function SettingsPage() {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-semibold mb-2 dark:text-white">Idioma:</label>
+              <label className="block text-sm font-semibold mb-2 dark:text-white">
+                Idioma:
+              </label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione o Idioma" />
@@ -157,20 +167,27 @@ export default function SettingsPage() {
             {/* Configurações de Notificações */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button className="w-full mb-4">Configurações das Modalidades</Button>
+                <Button className="w-full mb-4">
+                  Configurações das Modalidades
+                </Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
                   <SheetTitle>Modalidades</SheetTitle>
                 </SheetHeader>
-                
+
                 <div className="mt-4">
                   <Checkbox
                     checked={notifyNewChampionships}
-                    onCheckedChange={handleCheckedChange(setNotifyNewChampionships)}
+                    onCheckedChange={handleCheckedChange(
+                      setNotifyNewChampionships,
+                    )}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Notificar sobre novos campeonatos nas modalidades que estou inscrito</span>
+                  <span className="dark:text-white">
+                    Notificar sobre novos campeonatos nas modalidades que estou
+                    inscrito
+                  </span>
                 </div>
                 <div className="mt-2">
                   <Checkbox
@@ -178,7 +195,9 @@ export default function SettingsPage() {
                     onCheckedChange={handleCheckedChange(setNotifyNewPosts)}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Notificar sobre novos posts criados nas modalidades</span>
+                  <span className="dark:text-white">
+                    Notificar sobre novos posts criados nas modalidades
+                  </span>
                 </div>
                 <div className="mt-2">
                   <Checkbox
@@ -186,7 +205,9 @@ export default function SettingsPage() {
                     onCheckedChange={handleCheckedChange(setNotifyComments)}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Notificar sobre comentários feitos nos meus posts</span>
+                  <span className="dark:text-white">
+                    Notificar sobre comentários feitos nos meus posts
+                  </span>
                 </div>
                 <div className="mt-2">
                   <Checkbox
@@ -194,7 +215,9 @@ export default function SettingsPage() {
                     onCheckedChange={handleCheckedChange(setNotifyLikes)}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Notificar sobre likes nos meus posts</span>
+                  <span className="dark:text-white">
+                    Notificar sobre likes nos meus posts
+                  </span>
                 </div>
               </SheetContent>
             </Sheet>
@@ -202,20 +225,25 @@ export default function SettingsPage() {
             {/* Configurações de Privacidade */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button className="w-full mb-4">Configurações de Privacidade</Button>
+                <Button className="w-full mb-4">
+                  Configurações de Privacidade
+                </Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
                   <SheetTitle>Privacidade</SheetTitle>
                 </SheetHeader>
-                
+
                 <div className="mt-4">
                   <Checkbox
                     checked={privacyDetails}
                     onCheckedChange={handleCheckedChange(setPrivacyDetails)}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Permitir que outros usuários vejam detalhes das minhas modalidades</span>
+                  <span className="dark:text-white">
+                    Permitir que outros usuários vejam detalhes das minhas
+                    modalidades
+                  </span>
                 </div>
                 <div className="mt-2">
                   <Checkbox
@@ -223,7 +251,10 @@ export default function SettingsPage() {
                     onCheckedChange={handleCheckedChange(setPrivacyHistory)}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Permitir que outros usuários acessem meu histórico de campeonatos</span>
+                  <span className="dark:text-white">
+                    Permitir que outros usuários acessem meu histórico de
+                    campeonatos
+                  </span>
                 </div>
                 <div className="mt-2">
                   <Checkbox
@@ -231,23 +262,33 @@ export default function SettingsPage() {
                     onCheckedChange={handleCheckedChange(setPrivacyStats)}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Permitir que outros usuários vejam minhas estatísticas esportivas</span>
+                  <span className="dark:text-white">
+                    Permitir que outros usuários vejam minhas estatísticas
+                    esportivas
+                  </span>
                 </div>
                 <div className="mt-2">
                   <Checkbox
                     checked={privacyAchievements}
-                    onCheckedChange={handleCheckedChange(setPrivacyAchievements)}
+                    onCheckedChange={handleCheckedChange(
+                      setPrivacyAchievements,
+                    )}
                     className="mr-2"
                   />
-                  <span className="dark:text-white">Permitir que outros usuários vejam minhas conquistas</span>
+                  <span className="dark:text-white">
+                    Permitir que outros usuários vejam minhas conquistas
+                  </span>
                 </div>
               </SheetContent>
             </Sheet>
 
-            <Button onClick={handleSave} className="w-full bg-emerald-600 hover:bg-emerald-500">
+            <Button
+              onClick={handleSave}
+              className="w-full bg-emerald-600 hover:bg-emerald-500"
+            >
               Salvar Configurações
             </Button>
-            
+
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -270,5 +311,5 @@ export default function SettingsPage() {
         </div>
       </div>
     </>
-  );
+  )
 }

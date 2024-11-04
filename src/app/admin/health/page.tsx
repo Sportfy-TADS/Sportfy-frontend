@@ -3,5 +3,5 @@ export default function health() {
     <div>
       <h1>healthWarning</h1>
     </div>
-  );
+  )
 }

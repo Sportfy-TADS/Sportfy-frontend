@@ -1,66 +1,79 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+import { useState } from 'react'
+
+import { useQuery } from '@tanstack/react-query'
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Função para buscar dados de apoio à saúde
 async function getApoioSaude() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/apoioSaude`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/apoioSaude`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  )
 
   if (!response.ok) {
-    throw new Error('Erro ao buscar apoio à saúde');
+    throw new Error('Erro ao buscar apoio à saúde')
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 interface ApoioSaude {
-  idApoioSaude: number;
-  nome: string;
-  email: string;
-  telefone: string;
-  descricao: string;
-  dataPublicacao: string;
-  idAdministrador: number;
+  idApoioSaude: number
+  nome: string
+  email: string
+  telefone: string
+  descricao: string
+  dataPublicacao: string
+  idAdministrador: number
 }
 
 export default function ApoioSaudePage() {
-  const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Query para buscar os dados de apoio à saúde
   const { data: apoios = [], isLoading } = useQuery({
     queryKey: ['apoioSaude'],
     queryFn: getApoioSaude,
-  });
+  })
 
   // Função de filtro
   const filteredApoios = apoios.filter((apoio: ApoioSaude) => {
-    if (filter === 'all') return true;
-    return filter === 'ufpr' ? apoio.idAdministrador === 1 : apoio.idAdministrador !== 1;
-  });
+    if (filter === 'all') return true
+    return filter === 'ufpr'
+      ? apoio.idAdministrador === 1
+      : apoio.idAdministrador !== 1
+  })
 
   // Filtrando com base no termo de busca
   const displayedApoios = searchTerm
     ? filteredApoios.filter((apoio: ApoioSaude) =>
-        apoio.nome.toLowerCase().includes(searchTerm.toLowerCase())
+        apoio.nome.toLowerCase().includes(searchTerm.toLowerCase()),
       )
-    : filteredApoios;
+    : filteredApoios
 
   return (
     <>
@@ -85,7 +98,7 @@ export default function ApoioSaudePage() {
                 placeholder="Buscar apoio à saúde..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full" 
+                className="w-full"
               />
               <Button onClick={() => setSearchTerm(searchTerm)}>Buscar</Button>
             </div>
@@ -106,28 +119,28 @@ export default function ApoioSaudePage() {
                   </CardContent>
                 </Card>
               ))
+            ) : displayedApoios.length ? (
+              displayedApoios.map((apoio: ApoioSaude) => (
+                <Card key={apoio.idApoioSaude}>
+                  <CardHeader>
+                    <CardTitle>{apoio.nome}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">Email: {apoio.email}</p>
+                    <p className="text-sm">Telefone: {apoio.telefone}</p>
+                    <p className="text-sm mt-2">Descrição: {apoio.descricao}</p>
+                    <Button className="mt-4 w-full">Ver Detalhes</Button>
+                  </CardContent>
+                </Card>
+              ))
             ) : (
-              displayedApoios.length ? (
-                displayedApoios.map((apoio: ApoioSaude) => (
-                  <Card key={apoio.idApoioSaude}>
-                    <CardHeader>
-                      <CardTitle>{apoio.nome}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm">Email: {apoio.email}</p>
-                      <p className="text-sm">Telefone: {apoio.telefone}</p>
-                      <p className="text-sm mt-2">Descrição: {apoio.descricao}</p>
-                      <Button className="mt-4 w-full">Ver Detalhes</Button>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-center col-span-full">Nenhum apoio à saúde disponível.</p>
-              )
+              <p className="text-center col-span-full">
+                Nenhum apoio à saúde disponível.
+              </p>
             )}
           </div>
         </div>
       </div>
     </>
-  );
+  )
 }

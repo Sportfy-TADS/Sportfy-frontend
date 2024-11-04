@@ -1,25 +1,26 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import { Sport } from '@/interface/types';  
+import { useState, useEffect } from 'react'
+
+import Header from '@/components/Header'
+import { Sport } from '@/interface/types'
 
 export default function SportsPage() {
-  const [sports, setSports] = useState<Sport[]>([]); 
-  
+  const [sports, setSports] = useState<Sport[]>([])
+
   useEffect(() => {
     const fetchSports = async () => {
       try {
-        const response = await fetch('http://localhost:3001/sports');
-        const data = await response.json();
-        setSports(data);
+        const response = await fetch('http://localhost:3001/sports')
+        const data = await response.json()
+        setSports(data)
       } catch (error) {
-        console.error('Erro ao carregar as modalidades:', error);
+        console.error('Erro ao carregar as modalidades:', error)
       }
-    };
+    }
 
-    fetchSports();
-  }, []);
+    fetchSports()
+  }, [])
 
   return (
     <>
@@ -55,5 +56,5 @@ export default function SportsPage() {
         </div>
       </div>
     </>
-  );
+  )
 }

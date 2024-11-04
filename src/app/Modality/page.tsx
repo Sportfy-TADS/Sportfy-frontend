@@ -1,97 +1,122 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react'
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Modalidade {
-  idModalidadeEsportiva: number;
-  nome: string;
-  descricao: string;
-  dataCriacao: string;
-  inscrito: boolean;
+  idModalidadeEsportiva: number
+  nome: string
+  descricao: string
+  dataCriacao: string
+  inscrito: boolean
 }
 
 // Função para buscar modalidades
 async function getModalidades() {
-  const token = localStorage.getItem('token');
-  
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+  const token = localStorage.getItem('token')
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  )
 
   if (!response.ok) {
-    throw new Error('Erro ao buscar modalidades');
+    throw new Error('Erro ao buscar modalidades')
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 // Função para inscrever o usuário em uma modalidade
-async function inscreverUsuario(data: { userId: string; modalidadeId: string }) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${data.userId}/${data.modalidadeId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+async function inscreverUsuario(data: {
+  userId: string
+  modalidadeId: string
+}) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${data.userId}/${data.modalidadeId}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  )
 
   if (!response.ok) {
-    throw new Error('Erro ao realizar inscrição');
+    throw new Error('Erro ao realizar inscrição')
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 export default function ModalidadeInscricaoPage() {
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [filter, setFilter] = useState('all');
-  const [selectedModalidade, setSelectedModalidade] = useState<Modalidade | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const queryClient = useQueryClient();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [filter, setFilter] = useState('all')
+  const [selectedModalidade, setSelectedModalidade] =
+    useState<Modalidade | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const queryClient = useQueryClient()
 
   const { data: modalidades = [], isLoading } = useQuery({
     queryKey: ['modalidades'],
     queryFn: () => getModalidades(),
-  });
+  })
 
   const { mutate } = useMutation({
-    mutationFn: (modalidadeId: string) => inscreverUsuario({ userId: '1', modalidadeId }),
+    mutationFn: (modalidadeId: string) =>
+      inscreverUsuario({ userId: '1', modalidadeId }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['modalidades']);
-      toast.success('Inscrição realizada com sucesso!');
+      queryClient.invalidateQueries(['modalidades'])
+      toast.success('Inscrição realizada com sucesso!')
     },
     onError: () => {
-      toast.error('Erro ao realizar inscrição.');
+      toast.error('Erro ao realizar inscrição.')
     },
-  });
+  })
 
   const handleInscricao = (modalidadeId: string) => {
-    mutate(modalidadeId);
-  };
+    mutate(modalidadeId)
+  }
 
   const filteredModalidades = modalidades.filter((modalidade) => {
-    if (filter === 'all') return true;
-    return filter === 'inscrito' ? modalidade.inscrito : !modalidade.inscrito;
-  });
+    if (filter === 'all') return true
+    return filter === 'inscrito' ? modalidade.inscrito : !modalidade.inscrito
+  })
 
   const displayedModalidades = searchTerm
     ? filteredModalidades.filter((modalidade) =>
-        modalidade.nome.toLowerCase().includes(searchTerm.toLowerCase())
+        modalidade.nome.toLowerCase().includes(searchTerm.toLowerCase()),
       )
-    : filteredModalidades;
+    : filteredModalidades
 
   return (
     <>
@@ -126,7 +151,9 @@ export default function ModalidadeInscricaoPage() {
             <div className="mb-6">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button className="bg-blue-500 hover:bg-blue-600">Cadastrar Modalidade</Button>
+                  <Button className="bg-blue-500 hover:bg-blue-600">
+                    Cadastrar Modalidade
+                  </Button>
                 </SheetTrigger>
                 <SheetContent>
                   <SheetHeader>
@@ -137,7 +164,12 @@ export default function ModalidadeInscricaoPage() {
                     <Input placeholder="Descrição" required />
                     <Input placeholder="Horário" required />
                     <Input placeholder="Local" required />
-                    <Button type="submit" className="mt-4 bg-green-500 hover:bg-green-600">Salvar</Button>
+                    <Button
+                      type="submit"
+                      className="mt-4 bg-green-500 hover:bg-green-600"
+                    >
+                      Salvar
+                    </Button>
                   </form>
                 </SheetContent>
               </Sheet>
@@ -162,7 +194,7 @@ export default function ModalidadeInscricaoPage() {
                 <Card key={modalidade.idModalidadeEsportiva}>
                   <CardHeader>
                     <CardTitle>
-                      <span 
+                      <span
                         onClick={() => setSelectedModalidade(modalidade)}
                         className="text-blue-600 cursor-pointer hover:underline"
                       >
@@ -171,9 +203,13 @@ export default function ModalidadeInscricaoPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm">Inscrito: {modalidade.inscrito ? 'Sim' : 'Não'}</p>
+                    <p className="text-sm">
+                      Inscrito: {modalidade.inscrito ? 'Sim' : 'Não'}
+                    </p>
                     <Button
-                      onClick={() => handleInscricao(modalidade.idModalidadeEsportiva)}
+                      onClick={() =>
+                        handleInscricao(modalidade.idModalidadeEsportiva)
+                      }
                       className="mt-4 w-full"
                       disabled={modalidade.inscrito}
                     >
@@ -183,11 +219,13 @@ export default function ModalidadeInscricaoPage() {
                 </Card>
               ))
             ) : (
-              <p className="text-center col-span-full">Nenhuma modalidade disponível.</p>
+              <p className="text-center col-span-full">
+                Nenhuma modalidade disponível.
+              </p>
             )}
           </div>
         </div>
       </div>
     </>
-  );
+  )
 }
