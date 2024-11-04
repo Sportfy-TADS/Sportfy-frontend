@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -26,20 +25,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-
-// Tipagem para Modalidade Esportiva
-interface Modalidade {
-  id: string
-  name: string
-  description: string
-}
-
-// Tipagem para Inscrição
-interface Inscricao {
-  id: string
-  userId: string
-  modalidadeId: string
-}
+import { Inscricao, Modalidade, MatchData } from '@/interface/types'
 
 // Função para buscar as modalidades em que o usuário está inscrito
 async function getInscricoes(userId: string) {
@@ -57,8 +43,7 @@ async function getModalidades() {
   return await res.json()
 }
 
-// Função para criar partida
-async function createMatch(data: any) {
+async function createMatch(data: MatchData) {
   console.log('Dados enviados para o servidor:', data) // Adicionando log de depuração
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/matches`, {
@@ -121,7 +106,7 @@ export default function CreateMatchPage() {
   const mutation = useMutation({
     mutationFn: createMatch,
     onSuccess: () => {
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       toast.success('Partida criada com sucesso!')
       router.push('/feed') // Redireciona para o feed após criar a partida
     },

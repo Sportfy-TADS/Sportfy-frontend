@@ -48,3 +48,27 @@ export interface User {
   username: string
   role: string
 }
+
+// Tipagem para Modalidade Esportiva
+export interface Modalidade {
+  id: string
+  name: string
+  description: string
+}
+
+// Tipagem para Inscrição
+export interface Inscricao {
+  id: string
+  userId: string
+  modalidadeId: string
+}
+
+// Função para criar partida
+export interface MatchData {
+  nome: string
+  descricao: string
+  localizacao: string
+  modalidade: string
+  userId: string
+  date: string
+}
