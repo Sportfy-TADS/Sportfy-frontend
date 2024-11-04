@@ -1,13 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query'
 
 async function getUserData(userId: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`);
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`,
+  )
   if (!response.ok) {
-    throw new Error('Erro ao buscar dados do usuário');
+    throw new Error('Erro ao buscar dados do usuário')
   }
-  return await response.json();
+  return await response.json()
 }
 
 export function useUser(userId: string) {
-  return useQuery(['user', userId], () => getUserData(userId));
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => getUserData(userId),
+  })
 }

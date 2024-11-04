@@ -62,11 +62,11 @@ export default function SignInPage() {
 
       return decoded
     },
-    onSuccess: (decoded: DecodedToken) => {
+    onSuccess: () => {
       toast.success('Login bem-sucedido!')
       router.push('/feed')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Erro ao fazer login.')
     },
   })
