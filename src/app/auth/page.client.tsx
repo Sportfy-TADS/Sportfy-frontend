@@ -1,24 +1,26 @@
-'use client';
+'use client'
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { twMerge } from 'tailwind-merge';
-import { z } from 'zod';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Medal } from 'lucide-react';
-import { jwtDecode } from 'jwt-decode';
-import { signInSchema } from '@/schemas';
-import { DecodedToken } from '@/interface/types';
+import { useRouter } from 'next/navigation'
 
-type SignInSchema = z.infer<typeof signInSchema>;
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import { jwtDecode } from 'jwt-decode'
+import { Medal } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { twMerge } from 'tailwind-merge'
+import { z } from 'zod'
+
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { DecodedToken } from '@/interface/types'
+import { signInSchema } from '@/schemas'
+
+type SignInSchema = z.infer<typeof signInSchema>
 
 export default function SignInPage() {
-  const router = useRouter();
+  const router = useRouter()
 
   const {
     register,
@@ -26,53 +28,56 @@ export default function SignInPage() {
     formState: { isSubmitting },
   } = useForm<SignInSchema>({
     resolver: zodResolver(signInSchema),
-  });
+  })
 
   const { mutateAsync: authenticateUser } = useMutation({
     mutationFn: async ({ username, password }: SignInSchema) => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        },
+      )
 
       if (!res.ok) {
-        throw new Error('Nome de usuário ou senha inválidos');
+        throw new Error('Nome de usuário ou senha inválidos')
       }
 
-      const { token } = await res.json();
-      const decoded: DecodedToken = jwtDecode(token);
+      const { token } = await res.json()
+      const decoded: DecodedToken = jwtDecode(token)
 
-      console.log('Token recebido:', token);
-      console.log('Dados decodificados:', decoded);
+      console.log('Token recebido:', token)
+      console.log('Dados decodificados:', decoded)
 
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', token)
 
       // Salva o ID correto no localStorage, dependendo do papel
       if (decoded.role === 'ADMINISTRADOR') {
-        localStorage.setItem('adminId', decoded.idUsuario.toString());
+        localStorage.setItem('adminId', decoded.idUsuario.toString())
       } else {
-        localStorage.setItem('academicoId', decoded.idUsuario.toString());
+        localStorage.setItem('academicoId', decoded.idUsuario.toString())
       }
 
-      return decoded;
+      return decoded
     },
     onSuccess: (decoded: DecodedToken) => {
-      toast.success('Login bem-sucedido!');
-      router.push('/feed');
+      toast.success('Login bem-sucedido!')
+      router.push('/feed')
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Erro ao fazer login.');
+      toast.error(error.message || 'Erro ao fazer login.')
     },
-  });
+  })
 
   const handleLogin = async (data: SignInSchema) => {
     try {
-      await authenticateUser(data);
+      await authenticateUser(data)
     } catch (err) {
-      console.error('Erro no login:', err);
+      console.error('Erro no login:', err)
     }
-  };
+  }
 
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center antialiased lg:grid lg:grid-cols-2 lg:px-0">
@@ -94,7 +99,7 @@ export default function SignInPage() {
             href="/register"
             className={twMerge(
               buttonVariants({ variant: 'ghost' }),
-              'absolute right-4 top-4 md:right-8 md:top-8'
+              'absolute right-4 top-4 md:right-8 md:top-8',
             )}
           >
             Criar conta
@@ -103,7 +108,9 @@ export default function SignInPage() {
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             <div className="flex flex-col space-y-2 text-center">
               <h1 className="text-2xl font-semibold tracking-tight">Login</h1>
-              <p className="text-sm text-muted-foreground">Acesse sua conta Sportfy</p>
+              <p className="text-sm text-muted-foreground">
+                Acesse sua conta Sportfy
+              </p>
             </div>
 
             <div className="grid gap-6">
@@ -143,5 +150,5 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,13 +1,14 @@
-// app/layout.tsx
+import { Inter } from 'next/font/google'
 
-import type { Metadata } from 'next';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import QueryProvider from '@/components/QueryProvider'; // Importe o QueryProvider
-import { Toaster } from 'sonner';
+import './globals.css'
+import { Toaster } from 'sonner'
 
-const inter = Inter({ subsets: ['latin'] });
+import QueryProvider from '@/components/QueryProvider'
+import { ThemeProvider } from '@/components/theme-provider'
+
+import type { Metadata } from 'next'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
@@ -30,12 +31,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider> {/* Use o QueryProvider aqui */}
-          <Toaster />
+          <QueryProvider>
+            <Toaster />
             {children}
           </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
