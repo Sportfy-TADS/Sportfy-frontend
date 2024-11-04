@@ -5,7 +5,10 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
+import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import { Heart } from 'lucide-react'
+import { toast, Toaster } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -18,42 +21,22 @@ interface Post {
   idPublicacao: number
   titulo: string
   descricao: string
+  dataPublicacao?: string | null
+  idCanal: number
+  idModalidadeEsportiva?: number | null
   Usuario: {
     idUsuario: number
     username: string
-    foto: string | null
-  }
-  listaUsuarioCurtida: {
-    idUsuario: number
-    username: string
     nome: string
-    foto: string | null
+    foto?: string | null
     permissao: string
-  }[]
-  listaComentario: {
-    idComentario: number
-    descricao: string
-    dataComentario: string
-    Usuario: {
-      idUsuario: number
-      username: string
-      nome: string
-      foto: string | null
-      permissao: string
-    }
-    listaUsuarioCurtida: {
-      idUsuario: number
-      username: string
-      nome: string
-      foto: string | null
-      permissao: string
-    }[]
-  }[]
-  dataPublicacao: string
+  }
+  listaUsuarioCurtida: any[]
+  listaComentario: any[]
 }
 
 export default function FeedPage() {
-  const [canal, setCanal] = useState<Post[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [newPostTitle, setNewPostTitle] = useState('')
   const [newPostContent, setNewPostContent] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -66,36 +49,30 @@ export default function FeedPage() {
       const token = localStorage.getItem('token')
       if (!token) {
         console.error('Erro: Nenhum usuário logado encontrado no localStorage')
+        toast.error('Usuário não está logado.')
         router.push('/auth')
         return
       }
 
-      const decoded: User = jwtDecode(token)
-      setLoggedUser(decoded)
-
-      const userId = decoded.idUsuario
-      let userEndpoint = ''
-
-      if (decoded.role === 'ADMINISTRADOR') {
-        userEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`
-      } else if (decoded.role === 'ACADEMICO') {
-        userEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`
-      }
-
       try {
-        const response = await fetch(userEndpoint)
-        if (response.ok) {
-          const userData = await response.json()
-          setLoggedUser(userData)
-        } else {
-          console.error(
-            'Falha ao buscar os dados do usuário:',
-            response.statusText,
-          )
-          router.push('/auth')
-        }
-      } catch (error) {
+        const decodedToken: any = jwtDecode(token)
+        console.log('Token decodificado:', decodedToken)
+
+        const userId = decodedToken.idUsuario || decodedToken.idAcademico
+        const userRole =
+          decodedToken.role || decodedToken.permissao || 'ACADEMICO'
+
+        const userEndpoint =
+          userRole === 'ADMINISTRADOR'
+            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`
+            : `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`
+
+        const response = await axios.get(userEndpoint)
+        console.log('Dados do usuário carregado:', response.data)
+        setLoggedUser(response.data)
+      } catch (error: any) {
         console.error('Erro ao carregar dados do usuário logado:', error)
+        toast.error('Erro ao carregar dados do usuário. Faça login novamente.')
         router.push('/auth')
       } finally {
         setLoading(false)
@@ -108,37 +85,74 @@ export default function FeedPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch(
+        const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/canal/listarCanaisUsuario/1`,
         )
-        if (response.ok) {
-          const data = await response.json()
-          // Verifica se `data` é um array de canais
-          if (Array.isArray(data) && data.length > 0) {
-            const canalData = data[0] // Supondo que você queira o primeiro canal
-            if (Array.isArray(canalData.listaPublicacao)) {
-              setCanal(canalData.listaPublicacao)
-            } else {
-              console.error('Estrutura de resposta inesperada:', data)
-            }
-          } else {
-            console.error('Estrutura de resposta inesperada:', data)
-          }
-        } else {
-          console.error('Falha ao buscar os posts:', response.statusText)
+        if (response.data && response.data[0]?.listaPublicacao) {
+          setPosts(response.data[0].listaPublicacao)
         }
       } catch (error) {
         console.error('Erro ao carregar os posts:', error)
+        toast.error('Erro ao carregar os posts.')
       }
     }
 
     fetchPosts()
   }, [])
 
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true)
+  const cadastrarPublicacao = async (newPost: Post) => {
+    try {
+      const postData = {
+        idPublicacao: 0,
+        titulo: newPost.titulo,
+        descricao: newPost.descricao,
+        dataPublicacao: null, // Pode ser omitido se a API definir automaticamente
+        idCanal: newPost.idCanal,
+        idModalidadeEsportiva: null, // Ajuste conforme necessário
+        Usuario: {
+          idUsuario: loggedUser?.idAcademico || loggedUser?.idUsuario,
+          username: loggedUser?.username || '',
+          nome: loggedUser?.nome || '',
+          foto: loggedUser?.foto || null,
+          permissao: loggedUser?.permissao || 'ACADEMICO',
+        },
+      }
+
+      console.log(
+        'Dados simplificados a serem enviados:',
+        JSON.stringify(postData, null, 2),
+      )
+
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/publicacao/cadastrarPublicacao`,
+        postData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      console.log('Resposta da API:', response.data)
+      toast.success('Publicação criada com sucesso!')
+      return response.data
+    } catch (error: any) {
+      if (error.response) {
+        console.error('Erro da API:', error.response.data)
+        const errorMessage =
+          error.response.data.message || 'Falha ao criar publicação.'
+        toast.error(`Erro: ${errorMessage}`)
+      } else {
+        console.error('Erro desconhecido:', error)
+        toast.error('Erro desconhecido ao criar publicação.')
+      }
+      throw error
+    }
   }
 
+  const handleOpenDialog = () => setIsDialogOpen(true)
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
     setNewPostTitle('')
@@ -147,177 +161,148 @@ export default function FeedPage() {
 
   const handleCreatePost = async () => {
     if (!newPostTitle || !newPostContent) {
-      alert('Por favor, preencha todos os campos.')
+      toast.error('Por favor, preencha todos os campos.')
       return
     }
 
-    const newPost = {
-      titulo: newPostTitle,
-      descricao: newPostContent,
-      idCanal: 1, // Supondo que o idCanal seja 1
-      Usuario: loggedUser,
-      dataPublicacao: new Date().toISOString(),
+    console.log('loggedUser:', loggedUser)
+
+    if (!loggedUser || !(loggedUser.idAcademico || loggedUser.idUsuario)) {
+      toast.error('Usuário não está logado ou inválido.')
+      return
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/canal/publicar`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newPost),
+      const newPost: Post = {
+        idPublicacao: 0,
+        titulo: newPostTitle,
+        descricao: newPostContent,
+        idCanal: 1, // Ajuste o ID do canal se necessário
+        Usuario: {
+          idUsuario: loggedUser.idAcademico || loggedUser.idUsuario,
+          username: loggedUser.username || '',
+          nome: loggedUser.nome || '',
+          foto: loggedUser.foto || null,
+          permissao: loggedUser.permissao || 'ACADEMICO',
         },
-      )
+        listaUsuarioCurtida: [],
+        listaComentario: [],
+      }
 
-      if (response.ok) {
-        const createdPost = await response.json()
-        setCanal((prevPosts) => [createdPost, ...prevPosts])
+      console.log('Dados do post a ser criado:', newPost)
+
+      const createdPost = await cadastrarPublicacao(newPost)
+      if (createdPost) {
+        setPosts((prevPosts) => [createdPost, ...prevPosts])
         handleCloseDialog()
-      } else {
-        console.error('Falha ao criar o post:', response.statusText)
       }
     } catch (error) {
-      console.error('Erro ao criar o post:', error)
+      console.error('Erro ao criar post:', error)
     }
   }
 
-  const handleLikePost = (postId: number) => {
-    // Lógica para curtir o post
-    console.log('Post curtido:', postId)
-  }
-
-  const handleCommentPost = (postId: number) => {
-    // Lógica para comentar no post
-    console.log('Comentário no post:', postId)
+  const handleLikePost = async (postId: number) => {
+    if (loggedUser) {
+      try {
+        const token = localStorage.getItem('token')
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtir/${postId}`,
+          { idUsuario: loggedUser.idAcademico || loggedUser.idUsuario },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.idPublicacao === postId
+              ? {
+                  ...post,
+                  listaUsuarioCurtida: [
+                    ...post.listaUsuarioCurtida,
+                    loggedUser,
+                  ],
+                }
+              : post,
+          ),
+        )
+        toast.success('Publicação curtida!')
+      } catch (error) {
+        console.error('Erro ao curtir a publicação:', error)
+        toast.error('Erro ao curtir a publicação.')
+      }
+    }
   }
 
   return (
     <div>
       <Header />
+      <Toaster richColors />
       <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 p-4 lg:p-6">
         <div className="lg:w-1/4 lg:pr-6">
           <Sidebar />
         </div>
-
         <div className="lg:w-3/4 space-y-4">
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-10 w-full bg-blue-500" />
             </div>
           ) : (
             <div className="bg-transparent mb-4">
-              <Button
-                className="w-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-300"
-                onClick={handleOpenDialog}
-              >
+              <Button onClick={handleOpenDialog}>
                 No que você está pensando?
               </Button>
-
               {isDialogOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                   <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-lg space-y-4">
-                    <h3 className="text-lg font-semibold">Criar Post</h3>
                     <Textarea
                       value={newPostTitle}
                       onChange={(e) => setNewPostTitle(e.target.value)}
                       placeholder="Título do post"
-                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg"
                       rows={1}
                     />
                     <Textarea
                       value={newPostContent}
                       onChange={(e) => setNewPostContent(e.target.value)}
                       placeholder="Conteúdo do post"
-                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg"
                       rows={4}
                     />
                     <div className="flex justify-end space-x-2">
-                      <Button
-                        className="bg-gray-300 dark:bg-gray-700"
-                        onClick={handleCloseDialog}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        className="bg-blue-500 text-white"
-                        onClick={handleCreatePost}
-                      >
-                        Publicar
-                      </Button>
+                      <Button onClick={handleCloseDialog}>Cancelar</Button>
+                      <Button onClick={handleCreatePost}>Publicar</Button>
                     </div>
                   </div>
                 </div>
               )}
             </div>
           )}
-
-          {loading
-            ? Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="border-b border-gray-300 dark:border-gray-700 py-4 space-y-2"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Skeleton className="w-12 h-12 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                    </div>
+          {posts.map((post) => (
+            <div key={post.idPublicacao} className="border-b py-4">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <Image
+                    src={post?.Usuario?.foto || '/default-avatar.png'}
+                    alt="Avatar"
+                    width={50}
+                    height={50}
+                    className="rounded-full"
+                  />
+                </div>
+                <div>
+                  <h3>{post.titulo}</h3>
+                  <p>{post.descricao}</p>
+                  <div className="flex space-x-4 mt-2">
+                    <Button onClick={() => handleLikePost(post.idPublicacao)}>
+                      <Heart /> Curtir
+                    </Button>
                   </div>
                 </div>
-              ))
-            : canal?.map((post) => (
-                <div
-                  key={post.idPublicacao}
-                  className="border-b border-gray-300 dark:border-gray-700 py-4"
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <Image
-                        src={post?.Usuario?.foto || '/default-avatar.png'} // Use uma imagem padrão se a foto do usuário for nula
-                        alt="Avatar"
-                        width={50}
-                        height={50}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-bold">
-                          {post?.Usuario?.username || 'Usuário Desconhecido'}
-                        </span>{' '}
-                        •{' '}
-                        {post.dataPublicacao
-                          ? new Date(post.dataPublicacao).toLocaleDateString()
-                          : 'Data Desconhecida'}
-                      </div>
-                      <h3 className="font-semibold mt-2">{post.titulo}</h3>
-                      <p className="text-gray-800 dark:text-gray-200 mt-2">
-                        {post.descricao}
-                      </p>
-                      <div className="flex space-x-4 mt-2">
-                        <Button
-                          className="bg-blue-500 text-white"
-                          onClick={() => handleLikePost(post.idPublicacao)}
-                        >
-                          Curtir
-                        </Button>
-                        <Button
-                          className="bg-gray-300 dark:bg-gray-700"
-                          onClick={() => handleCommentPost(post.idPublicacao)}
-                        >
-                          Comentar
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -47,6 +47,9 @@ export interface User {
   idUsuario: number
   username: string
   role: string
+  permissao: string
+  nome: string
+  foto: string | null
 }
 
 // Tipagem para Modalidade Esportiva
