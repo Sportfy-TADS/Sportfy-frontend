@@ -8,11 +8,16 @@ import { jwtDecode } from 'jwt-decode'
 import {
   Home,
   User,
-  Trophy,
-  Heart,
+  Target,
+  Award,
+  HeartPulse,
   Settings,
   Activity,
+  Gamepad,
+  Trophy,
   Shield,
+  Layers,
+  Hospital,
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -48,43 +53,41 @@ export default function Sidebar() {
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/goals')}
         >
-          <Activity className="w-6 h-6 text-blue-500" />
+          <Target className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Metas</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/achievements')}
         >
-          <Trophy className="w-6 h-6 text-blue-500" />
+          <Award className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Conquistas</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/healthWarning')}
         >
-          <Heart className="w-6 h-6 text-blue-500" />
+          <HeartPulse className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Saúde</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/Modality')}
         >
-          <Heart className="w-6 h-6 text-blue-500" />
+          <Activity className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Modalidade</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
-          onClick={() => router.push('/Modality')}
+          onClick={() => router.push('/matches')}
         >
-          <Heart className="w-6 h-6 text-blue-500" />
+          <Gamepad className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Partida</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/championships')}
         >
-          {' '}
-          {/* Novo item "Campeonato" */}
           <Trophy className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Campeonato</span>
         </li>
@@ -96,7 +99,6 @@ export default function Sidebar() {
           <span className="text-lg font-semibold">Configurações</span>
         </li>
 
-        {/* Opções de Admin - Visível apenas para Administradores */}
         {isAdmin && (
           <>
             <li
@@ -112,7 +114,7 @@ export default function Sidebar() {
               className="flex items-center space-x-3 cursor-pointer"
               onClick={() => router.push('/admin/modality')}
             >
-              <Shield className="w-6 h-6 text-red-500" />
+              <Layers className="w-6 h-6 text-red-500" />
               <span className="text-lg font-semibold">
                 Gerenciar Modalidades
               </span>
@@ -121,7 +123,7 @@ export default function Sidebar() {
               className="flex items-center space-x-3 hover:bg-gray-700 cursor-pointer"
               onClick={() => router.push('/admin/health')}
             >
-              <Shield className="w-6 h-6 text-red-500" />
+              <Hospital className="w-6 h-6 text-red-500" />
               <span className="text-lg font-semibold">
                 Gerenciar Casas de Saúde
               </span>
