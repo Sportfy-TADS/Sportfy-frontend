@@ -2,290 +2,151 @@
 
 import { useState, useEffect } from 'react'
 
-import Image from 'next/image'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button' // Importação adicionada
 import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
 
 interface User {
-  id: string
+  idAcademico?: number
+  idUsuario?: number
+  curso?: string
   username: string
   email: string
-  gender?: string
-  profileImage?: string
-}
-
-interface Achievement {
-  id: number
-  userId: string
-  title: string
-  description: string
-}
-
-interface Goal {
-  id: number
-  title: string
-  description: string
-  status: string
-  userId: string
-}
-
-interface Post {
-  id: number
-  author: string
-  date: string
-  content: string
-  image?: string
+  password?: string | null
+  nome: string
+  genero?: string | null
+  telefone?: string
+  dataNascimento?: string
+  foto?: string | null
+  dataCriacao?: string
+  ativo?: boolean
+  permissao: string
+  [key: string]: string | number | boolean | null | undefined // Para acomodar campos adicionais
 }
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
-  const [achievements, setAchievements] = useState<Achievement[]>([])
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [posts, setPosts] = useState<Post[]>([])
-  const [newPostContent, setNewPostContent] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const academicoId = localStorage.getItem('academicoId')
-      if (!academicoId) return
+    const loadUser = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('Erro: Nenhum usuário logado encontrado no localStorage')
+        router.push('/auth')
+        return
+      }
 
       try {
-        const userResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${academicoId}`,
-        )
-        if (!userResponse.ok)
-          throw new Error('Erro ao buscar dados do acadêmico')
-        const userData = await userResponse.json()
-        setUser(userData)
+        interface DecodedToken {
+          idUsuario?: number
+          idAcademico?: number
+          role?: string
+          permissao?: string
+        }
 
-        const achievementsResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/conquistas?academicoId=${academicoId}`,
-        )
-        if (!achievementsResponse.ok)
-          throw new Error('Erro ao buscar conquistas')
-        const achievementsData = await achievementsResponse.json()
-        setAchievements(achievementsData)
+        const decodedToken: DecodedToken = jwtDecode(token)
+        console.log('Token decodificado:', decodedToken)
 
-        const goalsResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/metas?userId=${academicoId}`,
-        )
-        if (!goalsResponse.ok) throw new Error('Erro ao buscar metas')
-        const goalsData = await goalsResponse.json()
-        setGoals(goalsData)
+        const userId = decodedToken.idUsuario || decodedToken.idAcademico
+        const userRole =
+          decodedToken.role || decodedToken.permissao || 'ACADEMICO'
 
-        const postsResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/posts?author=${userData.username}`,
-        )
-        if (!postsResponse.ok) throw new Error('Erro ao buscar posts')
-        const postsData = await postsResponse.json()
-        setPosts(postsData)
+        const userEndpoint =
+          userRole === 'ADMINISTRADOR'
+            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${userId}`
+            : `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`
 
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Erro ao buscar dados do acadêmico:', error)
-        setIsLoading(false)
+        const response = await axios.get(userEndpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        console.log('Dados do usuário carregado:', response.data)
+        setUser(response.data)
+      } catch (error: unknown) {
+        console.error('Erro ao carregar dados do usuário logado:', error)
+        router.push('/auth')
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchUserData()
-  }, [])
+    loadUser()
+  }, [router])
 
-  const handleNewPost = async () => {
-    if (newPostContent.trim() === '') return
-
-    const newPost = {
-      id: posts.length + 1,
-      author: user?.username || 'Anônimo',
-      date: new Date().toISOString(),
-      content: newPostContent,
-    }
-
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPost),
-      })
-
-      setPosts([newPost, ...posts])
-      setNewPostContent('')
-    } catch (error) {
-      console.error('Erro ao criar novo post:', error)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleNewPost()
-    }
+  if (loading) {
+    return (
+      <div>
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <div className="container mx-auto p-4">
+            <Skeleton className="w-full h-48 bg-gray-300" />
+            <Skeleton className="w-24 h-24 rounded-full bg-gray-300 mt-4" />
+            <Skeleton className="h-8 w-48 bg-gray-300 mt-2" />
+            <Skeleton className="w-full h-32 bg-gray-300 mt-4" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div>
       <Header />
-      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 p-4 lg:p-6">
-        <div className="lg:w-1/4 lg:pr-6">
-          <Sidebar />
-        </div>
-
-        <div className="lg:w-3/4 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="shadow-lg">
-              <CardHeader className="flex items-center space-x-4">
-                {isLoading ? (
-                  <>
-                    <Skeleton className="w-20 h-20 rounded-full" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-36" />
-                      <Skeleton className="h-8 w-20 mt-2" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Avatar className="w-20 h-20">
-                      {user?.profileImage ? (
-                        <AvatarImage
-                          src={user.profileImage}
-                          alt="Profile Image"
-                        />
-                      ) : (
-                        <AvatarFallback>
-                          {user?.username.charAt(0)}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-xl font-bold">
-                        {user?.username}
-                      </CardTitle>
-                      <p className="text-sm text-gray-500">{user?.email}</p>
-                      <Button
-                        onClick={() => router.push('/profile/edit')}
-                        className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
-                      >
-                        Editar Perfil
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardHeader>
-            </Card>
-
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold">Conquistas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading
-                  ? Array(3)
-                      .fill(null)
-                      .map((_, index) => (
-                        <Skeleton key={index} className="h-6 w-full mb-2" />
-                      ))
-                  : achievements.map((achievement) => (
-                      <div key={achievement.id} className="mb-2">
-                        <h3 className="font-semibold">{achievement.title}</h3>
-                        <p className="text-sm">{achievement.description}</p>
-                      </div>
-                    ))}
-                <Link href="/achievements">Conquistas</Link>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold">Metas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading
-                  ? Array(2)
-                      .fill(null)
-                      .map((_, index) => (
-                        <Skeleton key={index} className="h-6 w-full mb-2" />
-                      ))
-                  : goals.map((goal) => (
-                      <div key={goal.id} className="mb-2">
-                        <h3 className="font-semibold">{goal.title}</h3>
-                        <p className="text-sm">{goal.description}</p>
-                        <p className="text-sm">
-                          Status:{' '}
-                          {goal.status === 'completed'
-                            ? 'Concluída'
-                            : 'Em Andamento'}
-                        </p>
-                      </div>
-                    ))}
-                <Link href="/profile/goals">Ver Metas</Link>
-              </CardContent>
-            </Card>
+      <div className="flex">
+        <Sidebar />
+        <div className="container mx-auto p-4">
+          {/* Perfil do Usuário */}
+          <div className="relative mb-6">
+            <div className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg" />
+            <div className="absolute -bottom-12 left-4">
+              <img
+                src={user?.foto || '/default-avatar.png'}
+                alt={user?.nome}
+                className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-900"
+              />
+            </div>
           </div>
-
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="shadow-lg">
-              <CardContent>
-                <Textarea
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder="No que você está pensando?"
-                  className="w-full mb-2 p-4 border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyDown={handleKeyDown}
-                  rows={4}
-                />
-                <Button
-                  onClick={handleNewPost}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  Publicar
-                </Button>
-              </CardContent>
-            </Card>
-
-            {isLoading
-              ? Array(3)
-                  .fill(null)
-                  .map((_, index) => (
-                    <Card key={index} className="shadow-md">
-                      <CardHeader>
-                        <Skeleton className="h-4 w-24 mb-2" />
-                      </CardHeader>
-                      <CardContent>
-                        <Skeleton className="h-20 w-full mb-4" />
-                      </CardContent>
-                    </Card>
-                  ))
-              : posts.map((post) => (
-                  <Card key={post.id} className="shadow-md">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(post.date).toLocaleString('pt-BR')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="mb-2">{post.content}</p>
-                      {post.image && (
-                        <Image
-                          src={post.image}
-                          alt="Post Image"
-                          width={500}
-                          height={300}
-                          className="rounded-md mb-2"
-                        />
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+          <div className="flex flex-col items-start space-y-4 mb-6">
+            <h1 className="text-2xl font-bold">{user?.nome}</h1>
+            <p className="text-gray-500">@{user?.username}</p>
+            <p className="text-gray-600 dark:text-gray-300">
+              <strong>Email:</strong> {user?.email}
+            </p>
+            {user?.curso && (
+              <p className="text-gray-600 dark:text-gray-300">
+                <strong>Curso:</strong> {user.curso}
+              </p>
+            )}
+            {user?.telefone && (
+              <p className="text-gray-600 dark:text-gray-300">
+                <strong>Telefone:</strong> {user.telefone}
+              </p>
+            )}
+            {user?.dataNascimento && (
+              <p className="text-gray-600 dark:text-gray-300">
+                <strong>Data de Nascimento:</strong>{' '}
+                {new Date(user.dataNascimento).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+            <p className="text-gray-600 dark:text-gray-300">
+              <strong>Gênero:</strong> {user?.genero || 'Não informado'}
+            </p>
+            <Button
+              onClick={() => router.push('/profile/edit')}
+              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Editar Perfil
+            </Button>
           </div>
         </div>
       </div>
