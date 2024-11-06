@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { jwtDecode } from 'jwt-decode' // Certifique-se de que esta biblioteca está instalada
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2, Trash2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -29,59 +29,96 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 
-// Função para buscar todos os usuários
-async function fetchUsers() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`)
-  if (!res.ok) throw new Error('Erro ao buscar usuários.')
+// Função para buscar todos os administradores
+async function fetchAdmins() {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
+  )
+  if (!res.ok) throw new Error('Erro ao buscar administradores.')
   return await res.json()
 }
 
-// Função para adicionar/remover administrador
-async function toggleAdminStatus(userId: string, isAdmin: boolean) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isAdmin }),
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao atualizar status de administrador.')
-  return res.json()
-}
-
-// Função para cadastrar um novo usuário como administrador
-async function addNewAdmin(userData: {
+// Função para cadastrar um novo administrador
+async function createAdmin(adminData: {
   name: string
   email: string
   username: string
   password: string
 }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...userData, isAdmin: true }),
-  })
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(adminData),
+    },
+  )
   if (!res.ok) throw new Error('Erro ao cadastrar novo administrador.')
   return res.json()
 }
 
-// Função para excluir um usuário
-async function deleteUser(userId: string) {
+// Função para atualizar um administrador existente
+async function updateAdmin(
+  id: string,
+  adminData: {
+    name: string
+    email: string
+    username: string
+  },
+) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/atualizar/${id}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(adminData),
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao atualizar administrador.')
+  return res.json()
+}
+
+// Função para consultar detalhes de um administrador
+async function consultAdmin(id: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${id}`,
+  )
+  if (!res.ok) throw new Error('Erro ao consultar administrador.')
+  return await res.json()
+}
+
+// Função para inativar um administrador
+async function inactivateAdmin(id: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`,
+    {
+      method: 'PUT',
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao inativar administrador.')
+  return res.json()
+}
+
+// Função para excluir um administrador
+async function deleteAdmin(id: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/excluir/${id}`,
     {
       method: 'DELETE',
     },
   )
-  if (!res.ok) throw new Error('Erro ao excluir usuário.')
+  if (!res.ok) throw new Error('Erro ao excluir administrador.')
   return res.json()
 }
 
 export default function AdminCrudPage() {
-  const [userId, setUserId] = useState<string | null>(null)
-  const [isUserAdmin, setIsUserAdmin] = useState(false)
-  const [newUser, setNewUser] = useState({
+  const [currentAdmin, setCurrentAdmin] = useState<{
+    id: string
+    name: string
+    email: string
+    username: string
+  } | null>(null)
+  const [newAdmin, setNewAdmin] = useState({
     name: '',
     email: '',
     username: '',
@@ -109,65 +146,123 @@ export default function AdminCrudPage() {
         return
       }
 
-      setUserId(decoded.idUsuario) // Armazena o ID do usuário logado
-      setIsUserAdmin(true) // Define que o usuário é admin
+      setCurrentAdmin({
+        id: decoded.idUsuario,
+        name: decoded.name,
+        email: decoded.email,
+        username: decoded.username,
+      })
     }
     checkAdminStatus()
   }, [router])
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: fetchUsers,
-    enabled: isUserAdmin, // Só faz a consulta se o usuário for admin
+  const { data: admins = [], isLoading } = useQuery({
+    queryKey: ['admins'],
+    queryFn: fetchAdmins,
+    enabled: !!currentAdmin, // Só faz a consulta se o usuário for admin
   })
 
-  const toggleAdminMutation = useMutation({
-    mutationFn: toggleAdminStatus,
+  const createAdminMutation = useMutation({
+    mutationFn: createAdmin,
     onSuccess: () => {
-      queryClient.invalidateQueries(['users'])
-      toast.success('Status de administrador atualizado com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao atualizar o status de administrador.')
-    },
-  })
-
-  const addAdminMutation = useMutation({
-    mutationFn: addNewAdmin,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries({ queryKey: ['admins'] })
       toast.success('Novo administrador cadastrado com sucesso!')
+      setNewAdmin({ name: '', email: '', username: '', password: '' })
     },
     onError: () => {
       toast.error('Erro ao cadastrar novo administrador.')
     },
   })
 
-  const deleteUserMutation = useMutation({
-    mutationFn: deleteUser,
+  const updateAdminMutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string
+      data: { name: string; email: string; username: string }
+    }) => updateAdmin(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['users'])
-      toast.success('Usuário excluído com sucesso!')
+      queryClient.invalidateQueries({ queryKey: ['admins'] })
+      toast.success('Administrador atualizado com sucesso!')
+      setCurrentAdmin(null)
     },
     onError: () => {
-      toast.error('Erro ao excluir usuário.')
+      toast.error('Erro ao atualizar administrador.')
     },
   })
 
-  const handleToggleAdmin = (userId: string, isAdmin: boolean) => {
-    toggleAdminMutation.mutate({ userId, isAdmin: !isAdmin })
-  }
+  const inactivateAdminMutation = useMutation({
+    mutationFn: inactivateAdmin,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admins'])
+      toast.success('Administrador inativado com sucesso!')
+    },
+    onError: () => {
+      toast.error('Erro ao inativar administrador.')
+    },
+  })
 
-  const handleAddAdmin = () => {
-    if (newUser.name && newUser.email && newUser.username && newUser.password) {
-      addAdminMutation.mutate(newUser)
+  const deleteAdminMutation = useMutation({
+    mutationFn: deleteAdmin,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admins'])
+      toast.success('Administrador excluído com sucesso!')
+    },
+    onError: () => {
+      toast.error('Erro ao excluir administrador.')
+    },
+  })
+
+  const handleCreateAdmin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (
+      newAdmin.name &&
+      newAdmin.email &&
+      newAdmin.username &&
+      newAdmin.password
+    ) {
+      createAdminMutation.mutate(newAdmin)
     } else {
       toast.error('Preencha todos os campos.')
     }
   }
 
-  const handleDeleteUser = (userId: string) => {
-    deleteUserMutation.mutate(userId)
+  const handleUpdateAdmin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (currentAdmin) {
+      const { id, name, email, username } = currentAdmin
+      if (name && email && username) {
+        updateAdminMutation.mutate({ id, data: { name, email, username } })
+      } else {
+        toast.error('Preencha todos os campos.')
+      }
+    }
+  }
+
+  const handleInactivateAdmin = (id: string) => {
+    inactivateAdminMutation.mutate(id)
+  }
+
+  const handleDeleteAdmin = (id: string) => {
+    deleteAdminMutation.mutate(id)
+  }
+
+  interface Admin {
+    id: string
+    name: string
+    email: string
+    username: string
+    isAdmin: boolean
+  }
+
+  const handleEditClick = (admin: Admin) => {
+    setCurrentAdmin({
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+      username: admin.username,
+    })
   }
 
   if (isLoading) {
@@ -178,15 +273,11 @@ export default function AdminCrudPage() {
     )
   }
 
-  const filteredUsers = showAdminsOnly
-    ? users.filter((user: any) => user.isAdmin)
-    : users
-
   return (
     <>
       <Header />
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
           <h1 className="text-2xl font-bold">Gerenciar Administradores</h1>
 
           {/* Filtro para mostrar apenas admins ou todos */}
@@ -213,38 +304,43 @@ export default function AdminCrudPage() {
               <SheetHeader>
                 <SheetTitle>Cadastrar Novo Administrador</SheetTitle>
               </SheetHeader>
-              <form className="space-y-4 mt-8">
+              <form className="space-y-4 mt-8" onSubmit={handleCreateAdmin}>
                 <Input
                   placeholder="Nome"
-                  value={newUser.name}
+                  value={newAdmin.name}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, name: e.target.value })
+                    setNewAdmin({ ...newAdmin, name: e.target.value })
                   }
+                  required
                 />
                 <Input
+                  type="email"
                   placeholder="Email"
-                  value={newUser.email}
+                  value={newAdmin.email}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, email: e.target.value })
+                    setNewAdmin({ ...newAdmin, email: e.target.value })
                   }
+                  required
                 />
                 <Input
                   placeholder="Username"
-                  value={newUser.username}
+                  value={newAdmin.username}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, username: e.target.value })
+                    setNewAdmin({ ...newAdmin, username: e.target.value })
                   }
+                  required
                 />
                 <Input
                   type="password"
                   placeholder="Senha"
-                  value={newUser.password}
+                  value={newAdmin.password}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, password: e.target.value })
+                    setNewAdmin({ ...newAdmin, password: e.target.value })
                   }
+                  required
                 />
                 <Button
-                  onClick={handleAddAdmin}
+                  type="submit"
                   className="w-full bg-green-500 hover:bg-green-600"
                 >
                   Salvar
@@ -254,30 +350,106 @@ export default function AdminCrudPage() {
           </Sheet>
         </div>
 
-        {/* Listar todos os usuários com checkbox para definir admin */}
+        {/* Formulário para editar administrador */}
+        {currentAdmin && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Editar Administrador</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-4" onSubmit={handleUpdateAdmin}>
+                <Input
+                  placeholder="Nome"
+                  value={currentAdmin.name}
+                  onChange={(e) =>
+                    setCurrentAdmin({
+                      ...currentAdmin,
+                      name: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={currentAdmin.email}
+                  onChange={(e) =>
+                    setCurrentAdmin({
+                      ...currentAdmin,
+                      email: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <Input
+                  placeholder="Username"
+                  value={currentAdmin.username}
+                  onChange={(e) =>
+                    setCurrentAdmin({
+                      ...currentAdmin,
+                      username: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <Button
+                  type="submit"
+                  className="w-full bg-yellow-500 hover:bg-yellow-600"
+                >
+                  Atualizar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setCurrentAdmin(null)}
+                  className="w-full bg-gray-500 hover:bg-gray-600"
+                >
+                  Cancelar
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Listar todos os administradores */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user: any) => (
-            <Card key={user.id} className="shadow-md">
+          {admins.map((admin: any) => (
+            <Card key={admin.id} className="shadow-md">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">
-                  {user.name} ({user.username})
+                  {admin.name} ({admin.username})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <span>{user.email}</span>
-                <Checkbox
-                  checked={user.isAdmin}
-                  onCheckedChange={() =>
-                    handleToggleAdmin(user.id, user.isAdmin)
-                  }
-                >
-                  Admin
-                </Checkbox>
+              <CardContent className="flex flex-col space-y-2">
+                <span>Email: {admin.email}</span>
+                <div className="flex items-center justify-between">
+                  <Checkbox
+                    checked={admin.isAdmin}
+                    onCheckedChange={() =>
+                      handleToggleAdmin(admin.id, admin.isAdmin)
+                    }
+                  >
+                    Admin
+                  </Checkbox>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => handleEditClick(admin)}
+                      className="bg-yellow-500 hover:bg-yellow-600"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleDeleteAdmin(admin.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
                 <Button
-                  variant="destructive"
-                  onClick={() => handleDeleteUser(user.id)}
+                  onClick={() => handleInactivateAdmin(admin.id)}
+                  className="w-full bg-red-500 hover:bg-red-600 mt-2"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  Inativar
                 </Button>
               </CardContent>
             </Card>
