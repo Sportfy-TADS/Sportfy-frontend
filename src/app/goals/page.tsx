@@ -52,6 +52,66 @@ async function getGoals(idAcademico: number) {
   return await response.json()
 }
 
+// Função API para criar uma nova meta
+async function createGoal(data: {
+  titulo: string
+  objetivo: string
+  quantidadeConcluida: number
+  progressoAtual: number
+  progressoMaximo: number
+  progressoItem: string
+  idAcademico: number
+  situacaoMetaDiaria: number
+}) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  )
+  if (!response.ok) throw new Error('Erro ao criar meta')
+  return await response.json()
+}
+
+// Função API para excluir uma meta
+async function deleteGoal(idMetaDiaria: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/deletar`,
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idMetaDiaria }),
+    },
+  )
+  if (!response.ok) throw new Error('Erro ao deletar meta')
+}
+
+// Função API para atualizar uma meta
+async function updateGoal(data: {
+  idMetaDiaria: number
+  titulo: string
+  objetivo: string
+  quantidadeConcluida: number
+  progressoAtual: number
+  progressoMaximo: number
+  progressoItem: string
+  idAcademico: number
+  situacaoMetaDiaria: number
+}) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  )
+  if (!response.ok) throw new Error('Erro ao atualizar meta')
+  return await response.json()
+}
+
 // Zod schema para validação de formulário
 const createGoalSchema = z.object({
   titulo: z.string().min(1, 'Informe a atividade que deseja praticar'),
@@ -69,6 +129,7 @@ export default function GoalsPage() {
     null,
   )
   const [idAcademico, setIdAcademico] = useState<number | null>(null)
+  const [editingGoal, setEditingGoal] = useState<any>(null)
   const queryClient = useQueryClient()
   const router = useRouter()
 
@@ -119,6 +180,16 @@ export default function GoalsPage() {
     resolver: zodResolver(createGoalSchema),
   })
 
+  // Formulário de edição
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    formState: { errors: errorsEdit },
+    reset: resetEdit,
+  } = useForm<CreateGoalSchema>({
+    resolver: zodResolver(createGoalSchema),
+  })
+
   const handleCreateGoal = async (data: CreateGoalSchema) => {
     try {
       const goalData = {
@@ -132,17 +203,7 @@ export default function GoalsPage() {
 
       console.log('Dados para criar meta:', goalData)
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(goalData),
-        },
-      )
-      if (!response.ok) throw new Error('Erro ao criar meta')
-      await response.json()
-
+      await createGoal(goalData)
       reset()
       queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
       toast.success('Meta criada com sucesso!')
@@ -154,17 +215,39 @@ export default function GoalsPage() {
 
   const handleDeleteGoal = async (idMetaDiaria: number) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/deletar`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idMetaDiaria }),
-      })
+      await deleteGoal(idMetaDiaria)
       queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
       toast.success('Meta excluída com sucesso!')
-    } catch {
+    } catch (error) {
+      console.error('Erro ao excluir a meta:', error)
       toast.error('Erro ao excluir a meta')
     }
   }
+
+  const handleSubmitEditGoal = handleSubmitEdit(
+    async (data: CreateGoalSchema) => {
+      if (!editingGoal) return
+
+      try {
+        const updatedGoal = {
+          ...editingGoal,
+          ...data,
+          idAcademico: idAcademico as number,
+        }
+
+        console.log('Dados para atualizar meta:', updatedGoal)
+
+        await updateGoal(updatedGoal)
+        resetEdit()
+        setEditingGoal(null)
+        queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
+        toast.success('Meta atualizada com sucesso!')
+      } catch (error) {
+        console.error('Erro ao atualizar a meta:', error)
+        toast.error('Erro ao atualizar a meta')
+      }
+    },
+  )
 
   const filteredGoals = goals.filter((goal: any) => {
     if (filter === 'all') return true
@@ -273,7 +356,7 @@ export default function GoalsPage() {
                     <CardTitle>{goal.titulo}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    Objetivo: {goal.objetivo}
+                    <p>Objetivo: {goal.objetivo}</p>
                     <p>
                       Progresso: {goal.quantidadeConcluida}/
                       {goal.progressoMaximo} {goal.progressoItem}
@@ -284,12 +367,20 @@ export default function GoalsPage() {
                         ? 'Concluída'
                         : 'Em andamento'}
                     </p>
-                    <Button
-                      onClick={() => handleDeleteGoal(goal.idMetaDiaria)}
-                      className="bg-red-500 hover:bg-red-600 mt-2"
-                    >
-                      Excluir
-                    </Button>
+                    <div className="flex space-x-2 mt-2">
+                      <Button
+                        onClick={() => setEditingGoal(goal)}
+                        className="bg-yellow-500 hover:bg-yellow-600"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        onClick={() => handleDeleteGoal(goal.idMetaDiaria)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Excluir
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))
@@ -297,6 +388,74 @@ export default function GoalsPage() {
               <p>Não há metas cadastradas.</p>
             )}
           </div>
+
+          {/* Formulário de Edição */}
+          {editingGoal && (
+            <Sheet
+              open={Boolean(editingGoal)}
+              onOpenChange={() => setEditingGoal(null)}
+            >
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Editar Meta</SheetTitle>
+                </SheetHeader>
+                <form
+                  onSubmit={handleSubmitEditGoal}
+                  className="space-y-4 mt-8"
+                >
+                  <div>
+                    <Label htmlFor="titulo">Atividade</Label>
+                    <Input
+                      id="titulo"
+                      defaultValue={editingGoal.titulo}
+                      {...registerEdit('titulo')}
+                    />
+                    {errorsEdit.titulo && (
+                      <p className="text-red-500">
+                        {errorsEdit.titulo.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="objetivo">Objetivo</Label>
+                    <Input
+                      id="objetivo"
+                      defaultValue={editingGoal.objetivo}
+                      {...registerEdit('objetivo')}
+                    />
+                    {errorsEdit.objetivo && (
+                      <p className="text-red-500">
+                        {errorsEdit.objetivo.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="progressoMaximo">Progresso Máximo</Label>
+                    <Input
+                      id="progressoMaximo"
+                      type="number"
+                      defaultValue={editingGoal.progressoMaximo}
+                      {...registerEdit('progressoMaximo')}
+                    />
+                    {errorsEdit.progressoMaximo && (
+                      <p className="text-red-500">
+                        {errorsEdit.progressoMaximo.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-green-500 hover:bg-green-600"
+                  >
+                    Salvar Alterações
+                  </Button>
+                </form>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </div>
     </>

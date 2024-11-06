@@ -1,10 +1,11 @@
+// index.ts
 export const fetchAchievements = async (
-  userId: string | null,
+  idAcademico: number,
   token: string | null,
 ) => {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/conquista/listarConquistas/1`,
+      `${process.env.NEXT_PUBLIC_API_URL}/conquista/listarConquistas/${idAcademico}`,
       {
         method: 'GET',
         headers: {

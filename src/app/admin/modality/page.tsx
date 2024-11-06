@@ -30,115 +30,151 @@ import {
 } from '@/components/ui/sheet'
 
 interface Modalidade {
-  id: string
-  name: string
-  description: string
-  schedule: string
-  location: string
+  idModalidadeEsportiva: number
+  nome: string
+  descricao: string
+  status: boolean
 }
 
-// Função para buscar modalidades
 async function getModalidades() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`)
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`,
+  )
   if (!res.ok) {
     throw new Error('Erro ao buscar modalidades')
   }
   return await res.json()
 }
 
-// Função para criar nova modalidade
-async function createModalidade(data: Partial<Modalidade>) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+async function createModalidade(data: Partial<Modalidade>, token: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  })
+  )
   if (!res.ok) {
     throw new Error('Erro ao cadastrar modalidade')
   }
   return res.json()
 }
 
-// Função para editar modalidade existente
-async function updateModalidade(id: string, data: Partial<Modalidade>) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
+async function updateModalidade(data: Modalidade, token: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  })
+  )
   if (!res.ok) {
     throw new Error('Erro ao editar modalidade')
   }
   return res.json()
 }
 
-// Função para deletar modalidade
-async function deleteModalidade(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports/${id}`, {
-    method: 'DELETE',
-  })
+async function desativarModalidade(id: number, token: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/desativar/${id}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
   if (!res.ok) {
-    throw new Error('Erro ao deletar modalidade')
+    throw new Error('Erro ao desativar modalidade')
+  }
+  return res.json()
+}
+
+async function searchModalidade(nome: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/buscar/${nome}`,
+  )
+  if (!res.ok) {
+    throw new Error('Erro ao buscar modalidade')
+  }
+  return await res.json()
+}
+
+async function inscreverModalidade(
+  idAcademico: number,
+  idModalidadeEsportiva: number,
+  token: string,
+) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${idModalidadeEsportiva}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+  if (!res.ok) {
+    throw new Error('Erro ao se inscrever na modalidade')
   }
   return res.json()
 }
 
 export default function AdminModalidadesPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [isUserAdmin, setIsUserAdmin] = useState(false)
+  const [userId, setUserId] = useState<number | null>(null)
   const [filter, setFilter] = useState('all')
   const [modalidadeForm, setModalidadeForm] = useState<Partial<Modalidade>>({
-    name: '',
-    description: '',
-    schedule: '',
-    location: '',
+    nome: '',
+    descricao: '',
+    status: true,
   })
   const [editMode, setEditMode] = useState<boolean>(false)
-  const [editingModalidadeId, setEditingModalidadeId] = useState<string | null>(
-    null,
-  )
+  const [searchTerm, setSearchTerm] = useState<string>('')
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // Verificar se o usuário é admin e se o localStorage está disponível
   useEffect(() => {
     const checkAdminStatus = async () => {
-      const token = localStorage.getItem('token') // Obtém o token do localStorage
+      const token = localStorage.getItem('token')
       if (!token) {
-        router.push('/auth') // Redireciona para login se não houver token
+        router.push('/auth')
         return
       }
 
-      const decoded: any = jwtDecode(token) // Decodifica o token
+      const decoded: any = jwtDecode(token)
       if (decoded.role !== 'ADMINISTRADOR') {
         toast.error(
           'Acesso negado! Somente administradores podem acessar esta página.',
         )
-        router.push('/') // Redireciona para a página principal
+        router.push('/')
         return
       }
 
-      setUserId(decoded.idUsuario) // Armazena o ID do usuário logado
-      setIsUserAdmin(true) // Define que o usuário é admin
+      setUserId(decoded.idUsuario)
+      setIsAdmin(true)
     }
     checkAdminStatus()
   }, [router])
 
-  // Query para buscar modalidades
+  const token = localStorage.getItem('token')
+
   const { data: modalidades = [], isLoading } = useQuery({
     queryKey: ['modalidades'],
     queryFn: getModalidades,
-    enabled: isAdmin, // Só executa a query se for admin
+    enabled: isAdmin,
   })
 
-  // Mutation para criar modalidade
   const createMutation = useMutation({
-    mutationFn: (data: Partial<Modalidade>) => createModalidade(data),
+    mutationFn: (data: Partial<Modalidade>) => createModalidade(data, token!),
     onSuccess: () => {
       queryClient.invalidateQueries(['modalidades'])
       toast.success('Modalidade criada com sucesso!')
@@ -148,39 +184,42 @@ export default function AdminModalidadesPage() {
     },
   })
 
-  // Mutation para editar modalidade
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<Modalidade>) =>
-      updateModalidade(editingModalidadeId!, data),
+    mutationFn: (data: Modalidade) => updateModalidade(data, token!),
     onSuccess: () => {
       queryClient.invalidateQueries(['modalidades'])
       toast.success('Modalidade editada com sucesso!')
-      setEditMode(false) // Sair do modo de edição
+      setEditMode(false)
     },
     onError: () => {
       toast.error('Erro ao editar modalidade')
     },
   })
 
-  // Mutation para deletar modalidade
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteModalidade(id),
+  const desativarMutation = useMutation({
+    mutationFn: (id: number) => desativarModalidade(id, token!),
     onSuccess: () => {
       queryClient.invalidateQueries(['modalidades'])
-      toast.success('Modalidade excluída com sucesso!')
+      toast.success('Modalidade desativada com sucesso!')
     },
     onError: () => {
-      toast.error('Erro ao excluir modalidade')
+      toast.error('Erro ao desativar modalidade')
+    },
+  })
+
+  const inscreverMutation = useMutation({
+    mutationFn: (idModalidadeEsportiva: number) =>
+      inscreverModalidade(userId!, idModalidadeEsportiva, token!),
+    onSuccess: () => {
+      toast.success('Inscrição realizada com sucesso!')
+    },
+    onError: () => {
+      toast.error('Erro ao se inscrever na modalidade')
     },
   })
 
   const handleCreateModalidade = () => {
-    if (
-      !modalidadeForm.name ||
-      !modalidadeForm.description ||
-      !modalidadeForm.schedule ||
-      !modalidadeForm.location
-    ) {
+    if (!modalidadeForm.nome || !modalidadeForm.descricao) {
       toast.error('Todos os campos são obrigatórios')
       return
     }
@@ -189,25 +228,32 @@ export default function AdminModalidadesPage() {
 
   const handleEditModalidade = (modalidade: Modalidade) => {
     setEditMode(true)
-    setEditingModalidadeId(modalidade.id)
     setModalidadeForm(modalidade)
   }
 
   const handleUpdateModalidade = () => {
-    if (
-      !modalidadeForm.name ||
-      !modalidadeForm.description ||
-      !modalidadeForm.schedule ||
-      !modalidadeForm.location
-    ) {
+    if (!modalidadeForm.nome || !modalidadeForm.descricao) {
       toast.error('Todos os campos são obrigatórios')
       return
     }
-    updateMutation.mutate(modalidadeForm)
+    updateMutation.mutate(modalidadeForm as Modalidade)
   }
 
-  const handleDeleteModalidade = (id: string) => {
-    deleteMutation.mutate(id)
+  const handleDesativarModalidade = (id: number) => {
+    desativarMutation.mutate(id)
+  }
+
+  const handleInscrever = (idModalidadeEsportiva: number) => {
+    inscreverMutation.mutate(idModalidadeEsportiva)
+  }
+
+  const handleSearch = async () => {
+    try {
+      const data = await searchModalidade(searchTerm)
+      setModalidades([data])
+    } catch (error) {
+      toast.error('Modalidade não encontrada')
+    }
   }
 
   if (isLoading) {
@@ -225,24 +271,34 @@ export default function AdminModalidadesPage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Gerenciar Modalidades</h1>
           <div className="flex space-x-4">
+            <Input
+              placeholder="Buscar por nome"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Button
+              onClick={handleSearch}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              Buscar
+            </Button>
             <Select onValueChange={setFilter} defaultValue="all">
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="inscrito">Inscritas</SelectItem>
-                <SelectItem value="nao_inscrito">Não inscritas</SelectItem>
+                <SelectItem value="ativas">Ativas</SelectItem>
+                <SelectItem value="desativadas">Desativadas</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Formulário para cadastrar nova modalidade - Apenas administradores */}
         {isAdmin && (
           <Sheet>
             <SheetTrigger asChild>
-              <Button className="bg-blue-500 hover:bg-blue-600">
+              <Button className="bg-green-500 hover:bg-green-600 mb-4">
                 {editMode ? 'Editar Modalidade' : 'Cadastrar Modalidade'}
               </Button>
             </SheetTrigger>
@@ -254,53 +310,27 @@ export default function AdminModalidadesPage() {
               </SheetHeader>
               <form className="space-y-4 mt-4">
                 <div>
-                  <Label htmlFor="name">Nome</Label>
+                  <Label htmlFor="nome">Nome</Label>
                   <Input
-                    id="name"
-                    value={modalidadeForm.name}
+                    id="nome"
+                    value={modalidadeForm.nome}
                     onChange={(e) =>
                       setModalidadeForm({
                         ...modalidadeForm,
-                        name: e.target.value,
+                        nome: e.target.value,
                       })
                     }
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Descrição</Label>
+                  <Label htmlFor="descricao">Descrição</Label>
                   <Input
-                    id="description"
-                    value={modalidadeForm.description}
+                    id="descricao"
+                    value={modalidadeForm.descricao}
                     onChange={(e) =>
                       setModalidadeForm({
                         ...modalidadeForm,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="schedule">Horário</Label>
-                  <Input
-                    id="schedule"
-                    value={modalidadeForm.schedule}
-                    onChange={(e) =>
-                      setModalidadeForm({
-                        ...modalidadeForm,
-                        schedule: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Localização</Label>
-                  <Input
-                    id="location"
-                    value={modalidadeForm.location}
-                    onChange={(e) =>
-                      setModalidadeForm({
-                        ...modalidadeForm,
-                        location: e.target.value,
+                        descricao: e.target.value,
                       })
                     }
                   />
@@ -318,18 +348,16 @@ export default function AdminModalidadesPage() {
           </Sheet>
         )}
 
-        {/* Lista de Modalidades */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {modalidades.map((modalidade: Modalidade) => (
-            <Card key={modalidade.id}>
+            <Card key={modalidade.idModalidadeEsportiva}>
               <CardHeader>
-                <CardTitle>{modalidade.name}</CardTitle>
+                <CardTitle>{modalidade.nome}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>{modalidade.description}</p>
-                <p>Horário: {modalidade.schedule}</p>
-                <p>Localização: {modalidade.location}</p>
-                {isAdmin && (
+                <p>{modalidade.descricao}</p>
+                <p>Status: {modalidade.status ? 'Ativa' : 'Desativada'}</p>
+                {isAdmin ? (
                   <div className="flex justify-end space-x-2 mt-4">
                     <Button
                       onClick={() => handleEditModalidade(modalidade)}
@@ -338,12 +366,25 @@ export default function AdminModalidadesPage() {
                       Editar
                     </Button>
                     <Button
-                      onClick={() => handleDeleteModalidade(modalidade.id)}
+                      onClick={() =>
+                        handleDesativarModalidade(
+                          modalidade.idModalidadeEsportiva,
+                        )
+                      }
                       className="bg-red-500 hover:bg-red-600"
                     >
-                      Excluir
+                      Desativar
                     </Button>
                   </div>
+                ) : (
+                  <Button
+                    onClick={() =>
+                      handleInscrever(modalidade.idModalidadeEsportiva)
+                    }
+                    className="w-full bg-blue-500 hover:bg-blue-600 mt-4"
+                  >
+                    Inscrever-se
+                  </Button>
                 )}
               </CardContent>
             </Card>
