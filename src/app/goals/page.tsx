@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode'
 import { useForm } from 'react-hook-form'
-import { toast } from 'sonner'
+import { toast, Toaster } from 'sonner'
 import { z } from 'zod'
 
 import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar' // Importando a Sidebar
+import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -30,47 +34,22 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 
+// Função para obter o idAcademico
+async function getUserData(userId: number) {
+  const response = await axios.get(
+    `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`,
+  )
+  if (response.status !== 200) throw new Error('Erro ao obter dados do usuário')
+  return response.data
+}
+
 // Função API para buscar metas
-async function getGoals(idDoUsuarioLogado: number) {
+async function getGoals(idAcademico: number) {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/listar/${idDoUsuarioLogado}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/listar/${idAcademico}`,
   )
   if (!response.ok) throw new Error('Erro ao buscar metas')
   return await response.json()
-}
-
-// Função API para criar uma nova meta
-async function createGoal(data: {
-  titulo: string
-  objetivo: string
-  quantidadeConcluida: number
-  progressoMaximo: number
-  progressoItem: string
-  idAcademico: number
-}) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    },
-  )
-  if (!response.ok) throw new Error('Erro ao criar meta')
-  return await response.json()
-}
-
-// Função API para excluir uma meta
-async function deleteGoal(idMetaDiaria: number) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/deletar`,
-    {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idMetaDiaria }),
-    },
-  )
-  if (!response.ok) throw new Error('Erro ao deletar meta')
 }
 
 // Zod schema para validação de formulário
@@ -89,20 +68,46 @@ export default function GoalsPage() {
   const [idDoUsuarioLogado, setIdDoUsuarioLogado] = useState<number | null>(
     null,
   )
+  const [idAcademico, setIdAcademico] = useState<number | null>(null)
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (token) {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      setIdDoUsuarioLogado(payload.idUsuario)
+    if (!token) {
+      console.error('Erro: Nenhum usuário logado encontrado no localStorage')
+      toast.error('Usuário não está logado.')
+      router.push('/auth')
+      return
     }
-  }, [])
+
+    const loadUserData = async () => {
+      try {
+        const decodedToken: any = jwtDecode(token)
+        console.log('Token decodificado:', decodedToken)
+
+        const userId = decodedToken.idAcademico || decodedToken.idUsuario
+
+        // Obter dados do usuário
+        const userData = await getUserData(userId)
+        console.log('Dados do usuário:', userData)
+
+        setIdDoUsuarioLogado(userId)
+        setIdAcademico(userData.idAcademico)
+      } catch (error) {
+        console.error('Erro ao obter dados do usuário:', error)
+        toast.error('Erro ao obter dados do usuário. Faça login novamente.')
+        router.push('/auth')
+      }
+    }
+
+    loadUserData()
+  }, [router])
 
   const { data: goals = [], isLoading } = useQuery({
-    queryKey: ['goals', idDoUsuarioLogado],
-    queryFn: () => getGoals(idDoUsuarioLogado as number),
-    enabled: idDoUsuarioLogado !== null,
+    queryKey: ['goals', idAcademico],
+    queryFn: () => getGoals(idAcademico as number),
+    enabled: idAcademico !== null,
   })
 
   const {
@@ -121,23 +126,40 @@ export default function GoalsPage() {
         quantidadeConcluida: 0,
         progressoAtual: 0,
         progressoItem: 'Kilômetros',
-        idAcademico: idDoUsuarioLogado as number,
+        idAcademico: idAcademico as number,
         situacaoMetaDiaria: 0,
       }
 
-      const response = await createGoal(goalData)
+      console.log('Dados para criar meta:', goalData)
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(goalData),
+        },
+      )
+      if (!response.ok) throw new Error('Erro ao criar meta')
+      await response.json()
+
       reset()
-      queryClient.invalidateQueries({ queryKey: ['goals', idDoUsuarioLogado] })
+      queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
       toast.success('Meta criada com sucesso!')
     } catch (error) {
+      console.error('Erro ao criar a meta:', error)
       toast.error('Erro ao criar a meta')
     }
   }
 
   const handleDeleteGoal = async (idMetaDiaria: number) => {
     try {
-      await deleteGoal(idMetaDiaria)
-      queryClient.invalidateQueries({ queryKey: ['goals', idDoUsuarioLogado] })
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/deletar`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idMetaDiaria }),
+      })
+      queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
       toast.success('Meta excluída com sucesso!')
     } catch {
       toast.error('Erro ao excluir a meta')
@@ -152,12 +174,10 @@ export default function GoalsPage() {
   return (
     <>
       <Header />
+      <Toaster richColors />
       <div className="flex h-screen">
-        <Sidebar className="flex-none" />{' '}
-        {/* Certifique-se de que a Sidebar esteja configurada para ocupar a altura total */}
+        <Sidebar className="flex-none" />
         <div className="container mx-auto p-4 flex-1 overflow-y-auto">
-          {' '}
-          {/* Adicionando overflow-y-auto para rolagem */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Metas Diárias</h1>
             <div className="flex space-x-4">
