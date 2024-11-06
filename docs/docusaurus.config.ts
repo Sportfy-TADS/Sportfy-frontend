@@ -5,8 +5,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Docmost',
-  tagline: 'Dinosaurs are cool',
+  title: 'Sportfy',
+  tagline: 'Sportfy are cool',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -17,8 +17,8 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'docmost', // Usually your GitHub org/user name.
-  projectName: 'docmost', // Usually your repo name.
+  organizationName: 'Sportfy', // Usually your GitHub org/user name.
+  projectName: 'Sportfy', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
