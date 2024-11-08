@@ -37,6 +37,32 @@ async function fetchAdmins() {
   return await res.json()
 }
 
+async function createAdmin(newAdmin) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newAdmin),
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
+  return await res.json()
+}
+
+async function inactivateAdmin(id) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`,
+    {
+      method: 'PATCH',
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao inativar administrador.')
+  return await res.json()
+}
+
 export default function AdminCrudPage() {
   const [currentAdmin, setCurrentAdmin] = useState(null)
   const [newAdmin, setNewAdmin] = useState({
@@ -84,6 +110,27 @@ export default function AdminCrudPage() {
     ? admins.filter((admin) => admin.isAdmin)
     : admins
 
+  const handleCreateAdmin = async () => {
+    try {
+      await createAdmin(newAdmin)
+      toast.success('Administrador cadastrado com sucesso.')
+      queryClient.invalidateQueries(['admins'])
+      setNewAdmin({ name: '', email: '', username: '', password: '' }) // Resetar o formulário
+    } catch (error) {
+      toast.error('Erro ao cadastrar o administrador.')
+    }
+  }
+
+  const handleInactivateAdmin = async (id) => {
+    try {
+      await inactivateAdmin(id)
+      toast.success('Administrador inativado com sucesso.')
+      queryClient.invalidateQueries(['admins'])
+    } catch (error) {
+      toast.error('Erro ao inativar o administrador.')
+    }
+  }
+
   return (
     <>
       <Header />
@@ -107,7 +154,58 @@ export default function AdminCrudPage() {
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Botão para abrir o Sheet do cadastro */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="primary">Cadastrar Novo Administrador</Button>
+            </SheetTrigger>
+            <SheetContent position="right" size="lg">
+              <SheetHeader>
+                <SheetTitle>Cadastrar Administrador</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 mt-6">
+                <Input
+                  placeholder="Nome"
+                  value={newAdmin.name}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, name: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Email"
+                  value={newAdmin.email}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, email: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Username"
+                  value={newAdmin.username}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, username: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Senha"
+                  type="password"
+                  value={newAdmin.password}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, password: e.target.value })
+                  }
+                />
+                <Button
+                  onClick={handleCreateAdmin}
+                  variant="primary"
+                  className="mt-4"
+                >
+                  Salvar
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Listagem de administradores */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
             {isLoading
               ? Array.from({ length: 6 }).map((_, index) => (
                   <Skeleton key={index} className="w-full h-32 rounded-lg" />
@@ -127,24 +225,19 @@ export default function AdminCrudPage() {
                         Email: {admin.email}
                       </span>
                       <div className="flex items-center justify-between">
-                        <div className="flex space-x-2">
-                          <Button
-                            onClick={() => setCurrentAdmin(admin)}
-                            variant="warning"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => deleteAdmin(admin.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          onClick={() => setCurrentAdmin(admin)}
+                          variant="warning"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleInactivateAdmin(admin.id)}
+                        >
+                          Inativar
+                        </Button>
                       </div>
-                      <Button variant="danger" className="w-full mt-2">
-                        Inativar
-                      </Button>
                     </CardContent>
                   </Card>
                 ))}
