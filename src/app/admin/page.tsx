@@ -4,18 +4,14 @@ import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { jwtDecode } from 'jwt-decode'
-import { Loader2, Trash2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
-
-import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -31,17 +27,24 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
 
-// Função para buscar todos os administradores
 async function fetchAdmins() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`)
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
+  )
   if (!res.ok) throw new Error('Erro ao buscar administradores.')
   return await res.json()
 }
 
 export default function AdminCrudPage() {
   const [currentAdmin, setCurrentAdmin] = useState(null)
-  const [newAdmin, setNewAdmin] = useState({ name: '', email: '', username: '', password: '' })
+  const [newAdmin, setNewAdmin] = useState({
+    name: '',
+    email: '',
+    username: '',
+    password: '',
+  })
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -55,7 +58,9 @@ export default function AdminCrudPage() {
       }
       const decoded = jwtDecode(token)
       if (decoded.role !== 'ADMINISTRADOR') {
-        toast.error('Acesso negado! Somente administradores podem acessar esta página.')
+        toast.error(
+          'Acesso negado! Somente administradores podem acessar esta página.',
+        )
         router.push('/')
         return
       }
@@ -75,17 +80,23 @@ export default function AdminCrudPage() {
     enabled: !!currentAdmin,
   })
 
-  const filteredAdmins = showAdminsOnly ? admins.filter((admin) => admin.isAdmin) : admins
+  const filteredAdmins = showAdminsOnly
+    ? admins.filter((admin) => admin.isAdmin)
+    : admins
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 bg-white dark:bg-gray-900">
-        <Header />
-        <div className="container mx-auto p-4">
+    <>
+      <Header />
+      <div className="flex h-screen">
+        <Sidebar className="flex-none" />
+        <div className="container mx-auto p-4 flex-1 overflow-y-auto">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-            <h1 className="text-2xl font-bold text-gray-800">Gerenciar Administradores</h1>
-            <Select onValueChange={(value) => setShowAdminsOnly(value === 'admins')}>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+              Gerenciar Administradores
+            </h1>
+            <Select
+              onValueChange={(value) => setShowAdminsOnly(value === 'admins')}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filtrar usuários" />
               </SelectTrigger>
@@ -102,20 +113,31 @@ export default function AdminCrudPage() {
                   <Skeleton key={index} className="w-full h-32 rounded-lg" />
                 ))
               : filteredAdmins.map((admin) => (
-                  <Card key={admin.id} className="shadow-md">
+                  <Card
+                    key={admin.id}
+                    className="shadow-md bg-white dark:bg-gray-800"
+                  >
                     <CardHeader>
-                      <CardTitle className="text-lg font-bold text-gray-800">
+                      <CardTitle className="text-lg font-bold text-gray-800 dark:text-gray-100">
                         {admin.name} ({admin.username})
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col space-y-2">
-                      <span className="text-gray-700">Email: {admin.email}</span>
+                      <span className="text-gray-700 dark:text-gray-300">
+                        Email: {admin.email}
+                      </span>
                       <div className="flex items-center justify-between">
                         <div className="flex space-x-2">
-                          <Button onClick={() => setCurrentAdmin(admin)} variant="warning">
+                          <Button
+                            onClick={() => setCurrentAdmin(admin)}
+                            variant="warning"
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="destructive" onClick={() => deleteAdmin(admin.id)}>
+                          <Button
+                            variant="destructive"
+                            onClick={() => deleteAdmin(admin.id)}
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -129,6 +151,6 @@ export default function AdminCrudPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

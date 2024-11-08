@@ -210,8 +210,10 @@ export default function Header() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/championships')}>
                 Campeonatos
-              </DropdownMenuItem>{' '}
-              {/* Nova opção para Campeonato */}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/statistics')}>
+                Estatística
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-500">
                 Logout
