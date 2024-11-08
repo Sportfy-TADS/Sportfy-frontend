@@ -29,7 +29,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton' // Importação do Skeleton
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Modalidade {
   idModalidadeEsportiva: number
@@ -297,11 +297,9 @@ export default function AdminModalidadesPage() {
   return (
     <>
       <Header />
-      <div className="flex">
-        <Sidebar className="h-screen w-64" /> {/* Ajustando a Sidebar */}
-        <div className="flex-1 container mx-auto p-4">
-          {' '}
-          {/* Ajustando o container principal */}
+      <div className="flex min-h-screen">
+        <Sidebar className="flex-none" />
+        <div className="container mx-auto p-4 flex-1">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Gerenciar Modalidades</h1>
             <div className="flex space-x-4">
