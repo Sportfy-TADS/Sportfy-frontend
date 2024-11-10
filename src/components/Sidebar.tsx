@@ -33,7 +33,7 @@ export default function Sidebar() {
   }, [])
 
   return (
-    <nav className="w-full max-w-xs bg-gray-200 dark:bg-gray-900 p-4 border-none shadow-none">
+    <nav className="flex-none h-screen w-full max-w-xs bg-gray-200 dark:bg-gray-900 p-4 border-none shadow-none">
       <ul className="space-y-6">
         <li
           className="flex items-center space-x-3 cursor-pointer"
@@ -90,6 +90,13 @@ export default function Sidebar() {
         >
           <Trophy className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Campeonato</span>
+        </li>
+        <li
+          className="flex items-center space-x-3 cursor-pointer"
+          onClick={() => router.push('/statistics')}
+        >
+          <Trophy className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Estatistica</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
