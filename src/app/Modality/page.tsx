@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { jwtDecode } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -27,6 +27,22 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 
+interface TokenPayload {
+  sub: string
+  roles: string
+  idUsuario: number
+  iss: string
+  exp: number
+}
+
+interface UserData {
+  idAcademico: number
+  curso: string
+  username: string
+  email: string
+  nome: string
+}
+
 interface Modalidade {
   idModalidadeEsportiva: number
   nome: string
@@ -35,88 +51,177 @@ interface Modalidade {
   inscrito: boolean
 }
 
-// Função para buscar modalidades
+function getIdAcademico(): number {
+  const userDataStr = localStorage.getItem('userData')
+  console.log('Dados do usuário no localStorage:', userDataStr)
+  if (!userDataStr) throw new Error('Dados do usuário não encontrados')
+
+  const userData: UserData = JSON.parse(userDataStr)
+  console.log('Dados do usuário após parse:', userData)
+  return userData.idAcademico
+}
+
+function decodeToken(token: string): TokenPayload {
+  const decoded = jwtDecode<TokenPayload>(token)
+  console.log('Token decodificado:', decoded)
+  return decoded
+}
+
 async function getModalidades() {
   const token = localStorage.getItem('token')
+  if (!token) {
+    console.error('Token não encontrado')
+    throw new Error('Token não encontrado')
+  }
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`,
-    {
-      method: 'GET',
+  const idAcademico = getIdAcademico()
+  console.log('Buscando modalidades para idAcademico:', idAcademico)
+
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
+  console.log('URL da API:', url)
+
+  try {
+    const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-    },
-  )
+    })
 
-  if (!response.ok) {
-    throw new Error('Erro ao buscar modalidades')
+    console.log('Status da resposta:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Erro na resposta da API:', errorText)
+      throw new Error(`Erro ao buscar modalidades: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('Dados recebidos da API:', data)
+    return data
+  } catch (error) {
+    console.error('Erro ao buscar modalidades:', error)
+    throw error
   }
-
-  return await response.json()
 }
 
-// Função para inscrever o usuário em uma modalidade
-async function inscreverUsuario(data: {
-  userId: string
-  modalidadeId: string
-}) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${data.userId}/${data.modalidadeId}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    },
-  )
+async function inscreverUsuario(modalidadeId: number) {
+  const token = localStorage.getItem('token')
+  if (!token) throw new Error('Token não encontrado')
 
-  if (!response.ok) {
-    throw new Error('Erro ao realizar inscrição')
+  try {
+    const idAcademico = getIdAcademico()
+    console.log('Inscrevendo usuário:', { idAcademico, modalidadeId })
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${modalidadeId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    console.log('Status da resposta:', response.status)
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Erro na resposta da API:', error)
+      throw new Error(`Erro ao realizar inscrição: ${error}`)
+    }
+
+    const data = await response.json()
+    console.log('Dados recebidos da API após inscrição:', data)
+    return data
+  } catch (error) {
+    console.error('Erro na inscrição:', error)
+    throw error
   }
-
-  return await response.json()
 }
 
 export default function ModalidadeInscricaoPage() {
-  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [filter, setFilter] = useState('all')
-  const [selectedModalidade, setSelectedModalidade] =
-    useState<Modalidade | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const queryClient = useQueryClient()
 
-  const { data: modalidades = [], isLoading } = useQuery({
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      const { roles, sub, idUsuario } = decodeToken(token)
+      setIsAdmin(roles === 'ADMIN')
+
+      // Simulação de armazenamento de dados do usuário no localStorage
+      const userData: UserData = {
+        idAcademico: 11, // Substitua pelo valor correto
+        curso: 'tads', // Substitua pelo valor correto
+        username: sub,
+        email: 'carlos@ufpr.br', // Substitua pelo valor correto
+        nome: 'thiago dos Santos', // Substitua pelo valor correto
+      }
+      localStorage.setItem('userData', JSON.stringify(userData))
+      console.log('Dados do usuário armazenados no localStorage:', userData)
+    }
+  }, [])
+
+  const {
+    data: modalidades = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['modalidades'],
-    queryFn: () => getModalidades(),
-  })
-
-  const { mutate } = useMutation({
-    mutationFn: (modalidadeId: string) =>
-      inscreverUsuario({ userId: '1', modalidadeId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['modalidades'])
-      toast.success('Inscrição realizada com sucesso!')
+    queryFn: getModalidades,
+    onSuccess: (data) => {
+      console.log('Modalidades carregadas com sucesso:', data)
     },
-    onError: () => {
-      toast.error('Erro ao realizar inscrição.')
+    onError: (error) => {
+      console.error('Erro ao carregar modalidades:', error)
     },
   })
 
-  const handleInscricao = (modalidadeId: string) => {
-    mutate(modalidadeId)
-  }
+  useEffect(() => {
+    if (isError) {
+      console.error('Erro ao carregar modalidades:', error)
+    }
+  }, [isError, error])
 
-  const filteredModalidades = modalidades.filter((modalidade) => {
-    if (filter === 'all') return true
-    return filter === 'inscrito' ? modalidade.inscrito : !modalidade.inscrito
-  })
+  const displayedModalidades = useMemo(() => {
+    let filteredModalidades = [...modalidades]
 
-  const displayedModalidades = searchTerm
-    ? filteredModalidades.filter((modalidade) =>
+    if (filter === 'inscrito') {
+      filteredModalidades = filteredModalidades.filter(
+        (modalidade) => modalidade.inscrito,
+      )
+    } else if (filter === 'nao_inscrito') {
+      filteredModalidades = filteredModalidades.filter(
+        (modalidade) => !modalidade.inscrito,
+      )
+    }
+
+    if (searchTerm) {
+      filteredModalidades = filteredModalidades.filter((modalidade) =>
         modalidade.nome.toLowerCase().includes(searchTerm.toLowerCase()),
       )
-    : filteredModalidades
+    }
+
+    return filteredModalidades
+  }, [modalidades, filter, searchTerm])
+
+  const { mutate } = useMutation({
+    mutationFn: inscreverUsuario,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['modalidades'])
+      toast.success('Inscrição realizada com sucesso!')
+      console.log('Inscrição realizada com sucesso:', data)
+    },
+    onError: (error: Error) => {
+      console.error('Erro detalhado:', error)
+      toast.error(`Erro ao realizar inscrição: ${error.message}`)
+    },
+  })
 
   return (
     <>
@@ -143,7 +248,6 @@ export default function ModalidadeInscricaoPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
               />
-              <Button onClick={() => setSearchTerm(searchTerm)}>Buscar</Button>
             </div>
           </div>
 
@@ -159,15 +263,10 @@ export default function ModalidadeInscricaoPage() {
                   <SheetHeader>
                     <SheetTitle>Cadastrar Nova Modalidade</SheetTitle>
                   </SheetHeader>
-                  <form>
+                  <form className="space-y-4 mt-4">
                     <Input placeholder="Nome da Modalidade" required />
                     <Input placeholder="Descrição" required />
-                    <Input placeholder="Horário" required />
-                    <Input placeholder="Local" required />
-                    <Button
-                      type="submit"
-                      className="mt-4 bg-green-500 hover:bg-green-600"
-                    >
+                    <Button type="submit" className="w-full">
                       Salvar
                     </Button>
                   </form>
@@ -193,24 +292,13 @@ export default function ModalidadeInscricaoPage() {
               displayedModalidades.map((modalidade) => (
                 <Card key={modalidade.idModalidadeEsportiva}>
                   <CardHeader>
-                    <CardTitle>
-                      <span
-                        onClick={() => setSelectedModalidade(modalidade)}
-                        className="text-blue-600 cursor-pointer hover:underline"
-                      >
-                        {modalidade.nome}
-                      </span>
-                    </CardTitle>
+                    <CardTitle>{modalidade.nome}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm">
-                      Inscrito: {modalidade.inscrito ? 'Sim' : 'Não'}
-                    </p>
+                    <p className="text-sm mb-2">{modalidade.descricao}</p>
                     <Button
-                      onClick={() =>
-                        handleInscricao(modalidade.idModalidadeEsportiva)
-                      }
-                      className="mt-4 w-full"
+                      onClick={() => mutate(modalidade.idModalidadeEsportiva)}
+                      className="w-full"
                       disabled={modalidade.inscrito}
                     >
                       {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
