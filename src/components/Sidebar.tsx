@@ -12,12 +12,12 @@ import {
   Award,
   HeartPulse,
   Settings,
-  Activity,
-  Gamepad,
   Trophy,
+  Flag,
   Shield,
   Layers,
   Hospital,
+  Activity,
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -40,7 +40,7 @@ export default function Sidebar() {
           onClick={() => router.push('/feed')}
         >
           <Home className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Home</span>
+          <span className="text-lg font-semibold">Início</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
@@ -81,7 +81,7 @@ export default function Sidebar() {
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/matches')}
         >
-          <Gamepad className="w-6 h-6 text-blue-500" />
+          <Flag className="w-6 h-6 text-blue-500" />
           <span className="text-lg font-semibold">Partida</span>
         </li>
         <li
@@ -95,8 +95,8 @@ export default function Sidebar() {
           className="flex items-center space-x-3 cursor-pointer"
           onClick={() => router.push('/statistics')}
         >
-          <Trophy className="w-6 h-6 text-blue-500" />
-          <span className="text-lg font-semibold">Estatistica</span>
+          <Layers className="w-6 h-6 text-blue-500" />
+          <span className="text-lg font-semibold">Estatísticas</span>
         </li>
         <li
           className="flex items-center space-x-3 cursor-pointer"
@@ -127,7 +127,7 @@ export default function Sidebar() {
               </span>
             </li>
             <li
-              className="flex items-center space-x-3 hover:bg-gray-700 cursor-pointer"
+              className="flex items-center space-x-3 cursor-pointer"
               onClick={() => router.push('/admin/health')}
             >
               <Hospital className="w-6 h-6 text-red-500" />

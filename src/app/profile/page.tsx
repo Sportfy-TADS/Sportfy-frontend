@@ -9,7 +9,7 @@ import { jwtDecode } from 'jwt-decode'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { Button } from '@/components/ui/button' // Importação adicionada
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface User {
@@ -18,7 +18,6 @@ interface User {
   curso?: string
   username: string
   email: string
-  password?: string | null
   nome: string
   genero?: string | null
   telefone?: string
@@ -27,7 +26,7 @@ interface User {
   dataCriacao?: string
   ativo?: boolean
   permissao: string
-  [key: string]: string | number | boolean | null | undefined // Para acomodar campos adicionais
+  [key: string]: string | number | boolean | null | undefined
 }
 
 export default function ProfilePage() {
@@ -53,7 +52,6 @@ export default function ProfilePage() {
         }
 
         const decodedToken: DecodedToken = jwtDecode(token)
-        console.log('Token decodificado:', decodedToken)
 
         const userId = decodedToken.idUsuario || decodedToken.idAcademico
         const userRole =
@@ -65,11 +63,8 @@ export default function ProfilePage() {
             : `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`
 
         const response = await axios.get(userEndpoint, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
-        console.log('Dados do usuário carregado:', response.data)
         setUser(response.data)
       } catch (error: unknown) {
         console.error('Erro ao carregar dados do usuário logado:', error)
@@ -105,7 +100,7 @@ export default function ProfilePage() {
       <div className="flex">
         <Sidebar />
         <div className="container mx-auto p-4">
-          {/* Perfil do Usuário */}
+          {/* Banner e Foto do Usuário */}
           <div className="relative mb-6">
             <div className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg" />
             <div className="absolute -bottom-12 left-4">
@@ -116,31 +111,38 @@ export default function ProfilePage() {
               />
             </div>
           </div>
-          <div className="flex flex-col items-start space-y-4 mb-6">
-            <h1 className="text-2xl font-bold">{user?.nome}</h1>
-            <p className="text-gray-500">@{user?.username}</p>
-            <p className="text-gray-600 dark:text-gray-300">
-              <strong>Email:</strong> {user?.email}
-            </p>
-            {user?.curso && (
-              <p className="text-gray-600 dark:text-gray-300">
-                <strong>Curso:</strong> {user.curso}
-              </p>
-            )}
-            {user?.telefone && (
-              <p className="text-gray-600 dark:text-gray-300">
-                <strong>Telefone:</strong> {user.telefone}
-              </p>
-            )}
-            {user?.dataNascimento && (
-              <p className="text-gray-600 dark:text-gray-300">
-                <strong>Data de Nascimento:</strong>{' '}
-                {new Date(user.dataNascimento).toLocaleDateString('pt-BR')}
-              </p>
-            )}
-            <p className="text-gray-600 dark:text-gray-300">
-              <strong>Gênero:</strong> {user?.genero || 'Não informado'}
-            </p>
+          {/* Informações do Usuário (Agora lado a lado com a foto) */}
+          <div className="flex items-center space-x-6 mb-6">
+            <div className="flex flex-col space-y-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {user?.nome}
+              </h1>
+              <p className="text-gray-500">@{user?.username}</p>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <p>
+                  <strong>Email:</strong> {user?.email}
+                </p>
+                {user?.curso && (
+                  <p>
+                    <strong>Curso:</strong> {user.curso}
+                  </p>
+                )}
+                {user?.telefone && (
+                  <p>
+                    <strong>Telefone:</strong> {user.telefone}
+                  </p>
+                )}
+                {user?.dataNascimento && (
+                  <p>
+                    <strong>Data de Nascimento:</strong>{' '}
+                    {new Date(user.dataNascimento).toLocaleDateString('pt-BR')}
+                  </p>
+                )}
+                <p>
+                  <strong>Gênero:</strong> {user?.genero || 'Não informado'}
+                </p>
+              </div>
+            </div>
             <Button
               onClick={() => router.push('/profile/edit')}
               className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
