@@ -1,18 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
 import { useRouter } from 'next/navigation'
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
-import { Trash2, Edit } from 'lucide-react'
+import {jwtDecode} from 'jwt-decode'
 import { toast, Toaster } from 'sonner'
+import { Edit, Trash2 } from 'lucide-react'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -88,7 +86,7 @@ async function inactivateApoioSaude(id: string) {
 }
 
 export default function ApoioSaudeAdminPage() {
-  const [currentApoio, setCurrentApoio] = useState(null)
+  const [currentApoio, setCurrentApoio] = useState<any>(null)
   const [newApoio, setNewApoio] = useState({
     nome: '',
     email: '',
@@ -108,12 +106,13 @@ export default function ApoioSaudeAdminPage() {
       return
     }
 
-    const decoded = jwtDecode(token)
-    if ((decoded as any).role !== 'ADMINISTRADOR') {
+    const decoded: any = jwtDecode(token)
+    if (!decoded.roles.includes('ADMINISTRADOR')) {
       toast.error(
         'Acesso negado! Somente administradores podem acessar esta página.',
       )
       router.push('/')
+      return
     }
   }, [router])
 
