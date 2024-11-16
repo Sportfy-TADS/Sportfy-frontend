@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
 import { useRouter } from 'next/navigation'
-
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -34,8 +32,10 @@ async function fetchAdmins() {
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
   )
   if (!res.ok) throw new Error('Erro ao buscar administradores.')
-  return await res.json()
+  const data = await res.json()
+  return data.content // Adjust this based on the actual response structure
 }
+
 
 async function createAdmin(newAdmin) {
   const res = await fetch(
@@ -82,8 +82,16 @@ export default function AdminCrudPage() {
         router.push('/auth')
         return
       }
-      const decoded = jwtDecode(token)
-      if (decoded.role !== 'ADMINISTRADOR') {
+      let decoded
+      try {
+        decoded = jwtDecode(token)
+        console.log('Decoded Token:', decoded) // Log do token decodificado
+      } catch (error) {
+        console.error('Erro ao decodificar o token:', error)
+        router.push('/auth')
+        return
+      }
+      if (!decoded.roles.includes('ADMINISTRADOR')) {
         toast.error(
           'Acesso negado! Somente administradores podem acessar esta página.',
         )
