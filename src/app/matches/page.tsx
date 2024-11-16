@@ -1,14 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
 import { useRouter } from 'next/navigation'
-
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-
 import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar' // Importando o componente Sidebar
+import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -44,9 +41,15 @@ async function getModalidades() {
   return await res.json()
 }
 
-async function createMatch(data: MatchData) {
-  console.log('Dados enviados para o servidor:', data) // Adicionando log de depuração
+// Função para buscar as partidas de um campeonato específico
+async function getPartidas(idCampeonato) {
+  const res = await fetch(`http://localhost:8081/campeonatos/${idCampeonato}/partidas`)
+  if (!res.ok) throw new Error('Erro ao buscar partidas.')
+  return await res.json()
+}
 
+// Função para criar uma nova partida
+async function createMatch(data: MatchData) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/matches`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -63,28 +66,23 @@ export default function CreateMatchPage() {
   const [localizacao, setLocalizacao] = useState('')
   const [selectedModalidade, setSelectedModalidade] = useState('')
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([])
-  const [modalidadesFiltradas, setModalidadesFiltradas] = useState<
-    Modalidade[]
-  >([])
+  const [modalidadesFiltradas, setModalidadesFiltradas] = useState<Modalidade[]>([])
 
   const router = useRouter()
   const queryClient = useQueryClient()
-
   const userId = localStorage.getItem('userId') // Pegando o ID do usuário logado
+  const idCampeonato = 1 // Use the id from localStorage or dynamic value
 
-  // Carregar as modalidades e inscrições
+  // Fetch and set inscriptions and sports
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) {
         toast.error('Usuário não autenticado.')
         return
       }
-
       try {
         const inscricoesData = await getInscricoes(userId)
         const modalidadesData = await getModalidades()
-
-        // Filtrar as modalidades em que o usuário está inscrito
         const modalidadesInscritas = modalidadesData.filter(
           (modalidade: Modalidade) =>
             inscricoesData.some(
@@ -92,7 +90,6 @@ export default function CreateMatchPage() {
                 inscricao.modalidadeId === modalidade.id,
             ),
         )
-
         setInscricoes(inscricoesData)
         setModalidadesFiltradas(modalidadesInscritas)
       } catch (error) {
@@ -100,19 +97,25 @@ export default function CreateMatchPage() {
         toast.error('Erro ao carregar modalidades e inscrições.')
       }
     }
-
     fetchData()
   }, [userId])
+
+  // Fetch matches
+  const { data: partidas, isLoading: loadingPartidas } = useQuery({
+    queryKey: ['partidas', idCampeonato],
+    queryFn: () => getPartidas(idCampeonato),
+    enabled: !!idCampeonato, // Only fetch when idCampeonato is available
+  })
 
   const mutation = useMutation({
     mutationFn: createMatch,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
+      queryClient.invalidateQueries({ queryKey: ['partidas'] })
       toast.success('Partida criada com sucesso!')
-      router.push('/feed') // Redireciona para o feed após criar a partida
+      router.push('/feed')
     },
     onError: (error) => {
-      console.error('Erro ao criar a partida:', error) // Log de erro
+      console.error('Erro ao criar a partida:', error)
       toast.error('Erro ao criar a partida.')
     },
   })
@@ -136,8 +139,6 @@ export default function CreateMatchPage() {
       userId,
       date: new Date().toISOString(),
     }
-
-    console.log('Preparando para enviar a partida:', matchData) // Log dos dados antes de enviar
     mutation.mutate(matchData)
   }
 
@@ -183,7 +184,6 @@ export default function CreateMatchPage() {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div>
                     <Input
                       type="text"
@@ -193,7 +193,6 @@ export default function CreateMatchPage() {
                       onChange={(e) => setNome(e.target.value)}
                     />
                   </div>
-
                   <div>
                     <Textarea
                       className="w-full p-2 text-black dark:text-white"
@@ -202,7 +201,6 @@ export default function CreateMatchPage() {
                       onChange={(e) => setDescricao(e.target.value)}
                     />
                   </div>
-
                   <div>
                     <Input
                       type="text"
@@ -212,7 +210,6 @@ export default function CreateMatchPage() {
                       onChange={(e) => setLocalizacao(e.target.value)}
                     />
                   </div>
-
                   <Button
                     type="button"
                     onClick={handleCreateMatch}
@@ -224,6 +221,24 @@ export default function CreateMatchPage() {
               </SheetContent>
             </Sheet>
           </div>
+          <div className="mt-6">
+  <h2 className="text-2xl font-bold mb-4">Partidas</h2>
+  {loadingPartidas ? (
+    <p>Carregando partidas...</p>
+  ) : partidas && partidas.length > 0 ? (
+    <ul>
+      {partidas.map((partida) => (
+        <li key={partida.idPartida}>
+          {partida.fasePartida} - 
+          {partida.dataPartida ? new Date(partida.dataPartida).toLocaleDateString() : 'Data não definida'}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>Nenhuma partida encontrada.</p>
+  )}
+</div>
+
         </main>
       </div>
     </>
