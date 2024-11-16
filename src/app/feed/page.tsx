@@ -1,13 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
 import { useRouter } from 'next/navigation'
 
-import axios from 'axios'
-import { jwtDecode } from 'jwt-decode'
 import { Heart, MessageCircle } from 'lucide-react'
-import { toast, Toaster } from 'sonner'
+import { Toaster } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -22,186 +18,20 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-
-interface Comentario {
-  idComentario: number
-  descricao: string
-  idPublicacao: number
-  Usuario: {
-    idUsuario: number
-    username: string
-    nome: string
-    foto?: string | null
-    permissao: string
-  }
-}
-
-interface Post {
-  idPublicacao: number
-  titulo: string
-  descricao: string
-  dataPublicacao?: string | null
-  idCanal: number
-  Usuario: {
-    idUsuario: number
-    username: string
-    nome: string
-    foto?: string | null
-    permissao: string
-  }
-  listaUsuarioCurtida: number[]
-  listaComentario: Comentario[]
-}
+import { useFeed } from '@/hooks/useFeed'
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
-  const [comment, setComment] = useState('')
-  const [loggedUser, setLoggedUser] = useState<any>(null)
-  const [newPostContent, setNewPostContent] = useState('')
+  const {
+    posts,
+    loading,
+    newPostContent,
+    setNewPostContent,
+    formatDate,
+    handleLikePost,
+    handleNewPost,
+    loggedUser,
+  } = useFeed()
   const router = useRouter()
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=0&size=10&sort=dataPublicacao,desc`,
-        )
-        setPosts(response.data.content || [])
-      } catch (error) {
-        console.error('Erro ao carregar os posts:', error)
-        toast.error('Erro ao carregar os posts.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchPosts()
-
-    const fetchLoggedUser = () => {
-      const token = localStorage.getItem('token')
-      if (token) {
-        const user = jwtDecode(token)
-        setLoggedUser(user)
-      }
-    }
-    fetchLoggedUser()
-  }, [])
-
-  const formatDate = (date: string | null | undefined) => {
-    if (!date) return 'Data não disponível'
-    const formattedDate = new Date(date)
-    return formattedDate.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
-
-  const handleLikePost = async (postId: number) => {
-    if (loggedUser) {
-      try {
-        const token = localStorage.getItem('token')
-        const post = posts.find((post) => post.idPublicacao === postId)
-        const usuarioJaCurtiu = post?.listaUsuarioCurtida.includes(
-          loggedUser.idUsuario,
-        )
-
-        if (usuarioJaCurtiu) {
-          // Remover curtida
-          await axios.delete(
-            `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${loggedUser.idUsuario}/${postId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          )
-          // Atualizar o estado dos posts
-          setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-              post.idPublicacao === postId
-                ? {
-                    ...post,
-                    listaUsuarioCurtida: post.listaUsuarioCurtida.filter(
-                      (idUsuario) => idUsuario !== loggedUser.idUsuario,
-                    ),
-                  }
-                : post,
-            ),
-          )
-        } else {
-          // Curtir publicação
-          await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${loggedUser.idUsuario}/${postId}`,
-            null,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          )
-          // Atualizar o estado dos posts
-          setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-              post.idPublicacao === postId
-                ? {
-                    ...post,
-                    listaUsuarioCurtida: [
-                      ...post.listaUsuarioCurtida,
-                      loggedUser.idUsuario,
-                    ],
-                  }
-                : post,
-            ),
-          )
-        }
-      } catch (error) {
-        console.error('Erro ao atualizar a curtida:', error)
-        toast.error('Erro ao atualizar a curtida.')
-      }
-    }
-  }
-
-  const handleNewPost = async () => {
-    if (newPostContent.trim() === '') return
-
-    const newPost = {
-      idPublicacao: 0,
-      titulo: newPostContent,
-      descricao: newPostContent,
-      dataPublicacao: null,
-      idCanal: 1,
-      idModalidadeEsportiva: null,
-      Usuario: {
-        idUsuario: loggedUser.idUsuario,
-        username: loggedUser.username,
-        nome: loggedUser.nome,
-        foto: loggedUser.foto || null,
-        permissao: loggedUser.permissao,
-      },
-    }
-
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/publicacao/cadastrarPublicacao`,
-        newPost,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      )
-
-      setPosts([response.data, ...posts])
-      setNewPostContent('')
-      toast.success('Publicação criada com sucesso!')
-    } catch (error) {
-      console.error('Erro ao criar novo post:', error)
-      toast.error('Erro ao criar novo post.')
-    }
-  }
 
   return (
     <>

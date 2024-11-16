@@ -31,16 +31,34 @@ export interface Comment {
   listaUsuarioCurtida: number[]
 }
 
+export interface Comentario {
+  idComentario: number
+  descricao: string
+  idPublicacao: number
+  Usuario: {
+    idUsuario: number
+    username: string
+    nome: string
+    foto?: string | null
+    permissao: string
+  }
+}
+
 export interface Post {
   idPublicacao: number
   titulo: string
   descricao: string
+  dataPublicacao?: string | null
+  idCanal: number
   Usuario: {
     idUsuario: number
     username: string
+    nome: string
+    foto?: string | null
+    permissao: string
   }
   listaUsuarioCurtida: number[]
-  listaComentario: Comment[]
+  listaComentario: Comentario[]
 }
 
 export interface User {
@@ -74,4 +92,23 @@ export interface MatchData {
   modalidade: string
   userId: string
   date: string
+}
+
+export interface Campeonato {
+  idCampeonato: number
+  titulo: string
+  descricao: string
+  aposta: string
+  dataInicio: string
+  dataFim: string
+  ativo: boolean
+  limiteTimes: number
+  limiteParticipantes: number
+  endereco: {
+    rua: string
+    numero: string
+    cidade: string
+    estado: string
+    cep: string
+  }
 }

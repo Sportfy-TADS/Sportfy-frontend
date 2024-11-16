@@ -1,11 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { toast } from 'sonner'
-
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
@@ -19,152 +13,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton' // Importa o componente Skeleton
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-
-interface Campeonato {
-  idCampeonato: number
-  titulo: string
-  descricao: string
-  aposta: string
-  dataInicio: string
-  dataFim: string
-  ativo: boolean
-  limiteTimes: number
-  limiteParticipantes: number
-  endereco: {
-    rua: string
-    numero: string
-    cidade: string
-    estado: string
-    cep: string
-  }
-}
-
-// Função para buscar os campeonatos
-async function getCampeonatos() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar`,
-  )
-  if (!res.ok) {
-    console.error('Erro ao buscar campeonatos', await res.text())
-    throw new Error('Erro ao buscar campeonatos')
-  }
-  return res.json()
-}
-
-// Função para criar um novo campeonato
-async function createCampeonato(data: Partial<Campeonato>) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) throw new Error('Erro ao criar campeonato')
-  return res.json()
-}
-
-// Função para atualizar um campeonato existente
-async function updateCampeonato(
-  idCampeonato: number,
-  data: Partial<Campeonato>,
-) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${idCampeonato}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao atualizar campeonato')
-  return res.json()
-}
-
-// Função para excluir um campeonato
-async function deleteCampeonato(idCampeonato: number) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${idCampeonato}`,
-    {
-      method: 'DELETE',
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao excluir campeonato')
-  return res.json()
-}
+import { useCampeonatos } from '@/hooks/useCampeonatos'
 
 export default function CampeonatoPage() {
-  const queryClient = useQueryClient()
-  const [selectedCampeonato, setSelectedCampeonato] =
-    useState<Campeonato | null>(null)
-
-  const { register, handleSubmit, reset } = useForm<Partial<Campeonato>>({
-    defaultValues: selectedCampeonato || {},
-  })
-
-  const { data: campeonatos = [], isLoading } = useQuery({
-    queryKey: ['campeonatos'],
-    queryFn: getCampeonatos,
-  })
-
-  const createMutation = useMutation({
-    mutationFn: createCampeonato,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['campeonatos'])
-      toast.success('Campeonato criado com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao criar campeonato')
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({
-      idCampeonato,
-      data,
-    }: {
-      idCampeonato: number
-      data: Partial<Campeonato>
-    }) => updateCampeonato(idCampeonato, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['campeonatos'])
-      toast.success('Campeonato atualizado com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao atualizar campeonato')
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteCampeonato,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['campeonatos'])
-      toast.success('Campeonato excluído com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao excluir campeonato')
-    },
-  })
-
-  const handleCreateCampeonato = (data: Partial<Campeonato>) => {
-    createMutation.mutate(data)
-    reset()
-  }
-
-  const handleUpdateCampeonato = (data: Partial<Campeonato>) => {
-    if (selectedCampeonato) {
-      updateMutation.mutate({
-        idCampeonato: selectedCampeonato.idCampeonato,
-        data,
-      })
-      reset()
-      setSelectedCampeonato(null)
-    }
-  }
-
-  const handleDeleteCampeonato = (idCampeonato: number) => {
-    deleteMutation.mutate(idCampeonato)
-  }
+  const {
+    campeonatos,
+    isLoading,
+    selectedCampeonato,
+    setSelectedCampeonato,
+    register,
+    handleSubmit,
+    reset,
+    handleCreateCampeonato,
+    handleUpdateCampeonato,
+    handleDeleteCampeonato,
+  } = useCampeonatos()
 
   return (
     <>
@@ -205,7 +70,7 @@ export default function CampeonatoPage() {
                     <Skeleton className="h-10 w-full bg-gray-300" />
                   </Card>
                 ))
-              : campeonatos.map((campeonato: Campeonato) => (
+              : campeonatos.map((campeonato) => (
                   <Card key={campeonato.idCampeonato}>
                     <CardHeader>
                       <CardTitle>{campeonato.titulo}</CardTitle>

@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DecodedToken } from '@/interface/types'
 import { signInSchema } from '@/schemas'
+import { authenticateUser } from '@/http/auth'
 
 type SignInSchema = z.infer<typeof signInSchema>
 
@@ -30,38 +31,8 @@ export default function SignInPage() {
     resolver: zodResolver(signInSchema),
   })
 
-  const { mutateAsync: authenticateUser } = useMutation({
-    mutationFn: async ({ username, password }: SignInSchema) => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        },
-      )
-
-      if (!res.ok) {
-        throw new Error('Nome de usuário ou senha inválidos')
-      }
-
-      const { token } = await res.json()
-      const decoded: DecodedToken = jwtDecode(token)
-
-      console.log('Token recebido:', token)
-      console.log('Dados decodificados:', decoded)
-
-      localStorage.setItem('token', token)
-
-      // Salva o ID correto no localStorage, dependendo do papel
-      if (decoded.role === 'ADMINISTRADOR') {
-        localStorage.setItem('adminId', decoded.idUsuario.toString())
-      } else {
-        localStorage.setItem('academicoId', decoded.idUsuario.toString())
-      }
-
-      return decoded
-    },
+  const { mutateAsync: authenticate } = useMutation({
+    mutationFn: authenticateUser,
     onSuccess: () => {
       toast.success('Login bem-sucedido!')
       router.push('/feed')
@@ -73,7 +44,7 @@ export default function SignInPage() {
 
   const handleLogin = async (data: SignInSchema) => {
     try {
-      await authenticateUser(data)
+      await authenticate(data)
     } catch (err) {
       console.error('Erro no login:', err)
     }
