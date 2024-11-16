@@ -1,12 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
 import { useRouter } from 'next/navigation'
-
-import { jwtDecode } from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode'
 import { LogOut } from 'lucide-react'
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -20,8 +17,8 @@ import { Input } from '@/components/ui/input'
 
 interface DecodedToken {
   idUsuario: number
-  username: string
-  role: string
+  sub: string
+  roles: string
 }
 
 export default function Header() {
@@ -55,19 +52,19 @@ export default function Header() {
 
       setIsLoggedIn(true)
       const userId = decoded.idUsuario
-      setUserName(decoded.username)
+      setUserName(decoded.sub)
 
       try {
         let userResponse
 
-        if (decoded.role === 'ADMINISTRADOR') {
+        if (decoded.roles.includes('ADMINISTRADOR')) {
           const adminResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
           )
           const adminData = await adminResponse.json()
           console.log('Admin Data:', adminData) // Log dos dados do administrador
 
-          const matchedAdmin = adminData.find(
+          const matchedAdmin = adminData.content.find(
             (admin: any) => admin.username === decoded.sub,
           )
           console.log('Matched Admin:', matchedAdmin) // Log do administrador correspondente

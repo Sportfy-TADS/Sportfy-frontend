@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
 import { useRouter } from 'next/navigation'
-
-import { jwtDecode } from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode'
 import {
   Home,
   User,
@@ -20,6 +18,10 @@ import {
   Activity,
 } from 'lucide-react'
 
+interface DecodedToken {
+  roles: string
+}
+
 export default function Sidebar() {
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState(false)
@@ -27,8 +29,9 @@ export default function Sidebar() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      const decoded: { role: string } = jwtDecode(token)
-      setIsAdmin(decoded.role === 'ADMINISTRADOR')
+      const decoded: DecodedToken = jwtDecode(token)
+      // Check if the roles string includes 'ADMINISTRADOR'
+      setIsAdmin(decoded.roles.includes('ADMINISTRADOR'))
     }
   }, [])
 
