@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -25,49 +24,40 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getModalidades, inscreverUsuario } from '@/http/modality'
-import { decodeToken, getIdAcademico } from '@/utils/apiUtils'
+import { useModalidades, useInscreverUsuario, createModalidade, updateModalidade } from '@/http/modality'
+import { decodeToken } from '@/utils/apiUtils'
 
 export default function ModalidadeInscricaoPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [modalidadeNome, setModalidadeNome] = useState('')
+  const [modalidadeDescricao, setModalidadeDescricao] = useState('')
+  const [modalidadeId, setModalidadeId] = useState(null)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
   const queryClient = useQueryClient()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      const { roles, sub, idUsuario } = decodeToken(token)
-      setIsAdmin(roles === 'ADMIN')
+      const { roles, sub } = decodeToken(token)
+      console.log('Roles:', roles)
+      setIsAdmin(roles.includes('ADMIN'))
+      console.log('isAdmin:', roles.includes('ADMIN'))
 
-      // Simulação de armazenamento de dados do usuário no localStorage
       const userData = {
-        idAcademico: 11, // Substitua pelo valor correto
-        curso: 'tads', // Substitua pelo valor correto
+        idAcademico: 11,
+        curso: 'tads',
         username: sub,
-        email: 'carlos@ufpr.br', // Substitua pelo valor correto
-        nome: 'thiago dos Santos', // Substitua pelo valor correto
+        email: 'carlos@ufpr.br',
+        nome: 'thiago dos Santos',
       }
       localStorage.setItem('userData', JSON.stringify(userData))
       console.log('Dados do usuário armazenados no localStorage:', userData)
     }
   }, [])
 
-  const {
-    data: modalidades = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['modalidades'],
-    queryFn: getModalidades,
-    onSuccess: (data) => {
-      console.log('Modalidades carregadas com sucesso:', data)
-    },
-    onError: (error) => {
-      console.error('Erro ao carregar modalidades:', error)
-    },
-  })
+  const { data: modalidades = [], isLoading, isError, error } = useModalidades()
 
   useEffect(() => {
     if (isError) {
@@ -97,18 +87,61 @@ export default function ModalidadeInscricaoPage() {
     return filteredModalidades
   }, [modalidades, filter, searchTerm])
 
-  const { mutate } = useMutation({
-    mutationFn: inscreverUsuario,
-    onSuccess: (data) => {
+  const { mutate } = useInscreverUsuario(queryClient)
+
+  const handleCreateModalidade = async (e) => {
+    e.preventDefault()
+    try {
+      console.log('Tentando criar modalidade com:', { nome: modalidadeNome, descricao: modalidadeDescricao })
+      await createModalidade({
+        nome: modalidadeNome,
+        descricao: modalidadeDescricao,
+      })
+      toast.success('Modalidade cadastrada com sucesso!')
       queryClient.invalidateQueries(['modalidades'])
-      toast.success('Inscrição realizada com sucesso!')
-      console.log('Inscrição realizada com sucesso:', data)
-    },
-    onError: (error: Error) => {
-      console.error('Erro detalhado:', error)
-      toast.error(`Erro ao realizar inscrição: ${error.message}`)
-    },
-  })
+      setIsSheetOpen(false)
+    } catch (error) {
+      if (error.response && error.response.status === 409) {
+        toast.error('Modalidade já existe')
+      } else {
+        toast.error('Erro ao cadastrar modalidade')
+      }
+      console.error('Erro ao cadastrar modalidade:', error)
+    }
+  }
+
+  const handleUpdateModalidade = async (e) => {
+    e.preventDefault()
+    try {
+      console.log('Tentando atualizar modalidade com:', { idModalidadeEsportiva: modalidadeId, nome: modalidadeNome, descricao: modalidadeDescricao })
+      await updateModalidade({
+        idModalidadeEsportiva: modalidadeId,
+        nome: modalidadeNome,
+        descricao: modalidadeDescricao,
+        foto: null,
+      })
+      toast.success('Modalidade atualizada com sucesso!')
+      queryClient.invalidateQueries(['modalidades'])
+      setIsSheetOpen(false)
+    } catch (error) {
+      toast.error('Erro ao atualizar modalidade')
+      console.error('Erro ao atualizar modalidade:', error)
+    }
+  }
+
+  const handleEditClick = (modalidade) => {
+    setModalidadeId(modalidade.idModalidadeEsportiva)
+    setModalidadeNome(modalidade.nome)
+    setModalidadeDescricao(modalidade.descricao)
+    setIsSheetOpen(true)
+  }
+
+  const handleNewClick = () => {
+    setModalidadeId(null)
+    setModalidadeNome('')
+    setModalidadeDescricao('')
+    setIsSheetOpen(true)
+  }
 
   return (
     <>
@@ -140,27 +173,36 @@ export default function ModalidadeInscricaoPage() {
 
           {isAdmin && (
             <div className="mb-6">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button className="bg-blue-500 hover:bg-blue-600">
-                    Cadastrar Modalidade
-                  </Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Cadastrar Nova Modalidade</SheetTitle>
-                  </SheetHeader>
-                  <form className="space-y-4 mt-4">
-                    <Input placeholder="Nome da Modalidade" required />
-                    <Input placeholder="Descrição" required />
-                    <Button type="submit" className="w-full">
-                      Salvar
-                    </Button>
-                  </form>
-                </SheetContent>
-              </Sheet>
+              <Button className="bg-blue-500 hover:bg-blue-600" onClick={handleNewClick}>
+                Cadastrar Modalidade
+              </Button>
             </div>
           )}
+
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>{modalidadeId ? 'Editar Modalidade' : 'Cadastrar Nova Modalidade'}</SheetTitle>
+              </SheetHeader>
+              <form className="space-y-4 mt-4" onSubmit={modalidadeId ? handleUpdateModalidade : handleCreateModalidade}>
+                <Input
+                  placeholder="Nome da Modalidade"
+                  value={modalidadeNome}
+                  onChange={(e) => setModalidadeNome(e.target.value)}
+                  required
+                />
+                <Input
+                  placeholder="Descrição"
+                  value={modalidadeDescricao}
+                  onChange={(e) => setModalidadeDescricao(e.target.value)}
+                  required
+                />
+                <Button type="submit" className="w-full">
+                  Salvar
+                </Button>
+              </form>
+            </SheetContent>
+          </Sheet>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {isLoading ? (
@@ -190,6 +232,14 @@ export default function ModalidadeInscricaoPage() {
                     >
                       {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
                     </Button>
+                    {isAdmin && (
+                      <Button
+                        onClick={() => handleEditClick(modalidade)}
+                        className="w-full mt-2"
+                      >
+                        Editar
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))

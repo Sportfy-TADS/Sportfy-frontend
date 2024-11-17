@@ -1,7 +1,10 @@
 import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import axios from 'axios'
 
-export async function getModalidades() {
+export async function fetchModalidades() {
   const token = getToken()
   const idAcademico = getIdAcademico()
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
@@ -15,18 +18,24 @@ export async function getModalidades() {
 
 export async function createModalidade(data: Partial<Modalidade>) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva`
-  return fetchWithAuth(url, {
+  console.log('Enviando dados para criar modalidade:', data) // Adicione esta linha para verificar os dados enviados
+  const response = await fetchWithAuth(url, {
     method: 'POST',
     body: JSON.stringify(data),
   })
+  console.log('Resposta da API ao criar modalidade:', response) // Adicione esta linha para verificar a resposta da API
+  return response
 }
 
 export async function updateModalidade(data: Modalidade) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva`
-  return fetchWithAuth(url, {
+  console.log('Enviando dados para atualizar modalidade:', data)
+  const response = await fetchWithAuth(url, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
+  console.log('Resposta da API ao atualizar modalidade:', response)
+  return response
 }
 
 export async function desativarModalidade(id: number) {
@@ -83,4 +92,32 @@ export async function createAdmin(newAdmin) {
 export async function inactivateAdmin(id: number) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`
   return fetchWithAuth(url, { method: 'PATCH' })
+}
+
+export const useModalidades = () => {
+  return useQuery({
+    queryKey: ['modalidades'],
+    queryFn: fetchModalidades,
+    onSuccess: (data) => {
+      console.log('Modalidades carregadas com sucesso:', data)
+    },
+    onError: (error) => {
+      console.error('Erro ao carregar modalidades:', error)
+    },
+  })
+}
+
+export const useInscreverUsuario = (queryClient) => {
+  return useMutation({
+    mutationFn: inscreverUsuario,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['modalidades'])
+      toast.success('Inscrição realizada com sucesso!')
+      console.log('Inscrição realizada com sucesso:', data)
+    },
+    onError: (error: Error) => {
+      console.error('Erro detalhado:', error)
+      toast.error(`Erro ao realizar inscrição: ${error.message}`)
+    },
+  })
 }
