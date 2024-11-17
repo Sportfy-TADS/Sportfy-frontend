@@ -24,10 +24,9 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminModalidades } from '@/hooks/useAdminModalidades'
 import { Modalidade } from '@/interface/types'
-
-import { useAdminModalidades } from '../hooks/useAdminModalidades'
-
+../../../hooks/useAdminModalidades
 export default function AdminModalidadesPage() {
   const {
     isAdmin,
