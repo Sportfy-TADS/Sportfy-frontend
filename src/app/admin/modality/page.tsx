@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -30,6 +29,7 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchAdmins, createAdmin, inactivateAdmin } from '@/http/modality'
+import { decodeToken } from '@/utils/apiUtils'
 
 export default function AdminCrudPage() {
   const [currentAdmin, setCurrentAdmin] = useState(null)
@@ -52,7 +52,7 @@ export default function AdminCrudPage() {
       }
       let decoded
       try {
-        decoded = jwtDecode(token)
+        decoded = decodeToken(token)
         console.log('Decoded Token:', decoded) // Log do token decodificado
       } catch (error) {
         console.error('Erro ao decodificar o token:', error)
