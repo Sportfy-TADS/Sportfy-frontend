@@ -5,7 +5,7 @@ export const signInSchema = z.object({
   username: z
     .string()
     .min(3, 'Nome de usuário deve ter pelo menos 3 caracteres'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  password: z.string().min(4, 'A senha deve ter pelo menos 6 caracteres'),
 })
 
 // Esquema de validação usando zod para sign up
