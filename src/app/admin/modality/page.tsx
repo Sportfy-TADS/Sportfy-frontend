@@ -29,41 +29,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-
-async function fetchAdmins() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
-  )
-  if (!res.ok) throw new Error('Erro ao buscar administradores.')
-  const data = await res.json()
-  return data.content // Adjust this based on the actual response structure
-}
-
-async function createAdmin(newAdmin) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newAdmin),
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
-  return await res.json()
-}
-
-async function inactivateAdmin(id) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`,
-    {
-      method: 'PATCH',
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao inativar administrador.')
-  return await res.json()
-}
+import { fetchAdmins, createAdmin, inactivateAdmin } from '@/http/modality'
 
 export default function AdminCrudPage() {
   const [currentAdmin, setCurrentAdmin] = useState(null)
