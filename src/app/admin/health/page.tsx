@@ -1,13 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
-import { useRouter } from 'next/navigation'
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
-import { Trash2, Edit } from 'lucide-react'
-import { toast, Toaster } from 'sonner'
+import { Edit, Trash2 } from 'lucide-react'
+import { Toaster } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -29,160 +23,24 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-
-// Funções de API
-async function fetchApoioSaude() {
-  const response = await fetch('http://localhost:8081/apoio-saude/listar')
-  if (!response.ok) {
-    throw new Error('Erro ao buscar apoios à saúde')
-  }
-  return response.json()
-}
-
-async function createApoioSaude(data: {
-  nome: string
-  email: string
-  telefone: string
-  descricao: string
-}): Promise<any> {
-  const response = await fetch('http://localhost:8081/apoio-saude/cadastrar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!response.ok) {
-    throw new Error('Erro ao cadastrar apoio à saúde')
-  }
-  return response.json()
-}
-
-async function updateApoioSaude(
-  id: string,
-  data: { nome: string; email: string; telefone: string; descricao: string },
-) {
-  const response = await fetch(
-    `http://localhost:8081/apoio-saude/atualizar/${id}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    },
-  )
-  if (!response.ok) {
-    throw new Error('Erro ao atualizar apoio à saúde')
-  }
-  return response.json()
-}
-
-async function inactivateApoioSaude(id: string) {
-  const response = await fetch(
-    `http://localhost:8081/apoio-saude/inativar/${id}`,
-    {
-      method: 'PUT',
-    },
-  )
-  if (!response.ok) {
-    throw new Error('Erro ao inativar apoio à saúde')
-  }
-  return response.json()
-}
+import { useApoioSaude } from '@/hooks/useApoioSaude'
 
 export default function ApoioSaudeAdminPage() {
-  const [currentApoio, setCurrentApoio] = useState(null)
-  const [newApoio, setNewApoio] = useState({
-    nome: '',
-    email: '',
-    telefone: '',
-    descricao: '',
-  })
-  const [filter, setFilter] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const router = useRouter()
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      toast.error('Usuário não está logado.')
-      router.push('/auth')
-      return
-    }
-
-    const decoded = jwtDecode(token)
-    if ((decoded as any).role !== 'ADMINISTRADOR') {
-      toast.error(
-        'Acesso negado! Somente administradores podem acessar esta página.',
-      )
-      router.push('/')
-    }
-  }, [router])
-
-  const { data: apoios = [], isLoading } = useQuery({
-    queryKey: ['apoioSaude'],
-    queryFn: fetchApoioSaude,
-  })
-
-  const createMutation = useMutation({
-    mutationFn: createApoioSaude,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['apoioSaude'])
-      toast.success('Apoio à saúde cadastrado com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao cadastrar apoio à saúde.')
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: updateApoioSaude,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['apoioSaude'])
-      toast.success('Apoio à saúde atualizado com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao atualizar apoio à saúde.')
-    },
-  })
-
-  const inactivateMutation = useMutation({
-    mutationFn: inactivateApoioSaude,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['apoioSaude'])
-      toast.success('Apoio à saúde inativado com sucesso!')
-    },
-    onError: () => {
-      toast.error('Erro ao inativar apoio à saúde.')
-    },
-  })
-
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault()
-    createMutation.mutate(newApoio)
-    setNewApoio({ nome: '', email: '', telefone: '', descricao: '' })
-  }
-
-  const handleUpdate = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (currentApoio) {
-      updateMutation.mutate({ id: currentApoio.idApoioSaude, ...newApoio })
-      setCurrentApoio(null)
-      setNewApoio({ nome: '', email: '', telefone: '', descricao: '' })
-    }
-  }
-
-  const handleInactivate = (id: string) => {
-    inactivateMutation.mutate(id)
-  }
-
-  const filteredApoios = apoios
-    .filter((apoio: any) => {
-      if (filter === 'all') return true
-      if (filter === 'ufpr') return apoio.idAdministrador === 1
-      return apoio.idAdministrador !== 1
-    })
-    .filter((apoio: any) =>
-      apoio.nome.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
+  const {
+    currentApoio,
+    setCurrentApoio,
+    newApoio,
+    setNewApoio,
+    filter,
+    setFilter,
+    searchTerm,
+    setSearchTerm,
+    isLoading,
+    filteredApoios,
+    handleCreate,
+    handleUpdate,
+    handleInactivate,
+  } = useApoioSaude()
 
   return (
     <>
