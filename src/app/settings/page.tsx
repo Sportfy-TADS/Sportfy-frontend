@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 
 import { CheckedState } from '@radix-ui/react-checkbox'
 import { useTheme } from 'next-themes'
-import { toast } from 'sonner' // Usar para notificação de sucesso
+import { toast } from 'sonner'
 
 import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar' // Importando a Sidebar
+import Sidebar from '@/components/Sidebar'
 import { ModeToggle } from '@/components/theme'
 import {
   AlertDialog,
@@ -35,43 +35,35 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { fetchSettings, saveSettings } from '@/http/settings'
 
 // ID do usuário autenticado
-const userId = 7203 // Em uma aplicação real, o ID viria de um contexto ou autenticação
+const userId = 7203
 
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme()
   const [notifications, setNotifications] = useState(true)
   const [language, setLanguage] = useState('pt')
-
   const [notifyNewChampionships, setNotifyNewChampionships] = useState(true)
   const [notifyNewPosts, setNotifyNewPosts] = useState(true)
   const [notifyComments, setNotifyComments] = useState(true)
   const [notifyLikes, setNotifyLikes] = useState(true)
-
   const [privacyDetails, setPrivacyDetails] = useState(true)
   const [privacyHistory, setPrivacyHistory] = useState(true)
   const [privacyStats, setPrivacyStats] = useState(true)
   const [privacyAchievements, setPrivacyAchievements] = useState(true)
-
   const [showDialog, setShowDialog] = useState(false)
 
-  // Carregar as configurações do json-server
   useEffect(() => {
-    const fetchSettings = async () => {
+    const loadSettings = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
-        )
-        const data = await response.json()
+        const data = await fetchSettings(userId)
         setNotifications(data.notifications)
         setLanguage(data.language)
-
         setNotifyNewChampionships(data.notifyNewChampionships)
         setNotifyNewPosts(data.notifyNewPosts)
         setNotifyComments(data.notifyComments)
         setNotifyLikes(data.notifyLikes)
-
         setPrivacyDetails(data.privacyDetails)
         setPrivacyHistory(data.privacyHistory)
         setPrivacyStats(data.privacyStats)
@@ -82,10 +74,9 @@ export default function SettingsPage() {
       }
     }
 
-    fetchSettings()
+    loadSettings()
   }, [])
 
-  // Função para salvar as configurações no json-server
   const handleSave = () => {
     setShowDialog(true)
   }
@@ -93,39 +84,24 @@ export default function SettingsPage() {
   const confirmSave = async () => {
     setShowDialog(false)
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            notifications,
-            language,
-            notifyNewChampionships,
-            notifyNewPosts,
-            notifyComments,
-            notifyLikes,
-            privacyDetails,
-            privacyHistory,
-            privacyStats,
-            privacyAchievements,
-          }),
-        },
-      )
-
-      if (!response.ok) {
-        throw new Error('Erro ao salvar configurações')
-      }
-
+      await saveSettings(userId, {
+        notifications,
+        language,
+        notifyNewChampionships,
+        notifyNewPosts,
+        notifyComments,
+        notifyLikes,
+        privacyDetails,
+        privacyHistory,
+        privacyStats,
+        privacyAchievements,
+      })
       toast.success('Configurações salvas com sucesso!')
     } catch (error: any) {
       toast.error(error.message)
     }
   }
 
-  // Função para converter CheckedState em booleano
   const handleCheckedChange =
     (setState: (value: boolean) => void) => (checked: CheckedState) => {
       setState(checked === true)
@@ -135,20 +111,15 @@ export default function SettingsPage() {
     <>
       <Header />
       <div className="flex min-h-screen bg-white dark:bg-gray-800 transition-colors">
-        {/* Sidebar */}
         <Sidebar />
-
-        {/* Conteúdo da Página */}
         <div className="flex flex-col items-center justify-center w-full p-4">
           <div className="w-full max-w-md bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md p-6 m-4 sm:w-4/5 md:w-3/4 lg:w-1/2 xl:w-1/3 transition-colors">
             <h1 className="text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400 mb-6">
               Configurações do Sistema
             </h1>
-
             <div className="mb-4">
               <ModeToggle />
             </div>
-
             <div className="mt-4">
               <label className="block text-sm font-semibold mb-2 dark:text-white">
                 Idioma:
@@ -163,8 +134,6 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Configurações de Notificações */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button className="w-full mb-4">
@@ -175,7 +144,6 @@ export default function SettingsPage() {
                 <SheetHeader>
                   <SheetTitle>Modalidades</SheetTitle>
                 </SheetHeader>
-
                 <div className="mt-4">
                   <Checkbox
                     checked={notifyNewChampionships}
@@ -221,8 +189,6 @@ export default function SettingsPage() {
                 </div>
               </SheetContent>
             </Sheet>
-
-            {/* Configurações de Privacidade */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button className="w-full mb-4">
@@ -233,7 +199,6 @@ export default function SettingsPage() {
                 <SheetHeader>
                   <SheetTitle>Privacidade</SheetTitle>
                 </SheetHeader>
-
                 <div className="mt-4">
                   <Checkbox
                     checked={privacyDetails}
@@ -281,14 +246,12 @@ export default function SettingsPage() {
                 </div>
               </SheetContent>
             </Sheet>
-
             <Button
               onClick={handleSave}
               className="w-full bg-emerald-600 hover:bg-emerald-500"
             >
               Salvar Configurações
             </Button>
-
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <AlertDialogContent>
                 <AlertDialogHeader>

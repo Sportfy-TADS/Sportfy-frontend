@@ -4,8 +4,6 @@ import { useState } from 'react'
 
 import { Toaster } from 'sonner'
 
-import { useGoals } from '@/app/hooks/useGoals'
-import { useUserData } from '@/app/hooks/useUserData'
 import GoalForm from '@/components/goals/GoalForm'
 import GoalList from '@/components/goals/GoalList'
 import Header from '@/components/Header'
@@ -25,6 +23,8 @@ import {
   SheetTrigger,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { useGoals } from '@/hooks/useGoals'
+import { useUserData } from '@/hooks/useUserData'
 
 export default function GoalsPage() {
   const [filter, setFilter] = useState('all')
