@@ -1,14 +1,16 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {jwtDecode} from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -24,197 +26,229 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useAdminModalidades } from '@/hooks/useAdminModalidades'
-import { Modalidade } from '@/interface/types'
-../../../hooks/useAdminModalidades
-export default function AdminModalidadesPage() {
-  const {
-    isAdmin,
-    filter,
-    setFilter,
-    modalidadeForm,
-    setModalidadeForm,
-    editMode,
-    setEditMode,
-    searchTerm,
-    setSearchTerm,
-    modalidades,
-    isLoading,
-    handleCreateModalidade,
-    handleEditModalidade,
-    handleUpdateModalidade,
-    handleDesativarModalidade,
-    handleInscrever,
-    handleSearch,
-  } = useAdminModalidades()
 
-  if (isLoading) {
-    return (
-      <div className="flex">
-        <Sidebar className="h-screen w-64" />
-        <div className="flex-1 container mx-auto p-4">
-          <div className="flex justify-between items-center mb-6">
-            <Skeleton className="h-10 w-1/3" />
-            <div className="flex space-x-4">
-              <Skeleton className="h-10 w-1/4" />
-              <Skeleton className="h-10 w-1/4" />
-              <Skeleton className="h-10 w-1/4" />
-              <Skeleton className="h-10 w-1/4" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <div className="flex justify-end space-x-2 mt-4">
-                    <Skeleton className="h-10 w-1/4" />
-                    <Skeleton className="h-10 w-1/4" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
+async function fetchAdmins() {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
+  )
+  if (!res.ok) throw new Error('Erro ao buscar administradores.')
+  const data = await res.json()
+  return data.content // Adjust this based on the actual response structure
+}
+
+
+async function createAdmin(newAdmin) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newAdmin),
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
+  return await res.json()
+}
+
+async function inactivateAdmin(id) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`,
+    {
+      method: 'PATCH',
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao inativar administrador.')
+  return await res.json()
+}
+
+export default function AdminCrudPage() {
+  const [currentAdmin, setCurrentAdmin] = useState(null)
+  const [newAdmin, setNewAdmin] = useState({
+    name: '',
+    email: '',
+    username: '',
+    password: '',
+  })
+  const [showAdminsOnly, setShowAdminsOnly] = useState(true)
+  const router = useRouter()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        router.push('/auth')
+        return
+      }
+      let decoded
+      try {
+        decoded = jwtDecode(token)
+        console.log('Decoded Token:', decoded) // Log do token decodificado
+      } catch (error) {
+        console.error('Erro ao decodificar o token:', error)
+        router.push('/auth')
+        return
+      }
+      if (!decoded.roles.includes('ADMINISTRADOR')) {
+        toast.error(
+          'Acesso negado! Somente administradores podem acessar esta página.',
+        )
+        router.push('/')
+        return
+      }
+      setCurrentAdmin({
+        id: decoded.idUsuario,
+        name: decoded.name,
+        email: decoded.email,
+        username: decoded.username,
+      })
+    }
+    checkAdminStatus()
+  }, [router])
+
+  const { data: admins = [], isLoading } = useQuery({
+    queryKey: ['admins'],
+    queryFn: fetchAdmins,
+    enabled: !!currentAdmin,
+  })
+
+  const filteredAdmins = showAdminsOnly
+    ? admins.filter((admin) => admin.isAdmin)
+    : admins
+
+  const handleCreateAdmin = async () => {
+    try {
+      await createAdmin(newAdmin)
+      toast.success('Administrador cadastrado com sucesso.')
+      queryClient.invalidateQueries(['admins'])
+      setNewAdmin({ name: '', email: '', username: '', password: '' }) // Resetar o formulário
+    } catch (error) {
+      toast.error('Erro ao cadastrar o administrador.')
+    }
+  }
+
+  const handleInactivateAdmin = async (id) => {
+    try {
+      await inactivateAdmin(id)
+      toast.success('Administrador inativado com sucesso.')
+      queryClient.invalidateQueries(['admins'])
+    } catch (error) {
+      toast.error('Erro ao inativar o administrador.')
+    }
   }
 
   return (
     <>
       <Header />
-      <div className="flex min-h-screen">
+      <div className="flex h-screen">
         <Sidebar className="flex-none" />
-        <div className="container mx-auto p-4 flex-1">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Gerenciar Modalidades</h1>
-            <div className="flex space-x-4">
-              <Input
-                placeholder="Buscar por nome"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Button
-                onClick={handleSearch}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                Buscar
-              </Button>
-              <Select onValueChange={setFilter} defaultValue="all">
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="ativas">Ativas</SelectItem>
-                  <SelectItem value="desativadas">Desativadas</SelectItem>
-                </SelectContent>
-              </Select>
-              {isAdmin && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button className="bg-green-500 hover:bg-green-600">
-                      {editMode ? 'Editar Modalidade' : 'Cadastrar Modalidade'}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>
-                        {editMode
-                          ? 'Editar Modalidade'
-                          : 'Cadastrar Nova Modalidade'}
-                      </SheetTitle>
-                    </SheetHeader>
-                    <form className="space-y-4 mt-4">
-                      <div>
-                        <Label htmlFor="nome">Nome</Label>
-                        <Input
-                          id="nome"
-                          value={modalidadeForm.nome}
-                          onChange={(e) =>
-                            setModalidadeForm({
-                              ...modalidadeForm,
-                              nome: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="descricao">Descrição</Label>
-                        <Input
-                          id="descricao"
-                          value={modalidadeForm.descricao}
-                          onChange={(e) =>
-                            setModalidadeForm({
-                              ...modalidadeForm,
-                              descricao: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <Button
-                        onClick={
-                          editMode
-                            ? handleUpdateModalidade
-                            : handleCreateModalidade
-                        }
-                        className="w-full bg-green-500 hover:bg-green-600"
-                      >
-                        {editMode
-                          ? 'Atualizar Modalidade'
-                          : 'Cadastrar Modalidade'}
-                      </Button>
-                    </form>
-                  </SheetContent>
-                </Sheet>
-              )}
-            </div>
+        <div className="container mx-auto p-4 flex-1 overflow-y-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+              Gerenciar Administradores
+            </h1>
+            <Select
+              onValueChange={(value) => setShowAdminsOnly(value === 'admins')}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filtrar usuários" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admins">Mostrar apenas Admins</SelectItem>
+                <SelectItem value="all">Mostrar Todos</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {modalidades.map((modalidade: Modalidade) => (
-              <Card key={modalidade.idModalidadeEsportiva}>
-                <CardHeader>
-                  <CardTitle>{modalidade.nome}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>{modalidade.descricao}</p>
-                  <p>Status: {modalidade.status ? 'Ativa' : 'Desativada'}</p>
-                  {isAdmin ? (
-                    <div className="flex justify-end space-x-2 mt-4">
-                      <Button
-                        onClick={() => handleEditModalidade(modalidade)}
-                        className="bg-yellow-500 hover:bg-yellow-600"
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          handleDesativarModalidade(
-                            modalidade.idModalidadeEsportiva,
-                          )
-                        }
-                        className="bg-red-500 hover:bg-red-600"
-                      >
-                        Desativar
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() =>
-                        handleInscrever(modalidade.idModalidadeEsportiva)
-                      }
-                      className="w-full bg-blue-500 hover:bg-blue-600 mt-4"
-                    >
-                      Inscrever-se
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+
+          {/* Botão para abrir o Sheet do cadastro */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="primary">Cadastrar Novo Administrador</Button>
+            </SheetTrigger>
+            <SheetContent position="right" size="lg">
+              <SheetHeader>
+                <SheetTitle>Cadastrar Administrador</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 mt-6">
+                <Input
+                  placeholder="Nome"
+                  value={newAdmin.name}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, name: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Email"
+                  value={newAdmin.email}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, email: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Username"
+                  value={newAdmin.username}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, username: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Senha"
+                  type="password"
+                  value={newAdmin.password}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, password: e.target.value })
+                  }
+                />
+                <Button
+                  onClick={handleCreateAdmin}
+                  variant="primary"
+                  className="mt-4"
+                >
+                  Salvar
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Listagem de administradores */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton key={index} className="w-full h-32 rounded-lg" />
+                ))
+              : filteredAdmins.map((admin) => (
+                  <Card
+                    key={admin.id}
+                    className="shadow-md bg-white dark:bg-gray-800"
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                        {admin.name} ({admin.username})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col space-y-2">
+                      <span className="text-gray-700 dark:text-gray-300">
+                        Email: {admin.email}
+                      </span>
+                      <div className="flex items-center justify-between">
+                        <Button
+                          onClick={() => setCurrentAdmin(admin)}
+                          variant="warning"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleInactivateAdmin(admin.id)}
+                        >
+                          Inativar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
           </div>
         </div>
       </div>
