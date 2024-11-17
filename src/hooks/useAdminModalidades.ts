@@ -14,7 +14,7 @@ import {
   searchModalidade,
   inscreverModalidade,
   Modalidade,
-} from '@/app/admin/http/modality'
+} from '@/http/modality'
 
 export function useAdminModalidades() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
