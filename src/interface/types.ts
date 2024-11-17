@@ -122,3 +122,26 @@ export interface ApoioSaude {
   dataPublicacao: string
   idAdministrador: number
 }
+
+export interface Modalidade {
+  idModalidadeEsportiva: number
+  nome: string
+  descricao: string
+  status: boolean
+}
+
+export interface UserData {
+  idAcademico: number
+  curso: string
+  username: string
+  email: string
+  nome: string
+}
+
+export interface TokenPayload {
+  sub: string
+  roles: string
+  idUsuario: number
+  iss: string
+  exp: number
+}

@@ -1,13 +1,15 @@
 import { jwtDecode } from 'jwt-decode'
 
+import { TokenPayload } from '@/interface/types'
+
 export function getToken() {
   const token = localStorage.getItem('token')
   if (!token) throw new Error('Token não encontrado')
   return token
 }
 
-export function decodeToken(token: string) {
-  return jwtDecode(token)
+export function decodeToken(token: string): TokenPayload {
+  return jwtDecode<TokenPayload>(token)
 }
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {

@@ -1,11 +1,5 @@
+import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
-
-export interface Modalidade {
-  idModalidadeEsportiva: number
-  nome: string
-  descricao: string
-  status: boolean
-}
 
 export async function getModalidades() {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
@@ -59,14 +53,6 @@ function getIdAcademico(): number {
   return userData.idAcademico
 }
 
-interface UserData {
-  idAcademico: number
-  curso: string
-  username: string
-  email: string
-  nome: string
-}
-
 export async function fetchAdmins() {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`
   return fetchWithAuth(url)
@@ -80,7 +66,7 @@ export async function createAdmin(newAdmin) {
   })
 }
 
-export async function inactivateAdmin(id) {
+export async function inactivateAdmin(id: number) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`
   return fetchWithAuth(url, { method: 'PATCH' })
 }
