@@ -1,18 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
 import { jwtDecode } from 'jwt-decode'
-
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { fetchAchievements } from '@/http/achievements'
 import { Achievement } from '@/interface/types'
+import { useTheme } from 'next-themes'
 
 export default function AchievementsPage() {
   const [userAchievements, setUserAchievements] = useState<Achievement[]>([])
   const [userId, setUserId] = useState<number | null>(null)
+  const { theme } = useTheme()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +24,6 @@ export default function AchievementsPage() {
           console.log('Token decodificado:', decodedToken)
           const idUsuario = decodedToken.idUsuario || decodedToken.idAcademico
 
-          // Obter idAcademico
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${idUsuario}`,
             {
@@ -45,7 +44,6 @@ export default function AchievementsPage() {
 
           setUserId(idAcademico)
 
-          // Buscar conquistas usando o idAcademico
           const achievementsData = await fetchAchievements(idAcademico, token)
 
           console.log('Dados das conquistas:', achievementsData)
@@ -56,7 +54,6 @@ export default function AchievementsPage() {
         }
       } else {
         console.error('Erro: Nenhum usuário logado encontrado no localStorage')
-        // Opcional: redirecionar para a página de login
       }
     }
 
@@ -66,10 +63,10 @@ export default function AchievementsPage() {
   return (
     <>
       <Header />
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-white dark:bg-gray-900">
         <Sidebar />
         <div className="container mx-auto p-4 flex-1">
-          <h1 className="text-3xl font-bold mb-6 text-center">
+          <h1 className="text-3xl font-bold mb-6 text-center text-gray-900 dark:text-white">
             Suas Conquistas
           </h1>
 
@@ -78,21 +75,21 @@ export default function AchievementsPage() {
               {userAchievements.map((achievement) => (
                 <Card
                   key={achievement.idConquista}
-                  className="shadow-lg border border-emerald-500"
+                  className="shadow-lg border border-emerald-500 dark:border-emerald-400 transition-colors duration-200"
                 >
-                  <CardHeader className="bg-emerald-50">
-                    <CardTitle className="text-xl font-bold text-emerald-700">
+                  <CardHeader className="bg-emerald-50 dark:bg-emerald-900">
+                    <CardTitle className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
                       {achievement.metaEsportiva.titulo}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-emerald-100">
+                  <CardContent className="bg-emerald-100 dark:bg-emerald-800 dark:text-emerald-100">
                     <p>{achievement.metaEsportiva.descricao}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500">
+            <p className="text-center text-gray-500 dark:text-gray-400">
               Nenhuma conquista encontrada.
             </p>
           )}
