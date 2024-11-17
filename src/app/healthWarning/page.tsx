@@ -1,9 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
-import { useQuery } from '@tanstack/react-query'
-
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
@@ -17,63 +13,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-
-// Função para buscar dados de apoio à saúde
-async function getApoioSaude() {
-  const token = localStorage.getItem('token')
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/apoioSaude`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  )
-
-  if (!response.ok) {
-    throw new Error('Erro ao buscar apoio à saúde')
-  }
-
-  return await response.json()
-}
-
-interface ApoioSaude {
-  idApoioSaude: number
-  nome: string
-  email: string
-  telefone: string
-  descricao: string
-  dataPublicacao: string
-  idAdministrador: number
-}
+import { useApoioSaude } from '@/hooks/useApoioSaude'
 
 export default function ApoioSaudePage() {
-  const [filter, setFilter] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
-
-  // Query para buscar os dados de apoio à saúde
-  const { data: apoios = [], isLoading } = useQuery({
-    queryKey: ['apoioSaude'],
-    queryFn: getApoioSaude,
-  })
-
-  // Função de filtro
-  const filteredApoios = apoios.filter((apoio: ApoioSaude) => {
-    if (filter === 'all') return true
-    return filter === 'ufpr'
-      ? apoio.idAdministrador === 1
-      : apoio.idAdministrador !== 1
-  })
-
-  // Filtrando com base no termo de busca
-  const displayedApoios = searchTerm
-    ? filteredApoios.filter((apoio: ApoioSaude) =>
-        apoio.nome.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    : filteredApoios
+  const {
+    filter,
+    setFilter,
+    searchTerm,
+    setSearchTerm,
+    displayedApoios,
+    isLoading,
+  } = useApoioSaude()
 
   return (
     <>
@@ -120,7 +70,7 @@ export default function ApoioSaudePage() {
                 </Card>
               ))
             ) : displayedApoios.length ? (
-              displayedApoios.map((apoio: ApoioSaude) => (
+              displayedApoios.map((apoio) => (
                 <Card key={apoio.idApoioSaude}>
                   <CardHeader>
                     <CardTitle>{apoio.nome}</CardTitle>

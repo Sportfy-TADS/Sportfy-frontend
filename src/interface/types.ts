@@ -112,3 +112,13 @@ export interface Campeonato {
     cep: string
   }
 }
+
+export interface ApoioSaude {
+  idApoioSaude: number
+  nome: string
+  email: string
+  telefone: string
+  descricao: string
+  dataPublicacao: string
+  idAdministrador: number
+}
