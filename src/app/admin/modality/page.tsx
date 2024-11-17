@@ -82,9 +82,11 @@ export default function AdminCrudPage() {
     enabled: !!currentAdmin,
   })
 
-  const filteredAdmins = showAdminsOnly
-    ? admins.filter((admin) => admin.isAdmin)
-    : admins
+  const filteredAdmins = Array.isArray(admins)
+    ? showAdminsOnly
+      ? admins.filter((admin) => admin.isAdmin)
+      : admins
+    : []
 
   const handleCreateAdmin = async () => {
     try {
