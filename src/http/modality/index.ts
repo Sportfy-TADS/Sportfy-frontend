@@ -2,8 +2,15 @@ import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
 
 export async function getModalidades() {
+  const token = getToken()
+  const idAcademico = getIdAcademico()
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
-  return fetchWithAuth(url)
+  return fetchWithAuth(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 }
 
 export async function createModalidade(data: Partial<Modalidade>) {
@@ -41,9 +48,16 @@ export async function inscreverModalidade(
 }
 
 export async function inscreverUsuario(modalidadeId: number) {
+  const token = getToken()
   const idAcademico = getIdAcademico()
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${modalidadeId}`
-  return fetchWithAuth(url, { method: 'POST' })
+  return fetchWithAuth(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 }
 
 function getIdAcademico(): number {
