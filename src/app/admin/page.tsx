@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -28,108 +26,21 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-
-async function fetchAdmins() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
-  )
-  if (!res.ok) throw new Error('Erro ao buscar administradores.')
-  return await res.json()
-}
-
-async function createAdmin(newAdmin) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newAdmin),
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
-  return await res.json()
-}
-
-async function inactivateAdmin(id) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`,
-    {
-      method: 'PATCH',
-    },
-  )
-  if (!res.ok) throw new Error('Erro ao inativar administrador.')
-  return await res.json()
-}
+import useAdminCrud from '@/hooks/useAdminCrud'
+import useAdminStatus from '@/hooks/useAdminStatus'
 
 export default function AdminCrudPage() {
-  const [currentAdmin, setCurrentAdmin] = useState(null)
-  const [newAdmin, setNewAdmin] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-  })
-  const [showAdminsOnly, setShowAdminsOnly] = useState(true)
-  const router = useRouter()
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/auth')
-        return
-      }
-      const decoded = jwtDecode(token)
-      if (decoded.role !== 'ADMINISTRADOR') {
-        toast.error(
-          'Acesso negado! Somente administradores podem acessar esta página.',
-        )
-        router.push('/')
-        return
-      }
-      setCurrentAdmin({
-        id: decoded.idUsuario,
-        name: decoded.name,
-        email: decoded.email,
-        username: decoded.username,
-      })
-    }
-    checkAdminStatus()
-  }, [router])
-
-  const { data: admins = [], isLoading } = useQuery({
-    queryKey: ['admins'],
-    queryFn: fetchAdmins,
-    enabled: !!currentAdmin,
-  })
-
-  const filteredAdmins = showAdminsOnly
-    ? admins.filter((admin) => admin.isAdmin)
-    : admins
-
-  const handleCreateAdmin = async () => {
-    try {
-      await createAdmin(newAdmin)
-      toast.success('Administrador cadastrado com sucesso.')
-      queryClient.invalidateQueries(['admins'])
-      setNewAdmin({ name: '', email: '', username: '', password: '' }) // Resetar o formulário
-    } catch (error) {
-      toast.error('Erro ao cadastrar o administrador.')
-    }
-  }
-
-  const handleInactivateAdmin = async (id) => {
-    try {
-      await inactivateAdmin(id)
-      toast.success('Administrador inativado com sucesso.')
-      queryClient.invalidateQueries(['admins'])
-    } catch (error) {
-      toast.error('Erro ao inativar o administrador.')
-    }
-  }
+  const currentAdmin = useAdminStatus()
+  const {
+    newAdmin,
+    setNewAdmin,
+    showAdminsOnly,
+    setShowAdminsOnly,
+    admins,
+    isLoading,
+    handleCreateAdmin,
+    handleInactivateAdmin,
+  } = useAdminCrud(currentAdmin)
 
   return (
     <>
@@ -210,7 +121,7 @@ export default function AdminCrudPage() {
               ? Array.from({ length: 6 }).map((_, index) => (
                   <Skeleton key={index} className="w-full h-32 rounded-lg" />
                 ))
-              : filteredAdmins.map((admin) => (
+              : admins.map((admin) => (
                   <Card
                     key={admin.id}
                     className="shadow-md bg-white dark:bg-gray-800"
