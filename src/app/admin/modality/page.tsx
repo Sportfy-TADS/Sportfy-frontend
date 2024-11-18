@@ -168,16 +168,13 @@ export default function ModalidadeInscricaoPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
               />
+              {isAdmin && (
+                <Button className="bg-blue-500 hover:bg-blue-600" onClick={handleNewClick}>
+                  Cadastrar Modalidade
+                </Button>
+              )}
             </div>
           </div>
-
-          {isAdmin && (
-            <div className="mb-6">
-              <Button className="bg-blue-500 hover:bg-blue-600" onClick={handleNewClick}>
-                Cadastrar Modalidade
-              </Button>
-            </div>
-          )}
 
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent>
@@ -204,51 +201,27 @@ export default function ModalidadeInscricaoPage() {
             </SheetContent>
           </Sheet>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-3/4" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-4 w-1/2 mb-2" />
-                    <Skeleton className="h-8 w-full" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : displayedModalidades.length ? (
-              displayedModalidades.map((modalidade) => (
+          {isLoading ? (
+            <Skeleton count={5} height={40} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedModalidades.map((modalidade) => (
                 <Card key={modalidade.idModalidadeEsportiva}>
                   <CardHeader>
                     <CardTitle>{modalidade.nome}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm mb-2">{modalidade.descricao}</p>
-                    <Button
-                      onClick={() => mutate(modalidade.idModalidadeEsportiva)}
-                      className="w-full"
-                      disabled={modalidade.inscrito}
-                    >
-                      {modalidade.inscrito ? 'Inscrito' : 'Inscrever-se'}
-                    </Button>
+                    <p>{modalidade.descricao}</p>
                     {isAdmin && (
-                      <Button
-                        onClick={() => handleEditClick(modalidade)}
-                        className="w-full mt-2"
-                      >
+                      <Button onClick={() => handleEditClick(modalidade)}>
                         Editar
                       </Button>
                     )}
                   </CardContent>
                 </Card>
-              ))
-            ) : (
-              <p className="text-center col-span-full">
-                Nenhuma modalidade disponível.
-              </p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
