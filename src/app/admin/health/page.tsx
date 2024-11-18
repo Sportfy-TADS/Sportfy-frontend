@@ -1,7 +1,8 @@
 'use client'
 
-import { Edit, Trash2 } from 'lucide-react'
-import { Toaster } from 'sonner'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -23,162 +24,208 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useApoioSaude } from '@/hooks/useApoioSaude'
 
-export default function ApoioSaudeAdminPage() {
-  const {
-    currentApoio,
-    setCurrentApoio,
-    newApoio,
-    setNewApoio,
-    filter,
-    setFilter,
-    searchTerm,
-    setSearchTerm,
-    isLoading,
-    filteredApoios,
-    handleCreate,
-    handleUpdate,
-    handleInactivate,
-  } = useApoioSaude()
+// Funções de API
+async function fetchApoioSaude() {
+  const response = await fetch('http://localhost:8081/apoioSaude/listar', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  if (!response.ok) {
+    throw new Error('Erro ao buscar apoios à saúde')
+  }
+  return response.json()
+}
+
+async function createApoioSaude(data: {
+  nome: string
+  email: string
+  telefone: string
+  descricao: string
+  dataPublicacao: string
+  idAdministrador: number
+  ativo: boolean
+}): Promise<any> {
+  const response = await fetch('http://localhost:8081/apoioSaude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    throw new Error('Erro ao cadastrar apoio à saúde')
+  }
+  return response.json()
+}
+
+async function updateApoioSaude(id: number, data: {
+  nome: string
+  email: string
+  telefone: string
+  descricao: string
+}): Promise<any> {
+  const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    throw new Error('Erro ao atualizar apoio à saúde')
+  }
+  return response.json()
+}
+
+export default function ApoioSaudePage() {
+  const [newApoioSaude, setNewApoioSaude] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    descricao: '',
+    dataPublicacao: new Date().toISOString(),
+    idAdministrador: 1,
+    ativo: true,
+  })
+  const [editApoioSaude, setEditApoioSaude] = useState(null)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  const { data: apoiosSaude = [], isLoading, isError, error } = useQuery({
+    queryKey: ['apoiosSaude'],
+    queryFn: fetchApoioSaude,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: createApoioSaude,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['apoiosSaude'])
+      toast.success('Apoio à saúde cadastrado com sucesso!')
+      setIsSheetOpen(false)
+    },
+    onError: () => {
+      toast.error('Erro ao cadastrar apoio à saúde')
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: updateApoioSaude,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['apoiosSaude'])
+      toast.success('Apoio à saúde atualizado com sucesso!')
+      setIsSheetOpen(false)
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar apoio à saúde')
+    },
+  })
+
+  useEffect(() => {
+    if (isError) {
+      console.error('Erro ao carregar apoios à saúde:', error)
+    }
+  }, [isError, error])
+
+  const handleCreateApoioSaude = (e) => {
+    e.preventDefault()
+    createMutation.mutate(newApoioSaude)
+  }
+
+  const handleUpdateApoioSaude = (e) => {
+    e.preventDefault()
+    if (editApoioSaude) {
+      updateMutation.mutate({ id: editApoioSaude.idApoioSaude, ...newApoioSaude })
+    }
+  }
+
+  const handleEditClick = (apoio) => {
+    setEditApoioSaude(apoio)
+    setNewApoioSaude({
+      nome: apoio.nome,
+      email: apoio.email,
+      telefone: apoio.telefone,
+      descricao: apoio.descricao,
+      dataPublicacao: apoio.dataPublicacao,
+      idAdministrador: apoio.idAdministrador,
+      ativo: apoio.ativo,
+    })
+    setIsSheetOpen(true)
+  }
 
   return (
     <>
       <Header />
-      <Toaster richColors />
-      <div className="flex h-screen">
+      <div className="flex min-h-screen">
         <Sidebar className="flex-none" />
-        <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-6">
-            <div className="container mx-auto">
-              <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-                  Gerenciar Apoio à Saúde
-                </h1>
-                <div className="flex space-x-4">
-                  <Select onValueChange={setFilter} defaultValue="all">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filtrar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="ufpr">UFPR</SelectItem>
-                      <SelectItem value="externo">Externo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    placeholder="Buscar pelo nome..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full"
-                  />
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button className="bg-green-500 hover:bg-green-600">
-                        Adicionar Apoio
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent>
-                      <SheetHeader>
-                        <SheetTitle>Cadastrar Apoio à Saúde</SheetTitle>
-                      </SheetHeader>
-                      <form onSubmit={handleCreate} className="space-y-4 mt-4">
-                        <div>
-                          <label htmlFor="nome">Nome</label>
-                          <Input
-                            id="nome"
-                            value={newApoio.nome}
-                            onChange={(e) =>
-                              setNewApoio({ ...newApoio, nome: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="email">Email</label>
-                          <Input
-                            id="email"
-                            value={newApoio.email}
-                            onChange={(e) =>
-                              setNewApoio({
-                                ...newApoio,
-                                email: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="telefone">Telefone</label>
-                          <Input
-                            id="telefone"
-                            value={newApoio.telefone}
-                            onChange={(e) =>
-                              setNewApoio({
-                                ...newApoio,
-                                telefone: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="descricao">Descrição</label>
-                          <Input
-                            id="descricao"
-                            value={newApoio.descricao}
-                            onChange={(e) =>
-                              setNewApoio({
-                                ...newApoio,
-                                descricao: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <Button type="submit" className="w-full">
-                          Cadastrar
-                        </Button>
-                      </form>
-                    </SheetContent>
-                  </Sheet>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {isLoading ? (
-                  <Skeleton />
-                ) : (
-                  filteredApoios.map((apoio: any) => (
-                    <Card key={apoio.idApoioSaude}>
-                      <CardHeader>
-                        <CardTitle>{apoio.nome}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p>{apoio.descricao}</p>
-                        <div className="flex space-x-2">
-                          <Button
-                            onClick={() => {
-                              setCurrentApoio(apoio)
-                              setNewApoio({
-                                nome: apoio.nome,
-                                email: apoio.email,
-                                telefone: apoio.telefone,
-                                descricao: apoio.descricao,
-                              })
-                            }}
-                          >
-                            <Edit />
-                          </Button>
-                          <Button
-                            onClick={() => handleInactivate(apoio.idApoioSaude)}
-                            variant="destructive"
-                          >
-                            <Trash2 />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
+        <div className="container mx-auto p-4 flex-1">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Apoios à Saúde</h1>
+            <div className="flex space-x-4">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => setIsSheetOpen(true)}>
+                    Cadastrar Apoio à Saúde
+                  </Button>
+                </SheetTrigger>
+                <SheetContent position="right" size="lg" open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                  <SheetHeader>
+                    <SheetTitle>{editApoioSaude ? 'Editar Apoio à Saúde' : 'Cadastrar Apoio à Saúde'}</SheetTitle>
+                  </SheetHeader>
+                  <form className="space-y-4 mt-4" onSubmit={editApoioSaude ? handleUpdateApoioSaude : handleCreateApoioSaude}>
+                    <Input
+                      placeholder="Nome"
+                      value={newApoioSaude.nome}
+                      onChange={(e) => setNewApoioSaude({ ...newApoioSaude, nome: e.target.value })}
+                      required
+                    />
+                    <Input
+                      placeholder="Email"
+                      value={newApoioSaude.email}
+                      onChange={(e) => setNewApoioSaude({ ...newApoioSaude, email: e.target.value })}
+                      required
+                    />
+                    <Input
+                      placeholder="Telefone"
+                      value={newApoioSaude.telefone}
+                      onChange={(e) => setNewApoioSaude({ ...newApoioSaude, telefone: e.target.value })}
+                      required
+                    />
+                    <Input
+                      placeholder="Descrição"
+                      value={newApoioSaude.descricao}
+                      onChange={(e) => setNewApoioSaude({ ...newApoioSaude, descricao: e.target.value })}
+                      required
+                    />
+                    <Button type="submit" className="w-full">
+                      Salvar
+                    </Button>
+                  </form>
+                </SheetContent>
+              </Sheet>
             </div>
-          </main>
+          </div>
+
+          {isLoading ? (
+            <Skeleton count={5} height={40} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {apoiosSaude.map((apoio) => (
+                <Card key={apoio.idApoioSaude}>
+                  <CardHeader>
+                    <CardTitle>{apoio.nome}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>Email: {apoio.email}</p>
+                    <p>Telefone: {apoio.telefone}</p>
+                    <p>Descrição: {apoio.descricao}</p>
+                    <p>Data de Publicação: {new Date(apoio.dataPublicacao).toLocaleDateString()}</p>
+                    <Button className="mt-4 w-full" onClick={() => handleEditClick(apoio)}>
+                      Editar
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
