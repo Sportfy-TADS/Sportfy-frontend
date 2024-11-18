@@ -200,75 +200,75 @@ export default function AdminCrudPage() {
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
               Gerenciar Administradores
             </h1>
-            <Select
-              onValueChange={(value) => setShowAdminsOnly(value === 'admins')}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtrar usuários" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admins">Mostrar apenas Admins</SelectItem>
-                <SelectItem value="all">Mostrar Todos</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-4">
+              <Select
+                onValueChange={(value) => setShowAdminsOnly(value === 'admins')}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filtrar usuários" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admins">Mostrar apenas Admins</SelectItem>
+                  <SelectItem value="all">Mostrar Todos</SelectItem>
+                </SelectContent>
+              </Select>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="primary">Cadastrar Novo Administrador</Button>
+                </SheetTrigger>
+                <SheetContent position="right" size="lg">
+                  <SheetHeader>
+                    <SheetTitle>Cadastrar Administrador</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col space-y-4 mt-6">
+                    <Input
+                      placeholder="Username"
+                      value={newAdmin.username}
+                      onChange={(e) =>
+                        setNewAdmin({ ...newAdmin, username: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Senha"
+                      type="password"
+                      value={newAdmin.password}
+                      onChange={(e) =>
+                        setNewAdmin({ ...newAdmin, password: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Nome"
+                      value={newAdmin.nome}
+                      onChange={(e) =>
+                        setNewAdmin({ ...newAdmin, nome: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Telefone"
+                      value={newAdmin.telefone}
+                      onChange={(e) =>
+                        setNewAdmin({ ...newAdmin, telefone: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Data de Nascimento"
+                      value={newAdmin.dataNascimento}
+                      onChange={(e) =>
+                        setNewAdmin({ ...newAdmin, dataNascimento: e.target.value })
+                      }
+                    />
+                    <Button
+                      onClick={handleCreateAdmin}
+                      variant="primary"
+                      className="mt-4"
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
-
-          {/* Botão para abrir o Sheet do cadastro */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="primary">Cadastrar Novo Administrador</Button>
-            </SheetTrigger>
-            <SheetContent position="right" size="lg">
-              <SheetHeader>
-                <SheetTitle>Cadastrar Administrador</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col space-y-4 mt-6">
-                <Input
-                  placeholder="Username"
-                  value={newAdmin.username}
-                  onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, username: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Senha"
-                  type="password"
-                  value={newAdmin.password}
-                  onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, password: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Nome"
-                  value={newAdmin.nome}
-                  onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, nome: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Telefone"
-                  value={newAdmin.telefone}
-                  onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, telefone: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Data de Nascimento"
-                  value={newAdmin.dataNascimento}
-                  onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, dataNascimento: e.target.value })
-                  }
-                />
-                <Button
-                  onClick={handleCreateAdmin}
-                  variant="primary"
-                  className="mt-4"
-                >
-                  Salvar
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
 
           {/* Formulário de edição */}
           {editAdmin && (
