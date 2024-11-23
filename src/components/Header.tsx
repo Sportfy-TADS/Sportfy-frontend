@@ -84,7 +84,7 @@ export default function Header() {
         }
 
         setUserName(userResponse.nome)
-        setUserImage(userResponse.foto || '')
+        setUserImage(userResponse.foto || `https://via.placeholder.com/50`)
       } catch (error) {
         console.error('Erro ao buscar dados do usuário:', error)
         router.push('/auth')

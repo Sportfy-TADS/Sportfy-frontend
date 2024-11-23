@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 import { toast } from 'sonner'
 
@@ -16,6 +17,9 @@ export const useFeed = () => {
   const [loading, setLoading] = useState(true)
   const [newPostContent, setNewPostContent] = useState('')
   const [loggedUser, setLoggedUser] = useState<any>(null)
+  const [newPostTitle, setNewPostTitle] = useState('')
+  const [newPostCanal, setNewPostCanal] = useState('')
+  const [newPostModalidadeEsportiva, setNewPostModalidadeEsportiva] = useState('')
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -91,34 +95,81 @@ export const useFeed = () => {
     }
   }
 
-  const handleNewPost = async () => {
-    if (newPostContent.trim() === '') return
-
-    const newPost = {
-      idPublicacao: 0,
-      titulo: newPostContent,
-      descricao: newPostContent,
-      dataPublicacao: null,
-      idCanal: 1,
-      idModalidadeEsportiva: null,
-      Usuario: {
-        idUsuario: loggedUser.idUsuario,
-        username: loggedUser.username,
-        nome: loggedUser.nome,
-        foto: loggedUser.foto || null,
-        permissao: loggedUser.permissao,
-      },
+  const refreshPosts = async () => {
+    try {
+      const posts = await fetchPosts()
+      setPosts(posts)
+    } catch (error) {
+      console.error('Erro ao carregar os posts:', error)
+      toast.error('Erro ao carregar os posts.')
     }
+  }
 
+  const handleNewPost = async () => {
     try {
       const token = localStorage.getItem('token')
-      const createdPost = await createPost(newPost, token)
-      setPosts([createdPost, ...posts])
-      setNewPostContent('')
+      if (!token) {
+        throw new Error('Token not found')
+      }
+
+      const decodedToken = JSON.parse(atob(token.split('.')[1]))
+      const userId = decodedToken.idUsuario
+
+      const payload = {
+        idPublicacao: 0,
+        titulo: newPostTitle,
+        descricao: newPostContent,
+        dataPublicacao: null,
+        idCanal: 1,
+        idModalidadeEsportiva: null,
+        Usuario: {
+          idUsuario: userId,
+          username: loggedUser.username,
+          nome: loggedUser.nome,
+          foto: loggedUser.foto,
+          permissao: loggedUser.permissao,
+        },
+      }
+      await axios.post('http://localhost:8081/publicacao/cadastrarPublicacao', payload)
       toast.success('Publicação criada com sucesso!')
+      refreshPosts()
     } catch (error) {
-      console.error('Erro ao criar novo post:', error)
-      toast.error('Erro ao criar novo post.')
+      console.error('Error creating new post:', error)
+      toast.error('Erro ao criar a publicação.')
+    }
+  }
+
+  const handleEditPost = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Token not found')
+      }
+
+      const decodedToken = JSON.parse(atob(token.split('.')[1]))
+      const userId = decodedToken.idUsuario
+
+      const payload = {
+        idPublicacao: postId,
+        titulo: newPostTitle,
+        descricao: newPostContent,
+        dataPublicacao: null,
+        idCanal: 1,
+        idModalidadeEsportiva: null,
+        Usuario: {
+          idUsuario: userId,
+          username: loggedUser.username,
+          nome: loggedUser.nome,
+          foto: loggedUser.foto,
+          permissao: loggedUser.permissao,
+        },
+      }
+      await axios.put(`http://localhost:8081/publicacao/atualizarPublicacao/${postId}`, payload)
+      toast.success('Publicação atualizada com sucesso!')
+      refreshPosts()
+    } catch (error) {
+      console.error('Error updating post:', error)
+      toast.error('Erro ao atualizar a publicação.')
     }
   }
 
@@ -130,5 +181,13 @@ export const useFeed = () => {
     formatDate,
     handleLikePost,
     handleNewPost,
+    newPostTitle,
+    setNewPostTitle,
+    newPostCanal,
+    setNewPostCanal,
+    newPostModalidadeEsportiva,
+    setNewPostModalidadeEsportiva,
+    handleEditPost,
+    refreshPosts,
   }
 }

@@ -214,7 +214,12 @@ export default function AdminCrudPage() {
               </Select>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="primary">Cadastrar Novo Administrador</Button>
+                  <Button 
+                    variant="outline"
+                    className="bg-white text-black"
+                  >
+                      Cadastrar Novo Administrador
+                  </Button>
                 </SheetTrigger>
                 <SheetContent position="right" size="lg">
                   <SheetHeader>
@@ -259,8 +264,8 @@ export default function AdminCrudPage() {
                     />
                     <Button
                       onClick={handleCreateAdmin}
-                      variant="primary"
-                      className="mt-4"
+                      variant="outline"
+                      className="mt-4 bg-white text-black"
                     >
                       Salvar
                     </Button>
@@ -317,13 +322,13 @@ export default function AdminCrudPage() {
                       })
                     }
                   />
-                  <Button
+                    <Button
                     onClick={handleUpdateAdmin}
-                    variant="primary"
-                    className="mt-4"
-                  >
+                    variant="outline"
+                    className="mt-4 bg-white text-black"
+                    >
                     Salvar
-                  </Button>
+                    </Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -352,7 +357,8 @@ export default function AdminCrudPage() {
                       <div className="flex items-center justify-between">
                         <Button
                           onClick={() => setEditAdmin(admin)}
-                          variant="warning"
+                          variant="outline"
+                          className="mt-4 bg-white text-black"
                         >
                           Editar
                         </Button>

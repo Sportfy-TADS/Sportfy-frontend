@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -156,7 +157,12 @@ export default function ApoioSaudePage() {
       <Header />
       <div className="flex min-h-screen">
         <Sidebar className="flex-none" />
-        <div className="container mx-auto p-4 flex-1">
+        <motion.div
+          className="container mx-auto p-4 flex-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Apoios à Saúde</h1>
             <div className="flex space-x-4">
@@ -226,7 +232,7 @@ export default function ApoioSaudePage() {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </>
   )

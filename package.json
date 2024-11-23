@@ -36,6 +36,7 @@
     "json-server": "^1.0.0-beta.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.435.0",
+    "motion": "^11.11.17",
     "msw": "^2.6.0",
     "next": "14.2.5",
     "next-themes": "^0.3.0",

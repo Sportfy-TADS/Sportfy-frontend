@@ -213,7 +213,10 @@ export default function ModalidadeInscricaoPage() {
                   <CardContent>
                     <p>{modalidade.descricao}</p>
                     {isAdmin && (
-                      <Button onClick={() => handleEditClick(modalidade)}>
+                      <Button 
+                      className='mt-4'
+                        onClick={() => handleEditClick(modalidade)}
+                      >
                         Editar
                       </Button>
                     )}
