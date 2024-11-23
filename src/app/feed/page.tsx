@@ -163,8 +163,8 @@ export default function FeedPage() {
                             <Heart
                               className={`w-5 h-5 ${
                                 post.listaUsuarioCurtida?.includes(loggedUser?.idUsuario)
-                                  ? 'text-red-500'
-                                  : ''
+                                  ? 'text-red-500 fill-red-500'
+                                  : 'text-gray-300'
                               }`}
                             />
                             <span>{post.listaUsuarioCurtida?.length || 0}</span>

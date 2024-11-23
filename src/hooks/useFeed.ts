@@ -52,14 +52,13 @@ export const useFeed = () => {
   const handleLikePost = async (postId: number) => {
     if (loggedUser) {
       try {
-        const token = localStorage.getItem('token')
         const post = posts.find((post) => post.idPublicacao === postId)
-        const usuarioJaCurtiu = post?.listaUsuarioCurtida.includes(
-          loggedUser.idUsuario,
-        )
+        const usuarioJaCurtiu = post?.listaUsuarioCurtida.includes(loggedUser.idUsuario)
+
+        console.log('Handling like for post:', { postId, userId: loggedUser.idUsuario, usuarioJaCurtiu })
 
         if (usuarioJaCurtiu) {
-          await unlikePost(loggedUser.idUsuario, postId, token)
+          await unlikePost(loggedUser.idUsuario, postId)
           setPosts((prevPosts) =>
             prevPosts.map((post) =>
               post.idPublicacao === postId
@@ -73,7 +72,7 @@ export const useFeed = () => {
             ),
           )
         } else {
-          await likePost(loggedUser.idUsuario, postId, token)
+          await likePost(loggedUser.idUsuario, postId)
           setPosts((prevPosts) =>
             prevPosts.map((post) =>
               post.idPublicacao === postId

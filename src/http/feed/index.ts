@@ -19,32 +19,33 @@ export const fetchLoggedUser = () => {
 export const likePost = async (
   userId: number,
   postId: number,
-  token: string,
 ) => {
-  await axios.post(
-    `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`,
-    null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  )
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`
+    console.log('Sending like request to URL:', url)
+    const response = await axios.post(url, {})
+    console.log('Like response:', response)
+    return response.data
+  } catch (error) {
+    console.error('Error liking post:', error)
+    throw error
+  }
 }
 
 export const unlikePost = async (
   userId: number,
   postId: number,
-  token: string,
 ) => {
-  await axios.delete(
-    `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${userId}/${postId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  )
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${userId}/${postId}`
+    console.log('Sending unlike request to URL:', url)
+    const response = await axios.delete(url)
+    console.log('Unlike response:', response)
+    return response.data
+  } catch (error) {
+    console.error('Error unliking post:', error)
+    throw error
+  }
 }
 
 export const createPost = async (newPost: any, token: string) => {
