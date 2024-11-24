@@ -18,44 +18,62 @@ export async function getGoals(idAcademico: number) {
   return await response.json()
 }
 
+// Função API para buscar meta por nome
+export async function searchGoalByName(idAcademico: number, titulo: string) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/${idAcademico}/buscar/${titulo}`,
+  )
+  if (!response.ok) throw new Error('Erro ao buscar meta por nome')
+  return await response.json()
+}
+
 // Função API para criar uma nova meta
 export async function createGoal(data: {
   titulo: string
   objetivo: string
-  quantidadeConcluida: number
   progressoAtual: number
   progressoMaximo: number
   progressoItem: string
   idAcademico: number
   situacaoMetaDiaria: number
 }) {
+  const token = localStorage.getItem('token')
+  
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/criar`,
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
     {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         ...data,
-        quantidadeConcluida: 0,
+        quantidadeConcluida: data.progressoAtual,
         situacaoMetaDiaria: 0
       }),
     },
   )
-  if (!response.ok) throw new Error('Erro ao criar meta')
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    console.error('Error response:', errorData)
+    throw new Error(errorData?.message || 'Erro ao criar meta')
+  }
+
   return await response.json()
 }
 
 // Função API para excluir uma meta
 export async function deleteGoal(idMetaDiaria: number) {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/deletar`,
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/excluir/${idMetaDiaria}`,
     {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idMetaDiaria }),
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
     },
   )
   if (!response.ok) throw new Error('Erro ao deletar meta')
@@ -66,7 +84,6 @@ export async function updateGoal(data: {
   idMetaDiaria: number
   titulo: string
   objetivo: string
-  quantidadeConcluida: number
   progressoAtual: number
   progressoMaximo: number
   progressoItem: string
@@ -77,7 +94,10 @@ export async function updateGoal(data: {
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
     {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
       body: JSON.stringify(data),
     },
   )

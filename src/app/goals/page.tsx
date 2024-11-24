@@ -36,7 +36,7 @@ export default function GoalsPage() {
     handleCreateGoal,
     handleDeleteGoal,
     handleUpdateGoal,
-  } = useGoals(userData?.username) // Pass username instead of idAcademico
+  } = useGoals(userData?.idAcademico) // Pass idAcademico instead of username
 
   if (!userData) {
     return <div>Loading...</div>

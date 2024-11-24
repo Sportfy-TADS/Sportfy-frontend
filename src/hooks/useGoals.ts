@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
 
-export const useGoals = () => {
+export const useGoals = (idAcademico: number | undefined) => {
   const [goals, setGoals] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const idAcademico = Number(localStorage.getItem('idAcademico'))
 
   useEffect(() => {
     const fetchGoals = async () => {
