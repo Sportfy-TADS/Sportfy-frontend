@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-// Função para obter o idAcademico
-export async function getUserData(userId: number) {
+// Função para obter o dados do usuário
+export async function getUserData(username: string) {
   const response = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
   )
   if (response.status !== 200) throw new Error('Erro ao obter dados do usuário')
   return response.data
@@ -30,11 +30,18 @@ export async function createGoal(data: {
   situacaoMetaDiaria: number
 }) {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
+    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/criar`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        ...data,
+        quantidadeConcluida: 0,
+        situacaoMetaDiaria: 0
+      }),
     },
   )
   if (!response.ok) throw new Error('Erro ao criar meta')

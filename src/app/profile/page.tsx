@@ -50,22 +50,24 @@ export default function ProfilePage() {
 
       try {
         interface DecodedToken {
+          sub: string
+          role?: string
+          roles?: string
           idUsuario?: number
           idAcademico?: number
-          role?: string
           permissao?: string
         }
 
         const decodedToken: DecodedToken = jwtDecode(token)
 
-        const userId = decodedToken.idUsuario || decodedToken.idAcademico
+        const username = decodedToken.sub
         const userRole =
-          decodedToken.role || decodedToken.permissao || 'ACADEMICO'
+          decodedToken.role || decodedToken.roles || decodedToken.permissao || 'ACADEMICO'
 
         const userEndpoint =
           userRole === 'ADMINISTRADOR'
-            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${userId}`
-            : `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`
+            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${decodedToken.idUsuario}`
+            : `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
 
         const response = await axios.get(userEndpoint, {
           headers: { Authorization: `Bearer ${token}` },

@@ -1,50 +1,44 @@
 import { useState, useEffect } from 'react'
-
-import { useRouter } from 'next/navigation'
-
 import { jwtDecode } from 'jwt-decode'
-import { toast } from 'sonner'
+import axios from 'axios'
 
-import { getUserData } from '@/http/goals'
+interface DecodedToken {
+  sub: string
+  roles: string
+  idUsuario: number
+}
 
-export function useUserData() {
-  const [idDoUsuarioLogado, setIdDoUsuarioLogado] = useState<number | null>(
-    null,
-  )
-  const [idAcademico, setIdAcademico] = useState<number | null>(null)
-  const router = useRouter()
+interface UserData {
+  username: string
+  idAcademico?: number
+  nome?: string
+  // ...other user data fields
+}
+
+export const useUserData = () => {
+  const [userData, setUserData] = useState<UserData | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.error('Erro: Nenhum usuário logado encontrado no localStorage')
-      toast.error('Usuário não está logado.')
-      router.push('/auth')
-      return
-    }
-
     const loadUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return null
+
       try {
-        const decodedToken: any = jwtDecode(token)
-        console.log('Token decodificado:', decodedToken)
-
-        const userId = decodedToken.idAcademico || decodedToken.idUsuario
-
-        // Obter dados do usuário
-        const userData = await getUserData(userId)
-        console.log('Dados do usuário:', userData)
-
-        setIdDoUsuarioLogado(userId)
-        setIdAcademico(userData.idAcademico)
+        const decoded: DecodedToken = jwtDecode(token)
+        const username = decoded.sub
+        
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
+        )
+        
+        setUserData(response.data)
       } catch (error) {
         console.error('Erro ao obter dados do usuário:', error)
-        toast.error('Erro ao obter dados do usuário. Faça login novamente.')
-        router.push('/auth')
       }
     }
 
     loadUserData()
-  }, [router])
+  }, [])
 
-  return { idDoUsuarioLogado, idAcademico }
+  return userData
 }

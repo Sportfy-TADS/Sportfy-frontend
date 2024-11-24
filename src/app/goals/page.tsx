@@ -29,14 +29,18 @@ import { useUserData } from '@/hooks/useUserData'
 export default function GoalsPage() {
   const [filter, setFilter] = useState('all')
   const [editingGoal, setEditingGoal] = useState<any>(null)
-  const { idAcademico } = useUserData()
+  const userData = useUserData()
   const {
     goals,
     isLoading,
     handleCreateGoal,
     handleDeleteGoal,
     handleUpdateGoal,
-  } = useGoals(idAcademico)
+  } = useGoals(userData?.username) // Pass username instead of idAcademico
+
+  if (!userData) {
+    return <div>Loading...</div>
+  }
 
   const filteredGoals = goals.filter((goal: any) => {
     if (filter === 'all') return true

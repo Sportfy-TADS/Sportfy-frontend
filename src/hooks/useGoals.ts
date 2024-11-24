@@ -1,55 +1,58 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useState, useEffect } from 'react'
+import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
 
-import { getGoals, createGoal, deleteGoal, updateGoal } from '@/http/goals'
+export const useGoals = () => {
+  const [goals, setGoals] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const idAcademico = Number(localStorage.getItem('idAcademico'))
 
-export function useGoals(idAcademico: number | null) {
-  const queryClient = useQueryClient()
+  useEffect(() => {
+    const fetchGoals = async () => {
+      if (!idAcademico) return
+      try {
+        const data = await getGoals(idAcademico)
+        setGoals(data)
+      } catch (error) {
+        console.error('Error fetching goals:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  const { data: goals = [], isLoading } = useQuery({
-    queryKey: ['goals', idAcademico],
-    queryFn: () => getGoals(idAcademico as number),
-    enabled: idAcademico !== null,
-  })
+    if (idAcademico) {
+      fetchGoals()
+    }
+  }, [idAcademico])
 
-  const handleCreateGoal = async (data: any) => {
+  const handleCreateGoal = async (goalData: any) => {
     try {
-      await createGoal(data)
-      queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
-      toast.success('Meta criada com sucesso!')
+      const response = await createGoal({ ...goalData, idAcademico })
+      setGoals(prev => [...prev, response])
     } catch (error) {
-      console.error('Erro ao criar a meta:', error)
-      toast.error('Erro ao criar a meta')
+      console.error('Error creating goal:', error)
+      throw error
     }
   }
 
-  const handleDeleteGoal = async (idMetaDiaria: number) => {
+  const handleUpdateGoal = async (goalData: any) => {
     try {
-      await deleteGoal(idMetaDiaria)
-      queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
-      toast.success('Meta excluída com sucesso!')
+      const response = await updateGoal({ ...goalData, idAcademico })
+      setGoals(prev => prev.map(goal => goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal))
     } catch (error) {
-      console.error('Erro ao excluir a meta:', error)
-      toast.error('Erro ao excluir a meta')
+      console.error('Error updating goal:', error)
+      throw error
     }
   }
 
-  const handleUpdateGoal = async (data: any) => {
+  const handleDeleteGoal = async (goalId: number) => {
     try {
-      await updateGoal(data)
-      queryClient.invalidateQueries({ queryKey: ['goals', idAcademico] })
-      toast.success('Meta atualizada com sucesso!')
+      await deleteGoal(goalId)
+      setGoals(prev => prev.filter(goal => goal.idMetaDiaria !== goalId))
     } catch (error) {
-      console.error('Erro ao atualizar a meta:', error)
-      toast.error('Erro ao atualizar a meta')
+      console.error('Error deleting goal:', error)
+      throw error
     }
   }
 
-  return {
-    goals,
-    isLoading,
-    handleCreateGoal,
-    handleDeleteGoal,
-    handleUpdateGoal,
-  }
+  return { goals, isLoading, handleCreateGoal, handleUpdateGoal, handleDeleteGoal }
 }

@@ -51,8 +51,8 @@ export default function Header() {
       }
 
       setIsLoggedIn(true)
-      const userId = decoded.idUsuario
-      setUserName(decoded.sub)
+      const username = decoded.sub
+      setUserName(username)
 
       try {
         let userResponse
@@ -76,7 +76,7 @@ export default function Header() {
           userResponse = { nome: matchedAdmin.nome, foto: matchedAdmin.foto }
         } else {
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
           )
           if (!response.ok) throw new Error('Erro ao buscar dados do acadêmico')
           userResponse = await response.json()
