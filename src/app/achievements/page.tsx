@@ -22,30 +22,22 @@ export default function AchievementsPage() {
         try {
           const decodedToken: any = jwtDecode(token)
           console.log('Token decodificado:', decodedToken)
-          const idUsuario = decodedToken.idUsuario || decodedToken.idAcademico
-
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${idUsuario}`,
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          )
-
-          if (!response.ok) {
-            throw new Error('Erro ao obter dados do usuário.')
+          
+          // Get stored user data instead of using token data
+          const userDataStr = localStorage.getItem('userData')
+          if (!userDataStr) {
+            throw new Error('Dados do usuário não encontrados')
           }
-
-          const userData = await response.json()
+          
+          const userData = JSON.parse(userDataStr)
+          console.log('User data from localStorage:', userData)
+          
           const idAcademico = userData.idAcademico
-          console.log('idAcademico obtido:', idAcademico)
+          console.log('idAcademico a ser usado:', idAcademico)
 
           setUserId(idAcademico)
 
           const achievementsData = await fetchAchievements(idAcademico, token)
-
           console.log('Dados das conquistas:', achievementsData)
 
           setUserAchievements(achievementsData)

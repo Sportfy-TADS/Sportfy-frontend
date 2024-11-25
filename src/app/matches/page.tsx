@@ -25,6 +25,19 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Inscricao, Modalidade, MatchData } from '@/interface/types'
 
+// Função para buscar as partidas de um campeonato específico
+async function getPartidas(idCampeonato) {
+  const token = localStorage.getItem('token') // Obtém o token do localStorage
+  const res = await fetch(`http://localhost:8081/campeonatos/${idCampeonato}/partidas`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`, // Adiciona o token no cabeçalho Authorization
+    },
+  })
+  if (!res.ok) throw new Error('Erro ao buscar partidas.')
+  return await res.json()
+}
+
 // Função para buscar as modalidades em que o usuário está inscrito
 async function getInscricoes(userId: string) {
   const res = await fetch(
@@ -38,13 +51,6 @@ async function getInscricoes(userId: string) {
 async function getModalidades() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`)
   if (!res.ok) throw new Error('Erro ao buscar modalidades.')
-  return await res.json()
-}
-
-// Função para buscar as partidas de um campeonato específico
-async function getPartidas(idCampeonato) {
-  const res = await fetch(`http://localhost:8081/campeonatos/${idCampeonato}/partidas`)
-  if (!res.ok) throw new Error('Erro ao buscar partidas.')
   return await res.json()
 }
 
@@ -222,23 +228,22 @@ export default function CreateMatchPage() {
             </Sheet>
           </div>
           <div className="mt-6">
-  <h2 className="text-2xl font-bold mb-4">Partidas</h2>
-  {loadingPartidas ? (
-    <p>Carregando partidas...</p>
-  ) : partidas && partidas.length > 0 ? (
-    <ul>
-      {partidas.map((partida) => (
-        <li key={partida.idPartida}>
-          {partida.fasePartida} - 
-          {partida.dataPartida ? new Date(partida.dataPartida).toLocaleDateString() : 'Data não definida'}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p>Nenhuma partida encontrada.</p>
-  )}
-</div>
-
+            <h2 className="text-2xl font-bold mb-4">Partidas</h2>
+            {loadingPartidas ? (
+              <p>Carregando partidas...</p>
+            ) : partidas && partidas.length > 0 ? (
+              <ul>
+                {partidas.map((partida) => (
+                  <li key={partida.idPartida}>
+                    {partida.fasePartida} - 
+                    {partida.dataPartida ? new Date(partida.dataPartida).toLocaleDateString() : 'Data não definida'}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Nenhuma partida encontrada.</p>
+            )}
+          </div>
         </main>
       </div>
     </>

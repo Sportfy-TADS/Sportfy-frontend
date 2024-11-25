@@ -98,7 +98,8 @@ export default function CampeonatoPage() {
 
           <Button
             onClick={() => setSelectedCampeonato(campeonato)}
-            className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600"
+            className="
+            mt-4 w-full bg-white hover:bg-zinc-300"
           >
             Atualizar
           </Button>
