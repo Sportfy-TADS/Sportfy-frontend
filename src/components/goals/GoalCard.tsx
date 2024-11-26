@@ -19,7 +19,7 @@ export default function GoalCard({ goal, onEdit, onDelete }: any) {
         <div className="flex space-x-2 mt-2">
           <Button
             onClick={() => onEdit(goal)}
-            className="bg-yellow-500 hover:bg-yellow-600"
+            className="bg-white hover:bg-zinc-300"
           >
             Editar
           </Button>

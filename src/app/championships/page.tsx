@@ -1,5 +1,8 @@
 'use client'
 
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
@@ -15,32 +18,111 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { useCampeonatos } from '@/hooks/useCampeonatos'
+import {
+  getChampionships,
+  createChampionship,
+  updateChampionship,
+  deleteChampionship,
+} from '@/services/championshipService'
 
 interface Campeonato {
-  idCampeonato: number;
-  titulo: string;
-  descricao: string;
-  aposta: string;
-  dataInicio: string;
-  dataFim: string;
+  idCampeonato: number
+  titulo: string
+  descricao: string
+  aposta: string
+  dataInicio: string
+  dataFim: string
 }
 
 export default function CampeonatoPage() {
-  const {
-    campeonatos,
-    isLoading,
-    selectedCampeonato,
-    setSelectedCampeonato,
-    register,
-    handleSubmit,
-    reset,
-    handleCreateCampeonato,
-    handleUpdateCampeonato,
-    handleDeleteCampeonato,
-  } = useCampeonatos()
+  const [selectedCampeonato, setSelectedCampeonato] = useState<Campeonato | null>(null)
+  const [cep, setCep] = useState('')
+  const [logradouro, setLogradouro] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [cidade, setCidade] = useState('')
+  const [uf, setUf] = useState('')
+  const [privacidade, setPrivacidade] = useState('PUBLICO')
+  const queryClient = useQueryClient()
 
-  // Ensure campeonatos is an array and handle loading/error states
+  const { data: campeonatos = [], isLoading } = useQuery({
+    queryKey: ['campeonatos'],
+    queryFn: () => getChampionships(0, 10),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: createChampionship,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
+      toast.success('Campeonato criado com sucesso!')
+    },
+    onError: (error) => {
+      console.error('Erro ao criar campeonato:', error)
+      toast.error('Erro ao criar campeonato.')
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: Campeonato) => updateChampionship(data.idCampeonato, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
+      toast.success('Campeonato atualizado com sucesso!')
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar campeonato:', error)
+      toast.error('Erro ao atualizar campeonato.')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteChampionship(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
+      toast.success('Campeonato excluído com sucesso!')
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir campeonato:', error)
+      toast.error('Erro ao excluir campeonato.')
+    },
+  })
+
+  const handleCreateCampeonato = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const data = Object.fromEntries(formData.entries()) as unknown as Campeonato
+    createMutation.mutate(data)
+  }
+
+  const handleUpdateCampeonato = (data: Campeonato) => {
+    updateMutation.mutate(data)
+  }
+
+  const handleDeleteCampeonato = (id: number) => {
+    deleteMutation.mutate(id)
+  }
+
+  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cepValue = e.target.value
+    setCep(cepValue)
+
+    if (cepValue.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
+        const data = await response.json()
+        if (!data.erro) {
+          setLogradouro(data.logradouro)
+          setBairro(data.bairro)
+          setCidade(data.localidade)
+          setUf(data.uf)
+        } else {
+          toast.error('CEP não encontrado.')
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error)
+        toast.error('Erro ao buscar CEP.')
+      }
+    }
+  }
+
   const renderCampeonatos = () => {
     if (isLoading) {
       return Array.from({ length: 6 }).map((_, index) => (
@@ -54,24 +136,12 @@ export default function CampeonatoPage() {
       ))
     }
 
-    if (!Array.isArray(campeonatos)) {
+    if (!Array.isArray(campeonatos) || campeonatos.length === 0) {
       return (
         <Card className="col-span-full p-4">
           <CardContent>
             <p className="text-center text-gray-500">
               Nenhum campeonato encontrado ou erro ao carregar dados.
-            </p>
-          </CardContent>
-        </Card>
-      )
-    }
-
-    if (campeonatos.length === 0) {
-      return (
-        <Card className="col-span-full p-4">
-          <CardContent>
-            <p className="text-center text-gray-500">
-              Nenhum campeonato cadastrado.
             </p>
           </CardContent>
         </Card>
@@ -84,13 +154,10 @@ export default function CampeonatoPage() {
           <CardTitle>{campeonato.titulo}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm">
-            Descrição: {campeonato.descricao}
-          </p>
+          <p className="text-sm">Descrição: {campeonato.descricao}</p>
           <p className="text-sm">Aposta: {campeonato.aposta}</p>
           <p className="text-sm">
-            Início:{' '}
-            {new Date(campeonato.dataInicio).toLocaleDateString()}
+            Início: {new Date(campeonato.dataInicio).toLocaleDateString()}
           </p>
           <p className="text-sm">
             Fim: {new Date(campeonato.dataFim).toLocaleDateString()}
@@ -98,8 +165,7 @@ export default function CampeonatoPage() {
 
           <Button
             onClick={() => setSelectedCampeonato(campeonato)}
-            className="
-            mt-4 w-full bg-white hover:bg-zinc-300"
+            className="mt-4 w-full bg-white hover:bg-zinc-300"
           >
             Atualizar
           </Button>
@@ -130,34 +196,84 @@ export default function CampeonatoPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent>
-  <SheetHeader>
-    <SheetTitle>Cadastrar Novo Campeonato</SheetTitle>
-  </SheetHeader>
-  <form onSubmit={handleSubmit(handleCreateCampeonato)} className="space-y-4 mt-4">
-    <div>
-      <Label htmlFor="titulo">Título</Label>
-      <Input id="titulo" {...register("titulo", { required: true })} />
-    </div>
-    <div>
-      <Label htmlFor="descricao">Descrição</Label>
-      <Textarea id="descricao" {...register("descricao", { required: true })} />
-    </div>
-    <div>
-      <Label htmlFor="aposta">Aposta</Label>
-      <Input id="aposta" {...register("aposta", { required: true })} />
-    </div>
-    <div>
-      <Label htmlFor="dataInicio">Data de Início</Label>
-      <Input id="dataInicio" type="date" {...register("dataInicio", { required: true })} />
-    </div>
-    <div>
-      <Label htmlFor="dataFim">Data de Fim</Label>
-      <Input id="dataFim" type="date" {...register("dataFim", { required: true })} />
-    </div>
-    <Button type="submit" className="bg-blue-500 hover:bg-blue-600">Salvar</Button>
-  </form>
-</SheetContent>
-
+                <SheetHeader>
+                  <SheetTitle>Cadastrar Novo Campeonato</SheetTitle>
+                </SheetHeader>
+                <form onSubmit={handleCreateCampeonato} className="space-y-4 mt-4 max-h-[70vh] overflow-y-auto">
+                  <div>
+                    <Label htmlFor="titulo">Título <span className="text-red-500">*</span></Label>
+                    <Input id="titulo" name="titulo" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="descricao">Descrição <span className="text-red-500">*</span></Label>
+                    <Textarea id="descricao" name="descricao" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="aposta">Aposta <span className="text-red-500">*</span></Label>
+                    <Input id="aposta" name="aposta" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="dataInicio">Data de Início <span className="text-red-500">*</span></Label>
+                    <Input id="dataInicio" name="dataInicio" type="date" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="dataFim">Data de Fim <span className="text-red-500">*</span></Label>
+                    <Input id="dataFim" name="dataFim" type="date" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="limiteTimes">Limite de Times <span className="text-red-500">*</span></Label>
+                    <Input id="limiteTimes" name="limiteTimes" type="number" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="limiteParticipantes">Limite de Participantes <span className="text-red-500">*</span></Label>
+                    <Input id="limiteParticipantes" name="limiteParticipantes" type="number" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="privacidadeCampeonato">Privacidade do Campeonato <span className="text-red-500">*</span></Label>
+                    <select id="privacidadeCampeonato" name="privacidadeCampeonato" value={privacidade} onChange={(e) => setPrivacidade(e.target.value)} required>
+                      <option value="PUBLICO">Público</option>
+                      <option value="PRIVADO">Privado</option>
+                    </select>
+                  </div>
+                  {privacidade === 'PRIVADO' && (
+                    <div>
+                      <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
+                      <Input id="senha" name="senha" type="password" required />
+                    </div>
+                  )}
+                  <div>
+                    <Label htmlFor="cep">CEP <span className="text-red-500">*</span></Label>
+                    <Input id="cep" name="cep" type="text" value={cep} onChange={handleCepChange} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="logradouro">Logradouro <span className="text-red-500">*</span></Label>
+                    <Input id="logradouro" name="logradouro" type="text" value={logradouro} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="numero">Número <span className="text-red-500">*</span></Label>
+                    <Input id="numero" name="numero" type="text" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="cidade">Cidade <span className="text-red-500">*</span></Label>
+                    <Input id="cidade" name="cidade" type="text" value={cidade} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="uf">UF <span className="text-red-500">*</span></Label>
+                    <Input id="uf" name="uf" type="text" value={uf} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="bairro">Bairro <span className="text-red-500">*</span></Label>
+                    <Input id="bairro" name="bairro" type="text" value={bairro} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="complemento">Complemento</Label>
+                    <Textarea id="complemento" name="complemento" />
+                  </div>
+                  <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                    Salvar
+                  </Button>
+                </form>
+              </SheetContent>
             </Sheet>
           </div>
 

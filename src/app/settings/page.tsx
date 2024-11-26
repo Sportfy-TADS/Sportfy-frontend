@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { CheckedState } from '@radix-ui/react-checkbox'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
+import {jwtDecode} from 'jwt-decode'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -35,10 +36,36 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { fetchSettings, saveSettings } from '@/http/settings'
+import { fetchSettings, saveSettings, deleteSettings } from '@/http/settings'
+
+interface TokenPayload {
+  sub: string
+  roles: string
+  idUsuario: number
+  idAcademico: number
+  iss: string
+  exp: number
+}
+
+const getUserIdFromToken = (): number | null => {
+  const token = localStorage.getItem('jwt')
+  console.log('Token from localStorage:', token) // Debugging line
+  if (token) {
+    try {
+      const decodedToken: TokenPayload = jwtDecode(token)
+      console.log('Decoded Token:', decodedToken) // Debugging line
+      return decodedToken.idAcademico || null
+    } catch (error) {
+      console.error('Erro ao decodificar o token:', error)
+      return null
+    }
+  }
+  return null
+}
 
 // ID do usuário autenticado
-const userId = 7203
+const userId = getUserIdFromToken()
+console.log('User ID:', userId) // Debugging line
 
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme()
@@ -56,8 +83,14 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (!userId) {
+        toast.error('Usuário não autenticado.')
+        return
+      }
       try {
+        console.log('Fetching settings for user ID:', userId) // Debugging line
         const data = await fetchSettings(userId)
+        console.log('Fetched settings:', data) // Debugging line
         setNotifications(data.notifications)
         setLanguage(data.language)
         setNotifyNewChampionships(data.notifyNewChampionships)
@@ -75,7 +108,7 @@ export default function SettingsPage() {
     }
 
     loadSettings()
-  }, [])
+  }, [userId])
 
   const handleSave = () => {
     setShowDialog(true)
@@ -83,7 +116,12 @@ export default function SettingsPage() {
 
   const confirmSave = async () => {
     setShowDialog(false)
+    if (!userId) {
+      toast.error('Usuário não autenticado.')
+      return
+    }
     try {
+      console.log('Saving settings for user ID:', userId) // Debugging line
       await saveSettings(userId, {
         notifications,
         language,
@@ -98,6 +136,22 @@ export default function SettingsPage() {
       })
       toast.success('Configurações salvas com sucesso!')
     } catch (error: any) {
+      console.error('Erro ao salvar configurações:', error) // Debugging line
+      toast.error(error.message)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!userId) {
+      toast.error('Usuário não autenticado.')
+      return
+    }
+    try {
+      console.log('Deleting settings for user ID:', userId) // Debugging line
+      await deleteSettings(userId)
+      toast.success('Configurações deletadas com sucesso!')
+    } catch (error: any) {
+      console.error('Erro ao deletar configurações:', error) // Debugging line
       toast.error(error.message)
     }
   }
@@ -251,6 +305,12 @@ export default function SettingsPage() {
               className="w-full bg-emerald-600 hover:bg-emerald-500"
             >
               Salvar Configurações
+            </Button>
+            <Button
+              onClick={handleDelete}
+              className="w-full bg-red-600 hover:bg-red-500 mt-4"
+            >
+              Deletar Configurações
             </Button>
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <AlertDialogContent>

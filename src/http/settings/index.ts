@@ -23,3 +23,15 @@ export const saveSettings = async (userId: number, settings: any) => {
     throw new Error('Erro ao salvar configurações')
   }
 }
+
+export const deleteSettings = async (userId: number) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
+    {
+      method: 'DELETE',
+    },
+  )
+  if (!response.ok) {
+    throw new Error('Erro ao deletar configurações')
+  }
+}

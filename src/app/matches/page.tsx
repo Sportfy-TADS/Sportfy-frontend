@@ -24,47 +24,13 @@ import {
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { Inscricao, Modalidade, MatchData } from '@/interface/types'
-
-// Função para buscar as partidas de um campeonato específico
-async function getPartidas(idCampeonato) {
-  const token = localStorage.getItem('token') // Obtém o token do localStorage
-  const res = await fetch(`http://localhost:8081/campeonatos/${idCampeonato}/partidas`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`, // Adiciona o token no cabeçalho Authorization
-    },
-  })
-  if (!res.ok) throw new Error('Erro ao buscar partidas.')
-  return await res.json()
-}
-
-// Função para buscar as modalidades em que o usuário está inscrito
-async function getInscricoes(userId: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/inscricoes?userId=${userId}`,
-  )
-  if (!res.ok) throw new Error('Erro ao buscar inscrições.')
-  return await res.json()
-}
-
-// Função para buscar modalidades
-async function getModalidades() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sports`)
-  if (!res.ok) throw new Error('Erro ao buscar modalidades.')
-  return await res.json()
-}
-
-// Função para criar uma nova partida
-async function createMatch(data: MatchData) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/matches`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-
-  if (!res.ok) throw new Error('Erro ao criar partida.')
-  return res.json()
-}
+import {
+  getMatches,
+  createMatch,
+  getInscriptions,
+  getSports,
+  getUserIdFromToken,
+} from '@/services/matchService'
 
 export default function CreateMatchPage() {
   const [nome, setNome] = useState('')
@@ -76,7 +42,7 @@ export default function CreateMatchPage() {
 
   const router = useRouter()
   const queryClient = useQueryClient()
-  const userId = localStorage.getItem('userId') // Pegando o ID do usuário logado
+  const userId = getUserIdFromToken()
   const idCampeonato = 1 // Use the id from localStorage or dynamic value
 
   // Fetch and set inscriptions and sports
@@ -87,8 +53,8 @@ export default function CreateMatchPage() {
         return
       }
       try {
-        const inscricoesData = await getInscricoes(userId)
-        const modalidadesData = await getModalidades()
+        const inscricoesData = await getInscriptions(userId)
+        const modalidadesData = await getSports()
         const modalidadesInscritas = modalidadesData.filter(
           (modalidade: Modalidade) =>
             inscricoesData.some(
@@ -109,7 +75,7 @@ export default function CreateMatchPage() {
   // Fetch matches
   const { data: partidas, isLoading: loadingPartidas } = useQuery({
     queryKey: ['partidas', idCampeonato],
-    queryFn: () => getPartidas(idCampeonato),
+    queryFn: () => getMatches(idCampeonato),
     enabled: !!idCampeonato, // Only fetch when idCampeonato is available
   })
 
