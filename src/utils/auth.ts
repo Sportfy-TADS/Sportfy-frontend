@@ -4,19 +4,18 @@ interface TokenPayload {
   sub: string
   roles: string
   idUsuario: number
-  idAcademico: number
   iss: string
   exp: number
 }
 
 export const getUserIdFromToken = (): number | null => {
-  const token = localStorage.getItem('jwt')
+  const token = localStorage.getItem('token') // Changed from 'jwt' to 'token'
   console.log('Token from localStorage:', token) // Debugging line
   if (token) {
     try {
       const decodedToken: TokenPayload = jwtDecode(token)
       console.log('Decoded Token:', decodedToken) // Debugging line
-      return decodedToken.idAcademico || null
+      return decodedToken.idUsuario || null
     } catch (error) {
       console.error('Erro ao decodificar o token:', error)
       return null

@@ -29,8 +29,12 @@ import {
   createMatch,
   getInscriptions,
   getSports,
-  getUserIdFromToken,
 } from '@/services/matchService'
+import { getUserIdFromToken } from '@/utils/auth' // Import the function
+
+// ID do usuário autenticado
+const userId = getUserIdFromToken()
+console.log('User ID:', userId) // Debugging line
 
 export default function CreateMatchPage() {
   const [nome, setNome] = useState('')
@@ -42,7 +46,6 @@ export default function CreateMatchPage() {
 
   const router = useRouter()
   const queryClient = useQueryClient()
-  const userId = getUserIdFromToken()
   const idCampeonato = 1 // Use the id from localStorage or dynamic value
 
   // Fetch and set inscriptions and sports
