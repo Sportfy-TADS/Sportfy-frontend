@@ -1,8 +1,10 @@
 'use client'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import axios from 'axios'
-import { jwtDecode } from 'jwt-decode'
+import { getUserData } from '@/utils/auth'
 import { Trophy, Target, Medal } from 'lucide-react'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -37,44 +39,34 @@ interface User {
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
+      const userData = getUserData()
+      console.log('User Data:', userData)
+      if (!userData) {
         console.error('Erro: Nenhum usuário logado encontrado no localStorage')
         router.push('/auth')
         return
       }
 
       try {
-        interface DecodedToken {
-          sub: string
-          role?: string
-          roles?: string
-          idUsuario?: number
-          idAcademico?: number
-          permissao?: string
-        }
-
-        const decodedToken: DecodedToken = jwtDecode(token)
-
-        const username = decodedToken.sub
-        const userRole =
-          decodedToken.role || decodedToken.roles || decodedToken.permissao || 'ACADEMICO'
+        const username = userData.username
+        const userRole = userData.roles || userData.permissao || 'ACADEMICO'
 
         const userEndpoint =
           userRole === 'ADMINISTRADOR'
-            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${decodedToken.idUsuario}`
+            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${userData.idUsuario}`
             : `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
 
         const response = await axios.get(userEndpoint, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         
         // Mockando dados adicionais temporariamente - substituir pela API real depois
-        const userData = {
+        const userDataWithExtras = {
           ...response.data,
           metas: [
             'Conquistar faixa preta até 2025',
@@ -93,7 +85,7 @@ export default function ProfilePage() {
           ]
         }
         
-        setUser(userData)
+        setUser(userDataWithExtras)
       } catch (error: unknown) {
         console.error('Erro ao carregar dados do usuário logado:', error)
         router.push('/auth')
@@ -102,7 +94,17 @@ export default function ProfilePage() {
       }
     }
 
+    const fetchBannerImage = async () => {
+      try {
+        const response = await fetch('https://source.unsplash.com/random/1600x400')
+        setBannerUrl(response.url)
+      } catch (error) {
+        console.error('Erro ao carregar imagem do banner:', error)
+      }
+    }
+
     loadUser()
+    fetchBannerImage()
   }, [router])
 
   if (loading) {
@@ -135,7 +137,14 @@ export default function ProfilePage() {
         <div className="container mx-auto p-4">
           {/* Banner e Foto */}
           <div className="relative">
-            <div className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg" />
+            <div
+              className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg"
+              style={{
+                backgroundImage: `url(${bannerUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
             
             {/* Foto e Botão Editar */}
             <div className="flex justify-between items-start px-4">
@@ -177,57 +186,66 @@ export default function ProfilePage() {
 
               {/* Seções de Metas, Conquistas e Campeonatos */}
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Target className="w-5 h-5 text-blue-500" />
-                      Metas
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {user?.metas?.map((meta, index) => (
-                        <li key={index} className="text-sm">{meta}</li>
-                      ))}
-                    </ul>
-                  </CardContent>
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Link href="/goals">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Target className="w-5 h-5 text-blue-500" />
+                        Metas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {user?.metas?.map((meta, index) => (
+                          <li key={index} className="text-sm">{meta}</li>
+                        ))}
+                      </ul>
+                      <p className="text-blue-500 mt-2">Ver todas as metas</p>
+                    </CardContent>
+                  </Link>
                 </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Medal className="w-5 h-5 text-yellow-500" />
-                      Conquistas
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {user?.conquistas?.map((conquista, index) => (
-                        <li key={index} className="text-sm">{conquista}</li>
-                      ))}
-                    </ul>
-                  </CardContent>
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Link href="/achievements">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Medal className="w-5 h-5 text-yellow-500" />
+                        Conquistas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {user?.conquistas?.map((conquista, index) => (
+                          <li key={index} className="text-sm">{conquista}</li>
+                        ))}
+                      </ul>
+                      <p className="text-yellow-500 mt-2">Ver todas as conquistas</p>
+                    </CardContent>
+                  </Link>
                 </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-purple-500" />
-                      Campeonatos
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {user?.campeonatos?.map((campeonato, index) => (
-                        <li key={index} className="text-sm">
-                          <p className="font-semibold">{campeonato.nome}</p>
-                          <p className="text-gray-600">
-                            {campeonato.posicao} • {campeonato.data}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <Link href="/championships">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-purple-500" />
+                        Campeonatos
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {user?.campeonatos?.map((campeonato, index) => (
+                          <li key={index} className="text-sm">
+                            <p className="font-semibold">{campeonato.nome}</p>
+                            <p className="text-gray-600">
+                              {campeonato.posicao} • {campeonato.data}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-purple-500 mt-2">Ver todos os campeonatos</p>
+                    </CardContent>
+                  </Link>
                 </Card>
               </div>
             </div>

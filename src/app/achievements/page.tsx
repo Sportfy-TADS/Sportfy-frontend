@@ -1,92 +1,155 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { jwtDecode } from 'jwt-decode'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { getUserData } from '@/utils/auth'
+import { fetchAchievements } from '@/http/achievements'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { fetchAchievements } from '@/http/achievements'
-import { Achievement } from '@/interface/types'
-import { useTheme } from 'next-themes'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Target, CircleDashed, SignalHigh } from 'lucide-react'
 
-export default function AchievementsPage() {
-  const [userAchievements, setUserAchievements] = useState<Achievement[]>([])
-  const [userId, setUserId] = useState<number | null>(null)
-  const { theme } = useTheme()
+interface Achievement {
+  id: number
+  metaEsportiva: {
+    titulo: string
+    descricao: string
+    idModalidadeEsportiva: number
+    progressoMaximo: number
+  }
+  progressoAtual: number
+  conquistado: boolean
+}
+
+const AchievementsPage = () => {
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('token')
-
-      if (token) {
-        try {
-          const decodedToken: any = jwtDecode(token)
-          console.log('Token decodificado:', decodedToken)
-          
-          // Get stored user data instead of using token data
-          const userDataStr = localStorage.getItem('userData')
-          if (!userDataStr) {
-            throw new Error('Dados do usuário não encontrados')
-          }
-          
-          const userData = JSON.parse(userDataStr)
-          console.log('User data from localStorage:', userData)
-          
-          const idAcademico = userData.idAcademico
-          console.log('idAcademico a ser usado:', idAcademico)
-
-          setUserId(idAcademico)
-
-          const achievementsData = await fetchAchievements(idAcademico, token)
-          console.log('Dados das conquistas:', achievementsData)
-
-          setUserAchievements(achievementsData)
-        } catch (error) {
-          console.error('Erro ao carregar conquistas:', error)
-        }
-      } else {
+    const loadAchievements = async () => {
+      const userData = getUserData()
+      console.log('User Data:', userData)
+      if (!userData) {
         console.error('Erro: Nenhum usuário logado encontrado no localStorage')
+        router.push('/auth')
+        return
+      }
+
+      try {
+        const achievementsData = await fetchAchievements(userData.idAcademico, localStorage.getItem('token'))
+        setAchievements(achievementsData)
+      } catch (error: any) {
+        if (error.message.includes('403')) {
+          setIsBlocked(true)
+        } else {
+          console.error('Erro ao carregar conquistas:', error)
+          toast.error('Erro ao carregar conquistas.')
+        }
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchData()
-  }, [])
+    loadAchievements()
+  }, [router])
 
-  return (
-    <>
-      <Header />
-      <div className="flex min-h-screen bg-white dark:bg-gray-900">
-        <Sidebar />
-        <div className="container mx-auto p-4 flex-1">
-          <h1 className="text-3xl font-bold mb-6 text-center text-gray-900 dark:text-white">
-            Suas Conquistas
-          </h1>
+  const getModalidadeName = (id: number) => {
+    const modalidades: { [key: number]: string } = {
+      1: 'Futebol',
+      2: 'Vôlei',
+      3: 'Basquete',
+      4: 'Tênis de Mesa',
+      5: 'Handebol',
+    }
+    return modalidades[id] || 'Desconhecido'
+  }
 
-          {userAchievements.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userAchievements.map((achievement) => (
-                <Card
-                  key={achievement.idConquista}
-                  className="shadow-lg border border-emerald-500 dark:border-emerald-400 transition-colors duration-200"
-                >
-                  <CardHeader className="bg-emerald-50 dark:bg-emerald-900">
-                    <CardTitle className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
-                      {achievement.metaEsportiva.titulo}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="bg-emerald-100 dark:bg-emerald-800 dark:text-emerald-100">
-                    <p>{achievement.metaEsportiva.descricao}</p>
-                  </CardContent>
-                </Card>
-              ))}
+  if (loading) {
+    return (
+      <div>
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <div className="container mx-auto p-4">
+            <Skeleton className="w-full h-48 bg-gray-300" />
+            <div className="mt-4 space-y-4">
+              <Skeleton className="h-8 w-48 bg-gray-300" />
+              <Skeleton className="w-full h-32 bg-gray-300" />
             </div>
-          ) : (
-            <p className="text-center text-gray-500 dark:text-gray-400">
-              Nenhuma conquista encontrada.
-            </p>
-          )}
+          </div>
         </div>
       </div>
-    </>
+    )
+  }
+
+  if (isBlocked) {
+    return (
+      <div>
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <div className="container mx-auto p-4">
+            <p className="text-center text-red-500">
+              O acadêmico bloqueou a visualização das conquistas.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <div className="container mx-auto p-4">
+          <h1 className="text-3xl font-bold mb-6">Conquistas</h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {achievements.map((achievement) => (
+              <Card
+                key={achievement.id}
+                className={`${
+                  achievement.conquistado ? 'bg-green-100' : 'bg-red-100'
+                }`}
+              >
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center">
+                    <span>{achievement.metaEsportiva.titulo}</span>
+                    <span className="text-sm text-gray-500">
+                      {getModalidadeName(achievement.metaEsportiva.idModalidadeEsportiva)}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center mb-2">
+                    <Target className={`w-5 h-5 ${achievement.conquistado ? 'text-green-500' : 'text-red-500'}`} />
+                    <p className="ml-2">{achievement.metaEsportiva.descricao}</p>
+                  </div>
+                  <div className="flex items-center mb-2">
+                    <CircleDashed className={`w-5 h-5 ${achievement.conquistado ? 'text-green-500' : 'text-red-500'}`} />
+                    <p className="ml-2">
+                      Progresso: {achievement.progressoAtual} / {achievement.metaEsportiva.progressoMaximo}
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <SignalHigh className={`w-5 h-5 ${achievement.conquistado ? 'text-green-500' : 'text-red-500'}`} />
+                    <p className="ml-2">
+                      Desempenho: {((achievement.progressoAtual / achievement.metaEsportiva.progressoMaximo) * 100).toFixed(0)}% da conquista completa
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
+
+export default AchievementsPage
