@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { CheckedState } from '@radix-ui/react-checkbox'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
-import {jwtDecode} from 'jwt-decode'
+import { getUserData } from '@/utils/auth'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -38,35 +38,6 @@ import {
 } from '@/components/ui/sheet'
 import { fetchSettings, saveSettings, deleteSettings } from '@/http/settings'
 
-interface TokenPayload {
-  sub: string
-  roles: string
-  idUsuario: number
-  idAcademico: number
-  iss: string
-  exp: number
-}
-
-const getUserIdFromToken = (): number | null => {
-  const token = localStorage.getItem('jwt')
-  console.log('Token from localStorage:', token) // Debugging line
-  if (token) {
-    try {
-      const decodedToken: TokenPayload = jwtDecode(token)
-      console.log('Decoded Token:', decodedToken) // Debugging line
-      return decodedToken.idAcademico || null
-    } catch (error) {
-      console.error('Erro ao decodificar o token:', error)
-      return null
-    }
-  }
-  return null
-}
-
-// ID do usuário autenticado
-const userId = getUserIdFromToken()
-console.log('User ID:', userId) // Debugging line
-
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme()
   const [notifications, setNotifications] = useState(true)
@@ -80,15 +51,26 @@ export default function SettingsPage() {
   const [privacyStats, setPrivacyStats] = useState(true)
   const [privacyAchievements, setPrivacyAchievements] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
+  const [userId, setUserId] = useState<number | null>(null)
 
   useEffect(() => {
+    const userData = getUserData()
+    console.log('User Data:', userData)
+    if (userData && userData.idAcademico) {
+      setUserId(userData.idAcademico)
+    } else {
+      console.error('idAcademico not found in userData.')
+      toast.error('Usuário não autenticado.')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!userId) {
+      return
+    }
     const loadSettings = async () => {
-      if (!userId) {
-        toast.error('Usuário não autenticado.')
-        return
-      }
       try {
-        console.log('Fetching settings for user ID:', userId) // Debugging line
+        console.log('Fetching settings for user ID:', userId)
         const data = await fetchSettings(userId)
         console.log('Fetched settings:', data) // Debugging line
         setNotifications(data.notifications)
@@ -184,7 +166,7 @@ export default function SettingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="en">Inglês</SelectContent>
+                  <SelectItem value="en">Inglês</SelectItem>
                 </SelectContent>
               </Select>
             </div>

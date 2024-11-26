@@ -3,19 +3,20 @@ import {jwtDecode} from 'jwt-decode'
 interface TokenPayload {
   sub: string
   roles: string
-  idUsuario: number
+  idUsuario?: number
+  idAcademico?: number
   iss: string
   exp: number
 }
 
 export const getUserIdFromToken = (): number | null => {
-  const token = localStorage.getItem('token') // Changed from 'jwt' to 'token'
-  console.log('Token from localStorage:', token) // Debugging line
+  const token = localStorage.getItem('token')
+  console.log('Token from localStorage:', token)
   if (token) {
     try {
       const decodedToken: TokenPayload = jwtDecode(token)
-      console.log('Decoded Token:', decodedToken) // Debugging line
-      return decodedToken.idUsuario || null
+      console.log('Decoded Token:', decodedToken)
+      return decodedToken.idAcademico ?? decodedToken.idUsuario ?? null
     } catch (error) {
       console.error('Erro ao decodificar o token:', error)
       return null
