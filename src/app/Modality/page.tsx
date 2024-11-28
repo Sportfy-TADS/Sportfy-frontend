@@ -246,6 +246,7 @@ export default function ModalidadeInscricaoPage() {
     },
     onError: (error) => {
       console.error('Erro ao carregar modalidades:', error)
+      toast.error('Erro ao carregar modalidades.')
     },
   })
 

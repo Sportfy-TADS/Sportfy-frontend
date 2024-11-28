@@ -25,11 +25,34 @@ export const useGoals = (idAcademico: number | undefined) => {
 
   const handleCreateGoal = async (goalData: any) => {
     try {
-      const response = await createGoal({ ...goalData, idAcademico })
+      if (!idAcademico) {
+        throw new Error('ID do acadêmico não fornecido')
+      }
+
+      if (!goalData.titulo?.trim()) {
+        throw new Error('Título é obrigatório')
+      }
+
+      if (!goalData.objetivo?.trim()) {
+        throw new Error('Objetivo é obrigatório')
+      }
+
+      if (!goalData.progressoMaximo || goalData.progressoMaximo <= 0) {
+        throw new Error('Quantidade objetivo deve ser maior que zero')
+      }
+
+      const response = await createGoal({
+        ...goalData,
+        idAcademico,
+        progressoItem: goalData.progressoItem || 'unidade'
+      })
+      
       setGoals(prev => [...prev, response])
-    } catch (error) {
-      console.error('Error creating goal:', error)
-      throw error
+      return response
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Erro ao criar meta'
+      console.error('Error in handleCreateGoal:', error)
+      throw new Error(errorMessage)
     }
   }
 
