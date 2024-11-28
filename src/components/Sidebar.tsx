@@ -45,20 +45,20 @@ export default function Sidebar() {
   return (
     <>
       <button
-        className="lg:hidden p-4"
+        className="lg:hidden p-4 focus:outline-none"
         onClick={toggleSidebar}
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
       <nav
-        className={`fixed lg:static top-0 left-0 h-screen w-64 bg-gray-200 dark:bg-gray-900 p-4 border-none shadow-none transform ${
+        className={`fixed lg:static top-0 left-0 h-full lg:h-screen w-64 bg-gray-200 dark:bg-gray-900 p-4 border-r border-gray-300 dark:border-gray-700 transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-200 ease-in-out lg:translate-x-0`}
+        } transition-transform duration-200 ease-in-out lg:translate-x-0 z-50`}
       >
         <ul className="space-y-6">
           <li
             className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/feed' ? 'opacity-50' : ''
+              pathname === '/feed' ? 'opacity-75' : ''
             }`}
             onClick={() => router.push('/feed')}
           >
@@ -67,7 +67,7 @@ export default function Sidebar() {
           </li>
           <li
             className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/profile' ? 'opacity-50' : ''
+              pathname === '/profile' ? 'opacity-75' : ''
             }`}
             onClick={() => router.push('/profile')}
           >
@@ -142,7 +142,7 @@ export default function Sidebar() {
             <>
               <li
                 className={`flex items-center space-x-3 cursor-pointer hover:bg-red-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-                  pathname === '/admin' ? 'opacity-50' : ''
+                  pathname === '/admin' ? 'opacity-75' : ''
                 }`}
                 onClick={() => router.push('/admin')}
               >
@@ -177,6 +177,13 @@ export default function Sidebar() {
           )}
         </ul>
       </nav>
+      {/* Overlay para telas pequenas */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-25 lg:hidden"
+          onClick={toggleSidebar}
+        ></div>
+      )}
     </>
   )
 }

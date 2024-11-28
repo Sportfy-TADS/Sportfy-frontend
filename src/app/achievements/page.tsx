@@ -23,7 +23,7 @@ interface Achievement {
   conquistado: boolean
 }
 
-const AchievementsPage = () => {
+export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [loading, setLoading] = useState(true)
   const [isBlocked, setIsBlocked] = useState(false)
@@ -125,9 +125,9 @@ const AchievementsPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
-      <div className="flex">
-        <Sidebar />
-        <div className="container mx-auto p-4">
+      <div className="flex flex-col lg:flex-row">
+        <Sidebar className="flex-none" />
+        <div className="container mx-auto p-4 flex-1">
           <h1 className="text-4xl font-bold mb-8">Conquistas</h1>
           
           {Object.entries(achievementsByModalidade).map(([modalidade, modalidadeAchievements]) => (
@@ -139,9 +139,9 @@ const AchievementsPage = () => {
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+              <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
                 {modalidadeAchievements.map((achievement) => (
-                  <div key={achievement.id} className="flex flex-col items-center">
+                  <div key={achievement.id} className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/6">
                     <div className={`relative w-24 h-24 rounded-full mb-3 ${
                       achievement.conquistado 
                         ? 'bg-gradient-to-br from-orange-500 to-yellow-500' 
@@ -203,6 +203,4 @@ const AchievementsPage = () => {
     </div>
   )
 }
-
-export default AchievementsPage
 

@@ -1,6 +1,5 @@
-
 import axios from 'axios'
-import {jwtDecode} from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode' // Corrected import
 
 interface TokenPayload {
   sub: string
@@ -47,10 +46,10 @@ export const getUserIdFromToken = (): number | null => {
 
 export const getChampionships = async (page: number, size: number) => {
   const response = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar?page=${page}&size=${size}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar?page=${page}&size=${size}&sort=dataCriacao,desc`,
     getHttpOptions(),
   )
-  return response.data
+  return response.data.content
 }
 
 export const createChampionship = async (data: any) => {
