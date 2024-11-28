@@ -68,17 +68,28 @@ const AchievementsPage = () => {
     return modalidades[id] || 'Desconhecido'
   }
 
+  const getAchievementIcon = (modalidadeId: number) => {
+    const icons: { [key: number]: string } = {
+      1: '⚽️',
+      2: '🏐',
+      3: '🏀',
+      4: '🏓',
+      5: '🤾',
+    }
+    return icons[modalidadeId] || '🏅'
+  }
+
   if (loading) {
     return (
-      <div>
+      <div className="min-h-screen bg-gray-900 text-white">
         <Header />
         <div className="flex">
           <Sidebar />
           <div className="container mx-auto p-4">
-            <Skeleton className="w-full h-48 bg-gray-300" />
+            <Skeleton className="w-full h-48 bg-gray-800" />
             <div className="mt-4 space-y-4">
-              <Skeleton className="h-8 w-48 bg-gray-300" />
-              <Skeleton className="w-full h-32 bg-gray-300" />
+              <Skeleton className="h-8 w-48 bg-gray-800" />
+              <Skeleton className="w-full h-32 bg-gray-800" />
             </div>
           </div>
         </div>
@@ -88,7 +99,7 @@ const AchievementsPage = () => {
 
   if (isBlocked) {
     return (
-      <div>
+      <div className="min-h-screen bg-gray-900 text-white">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -102,50 +113,91 @@ const AchievementsPage = () => {
     )
   }
 
+  const achievementsByModalidade = achievements.reduce((acc, achievement) => {
+    const modalidade = getModalidadeName(achievement.metaEsportiva.idModalidadeEsportiva)
+    if (!acc[modalidade]) {
+      acc[modalidade] = []
+    }
+    acc[modalidade].push(achievement)
+    return acc
+  }, {} as { [key: string]: Achievement[] })
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       <div className="flex">
         <Sidebar />
         <div className="container mx-auto p-4">
-          <h1 className="text-3xl font-bold mb-6">Conquistas</h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {achievements.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className={`${
-                  achievement.conquistado ? 'bg-green-100' : 'bg-red-100'
-                }`}
-              >
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>{achievement.metaEsportiva.titulo}</span>
-                    <span className="text-sm text-gray-500">
-                      {getModalidadeName(achievement.metaEsportiva.idModalidadeEsportiva)}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center mb-2">
-                    <Target className={`w-5 h-5 ${achievement.conquistado ? 'text-green-500' : 'text-red-500'}`} />
-                    <p className="ml-2">{achievement.metaEsportiva.descricao}</p>
+          <h1 className="text-4xl font-bold mb-8">Conquistas</h1>
+          
+          {Object.entries(achievementsByModalidade).map(([modalidade, modalidadeAchievements]) => (
+            <div key={modalidade} className="mb-12">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold">{modalidade}</h2>
+                <button className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Ver tudo
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                {modalidadeAchievements.map((achievement) => (
+                  <div key={achievement.id} className="flex flex-col items-center">
+                    <div className={`relative w-24 h-24 rounded-full mb-3 ${
+                      achievement.conquistado 
+                        ? 'bg-gradient-to-br from-orange-500 to-yellow-500' 
+                        : 'bg-gray-800 opacity-50'
+                    } before:absolute before:inset-0 before:rounded-full before:border-2 before:border-yellow-500 before:transform before:scale-110`}>
+                      <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                        {getAchievementIcon(achievement.metaEsportiva.idModalidadeEsportiva)}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <h3 className="font-medium text-sm mb-1">{achievement.metaEsportiva.titulo}</h3>
+                      <p className="text-xs text-gray-400">
+                        {((achievement.progressoAtual / achievement.metaEsportiva.progressoMaximo) * 100).toFixed(0)}% completo
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center mb-2">
-                    <CircleDashed className={`w-5 h-5 ${achievement.conquistado ? 'text-green-500' : 'text-red-500'}`} />
-                    <p className="ml-2">
-                      Progresso: {achievement.progressoAtual} / {achievement.metaEsportiva.progressoMaximo}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <SignalHigh className={`w-5 h-5 ${achievement.conquistado ? 'text-green-500' : 'text-red-500'}`} />
-                    <p className="ml-2">
-                      Desempenho: {((achievement.progressoAtual / achievement.metaEsportiva.progressoMaximo) * 100).toFixed(0)}% da conquista completa
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {modalidadeAchievements.map((achievement) => (
+                  <Card
+                    key={achievement.id}
+                    className={`border border-gray-800 ${
+                      achievement.conquistado ? 'bg-gray-800' : 'bg-gray-900'
+                    }`}
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-center text-lg">
+                        <span>{achievement.metaEsportiva.titulo}</span>
+                        <span className="text-2xl">{getAchievementIcon(achievement.metaEsportiva.idModalidadeEsportiva)}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center text-sm">
+                        <Target className={`w-5 h-5 mr-3 ${achievement.conquistado ? 'text-green-500' : 'text-gray-500'}`} />
+                        <p>{achievement.metaEsportiva.descricao}</p>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <CircleDashed className={`w-5 h-5 mr-3 ${achievement.conquistado ? 'text-green-500' : 'text-gray-500'}`} />
+                        <p>
+                          Progresso: {achievement.progressoAtual} / {achievement.metaEsportiva.progressoMaximo}
+                        </p>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <SignalHigh className={`w-5 h-5 mr-3 ${achievement.conquistado ? 'text-green-500' : 'text-gray-500'}`} />
+                        <p>
+                          {((achievement.progressoAtual / achievement.metaEsportiva.progressoMaximo) * 100).toFixed(0)}% completo
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -153,3 +205,4 @@ const AchievementsPage = () => {
 }
 
 export default AchievementsPage
+
