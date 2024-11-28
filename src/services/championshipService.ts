@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { jwtDecode } from 'jwt-decode' // Corrected import
+import {jwtDecode} from 'jwt-decode' // Corrected import
 
 interface TokenPayload {
   sub: string
@@ -11,7 +11,13 @@ interface TokenPayload {
 }
 
 const getToken = (): string | null => {
-  return localStorage.getItem('jwt')
+  // Check if we're on the client side
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('jwt')
+  } else {
+    // Return null or handle server-side token retrieval
+    return null
+  }
 }
 
 // Modify getHttpOptions to accept a token parameter

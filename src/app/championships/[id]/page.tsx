@@ -1,10 +1,35 @@
-"use client"
-
 import { getChampionshipById } from '@/services/championshipService'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 // ...existing imports...
+
+interface Campeonato {
+  titulo: string
+  descricao: string
+  aposta: string
+  dataInicio: string
+  dataFim: string
+  limiteTimes: number
+  limiteParticipantes: number
+  ativo: boolean
+  endereco: {
+    cep: string
+    uf: string
+    cidade: string
+    bairro: string
+    rua: string
+    numero: string
+    complemento: string | null
+  }
+  privacidadeCampeonato: string
+  idAcademico: number
+  idModalidadeEsportiva: number
+  situacaoCampeonato: string
+  senha?: string
+  usernameCriador?: string // Assuming this field exists
+  codigo?: string // Assuming this field exists
+}
 
 export default async function ChampionshipDetailsPage({
   params,
@@ -15,7 +40,7 @@ export default async function ChampionshipDetailsPage({
   console.log(`Received championship ID: ${id}`) // Added log
 
   // Fetch the championship data on the server side
-  let campeonato
+  let campeonato: Campeonato | null = null
   try {
     campeonato = await getChampionshipById(id)
     console.log('Fetched campeonato data:', campeonato) // Added log
