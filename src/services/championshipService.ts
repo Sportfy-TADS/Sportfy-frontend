@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {jwtDecode} from 'jwt-decode' // Corrected import
+import { jwtDecode } from 'jwt-decode' // Corrected import
 
 interface TokenPayload {
   sub: string
@@ -14,19 +14,16 @@ const getToken = (): string | null => {
   return localStorage.getItem('jwt')
 }
 
-const getHttpOptions = () => {
-  const token = getToken()
-  const headers = token
-    ? {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      }
-    : {
-        'Content-Type': 'application/json',
-      }
+// Modify getHttpOptions to accept a token parameter
+const getHttpOptions = (token?: string) => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    // Include Authorization header if token is provided
+    ...(token && { Authorization: `Bearer ${token}` }),
+  }
 
   return {
-    headers: headers,
+    headers,
   }
 }
 
@@ -44,36 +41,60 @@ export const getUserIdFromToken = (): number | null => {
   return null
 }
 
-export const getChampionships = async (page: number, size: number) => {
+export const getChampionships = async (page: number, size: number, token?: string) => {
+  console.log(`Fetching championships: page=${page}, size=${size}`) // Added log
   const response = await axios.get(
     `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar?page=${page}&size=${size}&sort=dataCriacao,desc`,
-    getHttpOptions(),
+    getHttpOptions(token),
   )
+  console.log('API response:', response.data) // Added log
   return response.data.content
 }
 
-export const createChampionship = async (data: any) => {
+export const createChampionship = async (data: any, token?: string) => {
+  console.log('Creating championship with data:', data) // Added log
   const response = await axios.post(
     `${process.env.NEXT_PUBLIC_API_URL}/campeonatos`,
     data,
-    getHttpOptions(),
+    getHttpOptions(token),
   )
+  console.log('API response:', response.data) // Added log
   return response.data
 }
 
-export const updateChampionship = async (id: number, data: any) => {
+export const updateChampionship = async (id: number, data: any, token?: string) => {
+  console.log(`Updating championship with ID: ${id}, data:`, data) // Added log
   const response = await axios.put(
     `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
     data,
-    getHttpOptions(),
+    getHttpOptions(token),
   )
+  console.log('API response:', response.data) // Added log
   return response.data
 }
 
-export const deleteChampionship = async (id: number) => {
+export const deleteChampionship = async (id: number, token?: string) => {
+  console.log(`Deleting championship with ID: ${id}`) // Added log
   const response = await axios.delete(
     `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
-    getHttpOptions(),
+    getHttpOptions(token),
   )
+  console.log('API response:', response.data) // Added log
   return response.data
+}
+
+// Modify getChampionshipById to accept a token parameter
+export const getChampionshipById = async (id: string, token?: string) => {
+  console.log(`Fetching championship with ID: ${id}`) // Added log
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
+      getHttpOptions(token),
+    )
+    console.log('API response:', response.data) // Added log
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching championship with ID ${id}:`, error) // Added log
+    throw error // Re-throw the error after logging
+  }
 }
