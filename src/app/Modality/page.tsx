@@ -107,11 +107,6 @@ async function getModalidades() {
       throw new Error(`Erro ao buscar todas modalidades: ${errorText}`)
     }
 
-    if (inscritasResponse.status === 404) {
-      console.warn('Nenhuma modalidade inscrita encontrada para o idAcademico:', idAcademico)
-      return await allModalidadesResponse.json()
-    }
-
     if (!inscritasResponse.ok) {
       const errorText = await inscritasResponse.text()
       console.error('Erro na resposta da API para modalidades inscritas:', errorText)
@@ -227,11 +222,11 @@ export default function ModalidadeInscricaoPage() {
 
       // Simulação de armazenamento de dados do usuário no localStorage
       const userData: UserData = {
-        idAcademico: idUsuario, // Substitua pelo valor correto
+        idAcademico: 11, // Substitua pelo valor correto
         curso: 'tads', // Substitua pelo valor correto
         username: sub,
-        email: `${sub}@ufpr.br`, // Substitua pelo valor correto
-        nome: 'Thiago dos Santos', // Substitua pelo valor correto
+        email: 'carlos@ufpr.br', // Substitua pelo valor correto
+        nome: 'thiago dos Santos', // Substitua pelo valor correto
       }
       localStorage.setItem('userData', JSON.stringify(userData))
       console.log('Dados do usuário armazenados no localStorage:', userData)

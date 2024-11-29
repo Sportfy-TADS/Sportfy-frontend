@@ -9,7 +9,8 @@ import { SignUpSchema } from '@/schemas'
 export const useRegister = () => {
   const router = useRouter()
 
-  const mutation = useMutation(registerAcademico, {
+  const mutation = useMutation({
+    mutationFn: registerAcademico,
     onSuccess: (data, variables) => {
       toast.success('Registro bem-sucedido!', {
         action: {

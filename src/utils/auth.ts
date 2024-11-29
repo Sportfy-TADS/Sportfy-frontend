@@ -1,4 +1,4 @@
-import {jwtDecode} from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 
 interface TokenPayload {
   sub: string
@@ -16,6 +16,7 @@ export const getUserIdFromToken = (): number | null => {
     try {
       const decodedToken: TokenPayload = jwtDecode(token)
       console.log('Decoded Token:', decodedToken)
+      // Use idUsuario as idAcademico if idAcademico is not present
       return decodedToken.idAcademico ?? decodedToken.idUsuario ?? null
     } catch (error) {
       console.error('Erro ao decodificar o token:', error)

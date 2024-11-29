@@ -149,7 +149,7 @@ export default function ProfilePage() {
             {/* Foto e Botão Editar */}
             <div className="flex justify-between items-start px-4">
               <img
-                src={user?.foto || '/default-avatar.png'}
+                src={user?.foto || `https://via.placeholder.com/50`}
                 alt={user?.nome}
                 className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 -mt-16"
               />
