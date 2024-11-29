@@ -50,8 +50,10 @@ export const useGoals = (idAcademico: number | undefined) => {
       setGoals(prev => [...prev, response])
       return response
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Erro ao criar meta'
-      console.error('Error in handleCreateGoal:', error)
+      console.error('Error response:', error?.response)
+      console.error('Error message:', error?.message)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro ao criar meta'
+      console.error('Error in handleCreateGoal:', errorMessage)
       throw new Error(errorMessage)
     }
   }

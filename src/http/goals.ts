@@ -32,61 +32,21 @@ interface GoalPayload {
 }
 
 export const getGoals = async (idAcademico: number) => {
-  const response = await axios.get(
-    `${API_URL}/metaDiaria/listar/${idAcademico}`,
-    getHttpOptions()
-  )
+  const response = await axios.get(`${API_URL}/metaDiaria`, { params: { idAcademico } })
   return response.data
 }
 
 export const createGoal = async (goalData: any) => {
-  const payload: GoalPayload = {
-    titulo: goalData.titulo,
-    objetivo: goalData.objetivo,
-    quantidadeConcluida: 0,
-    quantidadeObjetivo: goalData.progressoMaximo,
-    itemQuantificado: goalData.progressoItem || 'unidade',
-    situacaoMetaDiaria: 0,
-    academico: {
-      idAcademico: goalData.idAcademico
-    }
-  }
-
-  try {
-    const response = await axios.post(
-      `${API_URL}/metaDiaria`,
-      payload,
-      {
-        ...getHttpOptions(),
-        validateStatus: false
-      }
-    )
-
-    if (response.status >= 400) {
-      console.error('Server response:', response.data)
-      throw new Error(response.data.message || `Error ${response.status}: ${response.data.error}`)
-    }
-
-    return response.data
-  } catch (error: any) {
-    console.error('Create goal error:', error.response?.data || error)
-    throw error
-  }
+  const response = await axios.post(`${API_URL}/metaDiaria`, goalData)
+  return response.data
 }
 
 export const updateGoal = async (goalData: any) => {
-  const response = await axios.put(
-    `${API_URL}/metaDiaria`,
-    goalData,
-    getHttpOptions()
-  )
+  const response = await axios.put(`${API_URL}/metaDiaria/${goalData.idMetaDiaria}`, goalData)
   return response.data
 }
 
 export const deleteGoal = async (id: number) => {
-  const response = await axios.delete(
-    `${API_URL}/metaDiaria/excluir/${id}`,
-    getHttpOptions()
-  )
+  const response = await axios.delete(`${API_URL}/metaDiaria/${id}`)
   return response.data
 }
