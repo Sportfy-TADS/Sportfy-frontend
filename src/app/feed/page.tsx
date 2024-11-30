@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Heart, MessageCircle } from 'lucide-react'
-import { Toaster } from 'sonner'
+import { Toaster, toast } from 'sonner' // Adicionado 'toast'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { useFeed } from '@/hooks/useFeed'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { fetchComments } from '@/http/feed'
+import CommentsDialog from '@/components/CommentsDialog'
+import { Comentario } from '@/interface/types'
 
 export default function FeedPage() {
   const {
@@ -36,10 +39,14 @@ export default function FeedPage() {
     refreshPosts,
   } = useFeed()
   const router = useRouter()
-  const [editingPost, setEditingPost] = useState(null)
+  const [editingPost, setEditingPost] = useState<any>(null) // Especificar tipo se possível
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false)
+  const [selectedPostComments, setSelectedPostComments] = useState<Comentario[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
 
-  const startEditingPost = (post) => {
+  const startEditingPost = (post: Post) => { // Especificar tipo
     setEditingPost(post)
     setNewPostTitle(post.titulo)
     setNewPostContent(post.descricao)
@@ -70,8 +77,30 @@ export default function FeedPage() {
     refreshPosts()
   }
 
+  const openCommentsDialog = async (postId: number) => {
+    setCommentsLoading(true)
+    setSelectedPostId(postId)
+    try {
+      const response = await fetchComments(postId)
+      setSelectedPostComments(response)
+      setIsCommentsDialogOpen(true)
+    } catch (error) {
+      console.error('Erro ao carregar comentários:', error)
+      toast.error('Erro ao carregar comentários')
+    } finally {
+      setCommentsLoading(false)
+    }
+  }
+
+  const closeCommentsDialog = () => {
+    setIsCommentsDialogOpen(false)
+    setSelectedPostComments([])
+    setSelectedPostId(null)
+  }
+
   return (
     <>
+      <Toaster /> {/* Adicionado Toaster */}
       <Header />
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
         <Sidebar className="flex-none w-64" />
@@ -162,18 +191,26 @@ export default function FeedPage() {
                           >
                             <Heart
                               className={`w-5 h-5 ${
-                                post.listaUsuarioCurtida?.includes(loggedUser?.idUsuario)
+                                post.listaUsuarioCurtida?.some(
+                                  (usuario) => usuario.idUsuario === loggedUser?.idUsuario
+                                )
                                   ? 'text-red-500 fill-red-500'
                                   : 'text-gray-300'
                               }`}
                             />
                             <span>{post.listaUsuarioCurtida?.length || 0}</span>
                           </button>
-                          <button className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200">
+                          <button
+                            onClick={() => openCommentsDialog(post.idPublicacao)}
+                            className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                          >
                             <MessageCircle className="w-5 h-5" />
-                            <span>{post.listaComentario?.length || 0}</span>
+                            {post.listaComentario?.length > 0 && (
+                              <span>{post.listaComentario.length}</span>
+                            )}
                           </button>
-                          {post.Usuario.idUsuario === loggedUser?.idUsuario && (
+                          {(loggedUser?.permissao === 'ACADEMICO' && 
+                            post.Usuario.idUsuario === loggedUser.idUsuario) && ( // Verifica permissão e idUsuario
                             <button
                               onClick={() => startEditingPost(post)}
                               className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
@@ -193,6 +230,14 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
+
+      <CommentsDialog
+        isOpen={isCommentsDialogOpen}
+        onClose={closeCommentsDialog}
+        comments={selectedPostComments}
+        loading={commentsLoading}
+        postId={selectedPostId} // Adicionado
+      />
     </>
   )
 }

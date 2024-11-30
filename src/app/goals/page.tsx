@@ -42,10 +42,10 @@ export default function GoalsPage() {
     return <div>Loading...</div>
   }
 
-  const filteredGoals = Array.isArray(goals) ? goals.filter((goal: any) => {
+  const filteredGoals = goals.filter((goal: any) => {
     if (filter === 'all') return true
     return goal.situacaoMetaDiaria === (filter === 'completed' ? 1 : 0)
-  }) : []
+  })
 
   return (
     <>

@@ -18,46 +18,39 @@ export interface DecodedToken {
   sub: string
   role: string
   idUsuario: number
+  nome?: string // Adicionado
+  idAcademico?: number // Adicionado
   exp: number
 }
 
-export interface Comment {
-  idComentario: number
-  descricao: string
-  Usuario: {
-    idUsuario: number
-    username: string
-  }
-  listaUsuarioCurtida: number[]
+export interface Usuario {
+  idUsuario: number
+  username: string
+  nome: string
+  foto?: string
+  permissao: string
+  idAcademico: number // Adicionado
 }
 
 export interface Comentario {
   idComentario: number
   descricao: string
+  dataComentario: string
   idPublicacao: number
-  Usuario: {
-    idUsuario: number
-    username: string
-    nome: string
-    foto?: string | null
-    permissao: string
-  }
+  Usuario: Usuario
+  listaUsuarioCurtida: Usuario[]
+  listaComentarios?: Comentario[] // Já adicionado para suportar respostas
 }
 
 export interface Post {
   idPublicacao: number
   titulo: string
   descricao: string
-  dataPublicacao?: string | null
+  dataPublicacao: string | null
   idCanal: number
-  Usuario: {
-    idUsuario: number
-    username: string
-    nome: string
-    foto?: string | null
-    permissao: string
-  }
-  listaUsuarioCurtida: number[]
+  idModalidadeEsportiva: number | null
+  Usuario: Usuario
+  listaUsuarioCurtida: Usuario[]
   listaComentario: Comentario[]
 }
 

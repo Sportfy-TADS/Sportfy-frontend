@@ -26,75 +26,64 @@ const GoalForm = ({ onSubmit, defaultValues }: GoalFormProps) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit}>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Título</label>
+        <label>Título</label>
         <input
           type="text"
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Objetivo</label>
+        <label>Objetivo</label>
         <input
           type="text"
           value={objetivo}
           onChange={(e) => setObjetivo(e.target.value)}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Progresso Atual</label>
+        <label>Progresso Atual</label>
         <input
           type="number"
           value={progressoAtual}
           onChange={(e) => setProgressoAtual(Number(e.target.value))}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Progresso Máximo</label>
+        <label>Progresso Máximo</label>
         <input
           type="number"
           value={progressoMaximo}
           onChange={(e) => setProgressoMaximo(Number(e.target.value))}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Progresso Item</label>
+        <label>Progresso Item</label>
         <input
           type="text"
           value={progressoItem}
           onChange={(e) => setProgressoItem(e.target.value)}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Situação Meta Diária</label>
+        <label>Situação Meta Diária</label>
         <select
           value={situacaoMetaDiaria}
           onChange={(e) => setSituacaoMetaDiaria(Number(e.target.value))}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         >
           <option value={0}>Em andamento</option>
           <option value={1}>Concluída</option>
         </select>
       </div>
-      <button
-        type="submit"
-        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        Salvar
-      </button>
+      <button type="submit">Salvar</button>
     </form>
   )
 }

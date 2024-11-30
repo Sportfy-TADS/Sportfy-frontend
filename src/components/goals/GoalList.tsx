@@ -12,16 +12,23 @@ interface GoalListProps {
 
 const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <>
+        <Skeleton />
+        <Skeleton />
+        <Skeleton />
+        <Skeleton />
+      </>
+    )
   }
 
-  if (goals.length === 0) {
-    return <div>No goals found</div>
+  if (!goals.length) {
+    return <p>Não há metas cadastradas.</p>
   }
 
   return (
-    <div className="space-y-4">
-      {goals.map((goal) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {goals.map((goal: any) => (
         <div key={goal.idMetaDiaria} className="p-4 border rounded-md shadow-sm">
           <h2 className="text-xl font-bold">{goal.titulo}</h2>
           <p>{goal.objetivo}</p>
