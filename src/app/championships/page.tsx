@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import Header from '@/components/Header'
@@ -65,9 +65,21 @@ export default function CampeonatoPage() {
   const currentUserId = getUserIdFromToken()
   const router = useRouter() // Initialize useRouter
 
+  useEffect(() => {
+    // Check if user is authenticated
+    const userCheck = () => {
+      const id = getUserIdFromToken()
+      if (!id) {
+        toast.error('Usuário não autenticado')
+        router.push('/auth')
+      }
+    }
+    userCheck()
+  }, [router])
+
   const { data: campeonatos = [], isLoading } = useQuery({
     queryKey: ['campeonatos'],
-    queryFn: () => getChampionships(0, 10),
+    queryFn: getChampionships,
   })
 
   const createMutation = useMutation({
@@ -142,47 +154,54 @@ export default function CampeonatoPage() {
     },
   })
 
-  const handleCreateCampeonato = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateCampeonato = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const data = Object.fromEntries(formData.entries()) as unknown as Partial<Campeonato & { cep: string, uf: string, cidade: string, bairro: string, logradouro: string, numero: string, complemento: string, senha?: string }>
-
-    // Format dates to 'YYYY-MM-DD'
-    const dataInicioFormatted = data.dataInicio ? data.dataInicio.toString() : ''
-    const dataFimFormatted = data.dataFim ? data.dataFim.toString() : ''
-
-    const newCampeonato: Campeonato = {
-      titulo: data.titulo || '',
-      descricao: data.descricao || '',
-      aposta: data.aposta || '',
-      dataInicio: dataInicioFormatted,
-      dataFim: dataFimFormatted,
-      limiteTimes: Number(data.limiteTimes) || 0,
-      limiteParticipantes: Number(data.limiteParticipantes) || 0,
-      ativo: true,
-      endereco: {
-        cep: data.cep || '',
-        uf: data.uf || '',
-        cidade: data.cidade || '',
-        bairro: data.bairro || '',
-        rua: data.logradouro || '',
-        numero: data.numero || '',
-        complemento: data.complemento || null,
-      },
-      privacidadeCampeonato: data.privacidadeCampeonato || 'PUBLICO',
-      idAcademico: currentUserId || 0,
-      idModalidadeEsportiva: 1,
-      situacaoCampeonato: 'EM_ABERTO',
+    const idAcademico = getUserIdFromToken()
+  
+    if (!idAcademico) {
+      toast.error('Usuário não identificado. Por favor, faça login novamente.')
+      router.push('/auth')
+      return
     }
-
-    if (newCampeonato.privacidadeCampeonato === 'PRIVADO' && data.senha) {
-      newCampeonato.senha = data.senha as string
+  
+    try {
+      const formData = new FormData(event.currentTarget)
+      const data = Object.fromEntries(formData.entries())
+  
+      const newCampeonato = {
+        titulo: String(data.titulo).trim(),
+        descricao: String(data.descricao).trim(),
+        aposta: String(data.aposta).trim(),
+        dataInicio: `${data.dataInicio}T09:00:00Z`,
+        dataFim: `${data.dataFim}T18:00:00Z`,
+        limiteTimes: Math.max(1, Number(data.limiteTimes)),
+        limiteParticipantes: Math.max(1, Number(data.limiteParticipantes)),
+        ativo: true,
+        endereco: {
+          cep: String(data.cep).replace(/\D/g, ''),
+          uf: String(data.uf).toUpperCase(),
+          cidade: String(data.cidade),
+          bairro: String(data.bairro),
+          rua: String(data.logradouro),
+          numero: String(data.numero),
+          complemento: data.complemento ? String(data.complemento) : ""
+        },
+        privacidadeCampeonato: data.privacidadeCampeonato || 'PUBLICO',
+        idAcademico,
+        idModalidadeEsportiva: 1,
+        situacaoCampeonato: 'EM_ABERTO'
+      }
+  
+      if (data.privacidadeCampeonato === 'PRIVADO' && data.senha) {
+        newCampeonato.senha = String(data.senha)
+      }
+  
+      console.log('Creating championship with data:', JSON.stringify(newCampeonato, null, 2))
+      await createMutation.mutateAsync(newCampeonato)
+    } catch (error) {
+      console.error('Error preparing championship data:', error)
+      toast.error('Erro ao preparar dados do campeonato')
     }
-
-    // Log the final payload
-    console.log('Creating Campeonato with data:', newCampeonato)
-
-    createMutation.mutate(newCampeonato)
   }
 
   const handleUpdateCampeonato = (data: Campeonato) => {

@@ -11,6 +11,8 @@ import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
+import { getGoals } from '@/http/goals'
+import { fetchAchievements } from '@/http/achievements'
 
 interface User {
   idAcademico?: number
@@ -26,7 +28,10 @@ interface User {
   dataCriacao?: string
   ativo?: boolean
   permissao: string
-  metas?: string[]
+  metas?: Array<{
+    titulo: string
+    progresso: string
+  }>
   conquistas?: string[]
   campeonatos?: Array<{
     nome: string
@@ -40,6 +45,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  const [recentGoals, setRecentGoals] = useState<any[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -65,19 +71,27 @@ export default function ProfilePage() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         
-        // Mockando dados adicionais temporariamente - substituir pela API real depois
+        // Fetch goals and format them correctly
+        const goals = await getGoals(response.data.idAcademico)
+        const sortedGoals = goals
+          .sort((a: any, b: any) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime())
+          .slice(0, 2) // Get only 2 most recent goals
+
+        // Fetch achievements
+        const achievements = await fetchAchievements(response.data.idAcademico, localStorage.getItem('token'))
+        const sortedAchievements = achievements
+          .sort((a: any, b: any) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime())
+          .slice(0, 2)
+        
         const userDataWithExtras = {
           ...response.data,
-          metas: [
-            'Conquistar faixa preta até 2025',
-            'Participar de 5 campeonatos em 2024',
-            'Alcançar peso ideal para categoria'
-          ],
-          conquistas: [
-            'Faixa roxa em Jiu-jitsu',
-            'Campeão estadual 2023',
-            'Instrutor certificado'
-          ],
+          metas: sortedGoals.map((goal: any) => ({
+            titulo: goal.titulo,
+            progresso: `${goal.titulo}: ${goal.quantidadeConcluida}/${goal.quantidadeObjetivo} ${goal.itemQuantificado}`
+          })),
+          conquistas: sortedAchievements.map((achievement: any) => 
+            `${achievement.metaEsportiva.titulo} - ${achievement.conquistado ? 'Conquistado' : 'Em andamento'}`
+          ),
           campeonatos: [
             { nome: 'Brasileiro de Jiu-Jitsu 2023', posicao: '2º lugar', data: '2023' },
             { nome: 'Copa São Paulo', posicao: '1º lugar', data: '2023' },
@@ -196,9 +210,15 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
-                        {user?.metas?.map((meta, index) => (
-                          <li key={index} className="text-sm">{meta}</li>
-                        ))}
+                        {user?.metas?.length > 0 ? (
+                          user.metas.map((meta, index) => (
+                            <li key={index} className="text-sm">
+                              {meta.progresso}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-sm text-gray-500">Nenhuma meta cadastrada</li>
+                        )}
                       </ul>
                       <p className="text-blue-500 mt-2">Ver todas as metas</p>
                     </CardContent>
