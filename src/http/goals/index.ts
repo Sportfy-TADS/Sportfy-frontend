@@ -88,13 +88,14 @@ export async function createGoal(data: {
 
 // Função API para excluir uma meta
 export async function deleteGoal(idMetaDiaria: number) {
+  const token = localStorage.getItem('token')
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/excluir/${idMetaDiaria}`,
     {
       method: 'DELETE',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       }
     },
   )
@@ -112,13 +113,14 @@ export async function updateGoal(data: {
   idAcademico: number
   situacaoMetaDiaria: number
 }) {
+  const token = localStorage.getItem('token')
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
     {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(data),
     },

@@ -2,7 +2,20 @@ import { useState, useEffect } from 'react'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
 
 export const useGoals = (idAcademico: number | undefined) => {
-  const [goals, setGoals] = useState([])
+  interface Goal {
+    idMetaDiaria: number;
+    titulo: string;
+    objetivo: string;
+    quantidadeConcluida: number;
+    quantidadeObjetivo: number;
+    itemQuantificado: string;
+    situacaoMetaDiaria: string;
+    academico: {
+      idAcademico: number;
+    };
+  }
+
+  const [goals, setGoals] = useState<Goal[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -29,42 +42,53 @@ export const useGoals = (idAcademico: number | undefined) => {
         throw new Error('ID do acadêmico não fornecido')
       }
 
-      if (!goalData.titulo?.trim()) {
-        throw new Error('Título é obrigatório')
-      }
-
-      if (!goalData.objetivo?.trim()) {
-        throw new Error('Objetivo é obrigatório')
-      }
-
-      if (!goalData.progressoMaximo || goalData.progressoMaximo <= 0) {
-        throw new Error('Quantidade objetivo deve ser maior que zero')
-      }
-
-      const response = await createGoal({
-        ...goalData,
+      // Format the data according to the backend's expected structure
+      const payload = {
+        titulo: goalData.titulo,
+        objetivo: goalData.objetivo,
+        progressoAtual: goalData.progressoAtual,
+        progressoMaximo: goalData.progressoMaximo,
+        progressoItem: goalData.progressoItem,
         idAcademico,
-        progressoItem: goalData.progressoItem || 'unidade'
-      })
+        situacaoMetaDiaria: goalData.situacaoMetaDiaria
+      }
+
+      const response = await createGoal(payload)
+      setGoals(prev => prev.map((goal: Goal) => goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal))
       
       setGoals(prev => [...prev, response])
       return response
     } catch (error: any) {
-      console.error('Error response:', error?.response)
-      console.error('Error message:', error?.message)
-      const errorMessage = error?.response?.data?.message || error?.message || 'Erro ao criar meta'
-      console.error('Error in handleCreateGoal:', errorMessage)
-      throw new Error(errorMessage)
+      console.error('Error creating goal:', error)
+      throw new Error(error?.response?.data?.message || error.message || 'Erro ao criar meta')
     }
   }
 
   const handleUpdateGoal = async (goalData: any) => {
     try {
-      const response = await updateGoal({ ...goalData, idAcademico })
-      setGoals(prev => prev.map(goal => goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal))
-    } catch (error) {
+      // Ensure all required fields are present and properly formatted
+      const payload = {
+        idMetaDiaria: goalData.idMetaDiaria,
+        titulo: goalData.titulo,
+        objetivo: goalData.objetivo,
+        quantidadeConcluida: Number(goalData.progressoAtual),
+        quantidadeObjetivo: Number(goalData.progressoMaximo),
+        itemQuantificado: goalData.progressoItem === 'outro' ? 
+          goalData.customProgressoItem : goalData.progressoItem,
+        situacaoMetaDiaria: Number(goalData.situacaoMetaDiaria),
+        academico: {
+          idAcademico
+        }
+      }
+
+      const response = await updateGoal(payload)
+      setGoals(prev => prev.map(goal => 
+        goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal
+      ))
+      return response
+    } catch (error: any) {
       console.error('Error updating goal:', error)
-      throw error
+      throw new Error(error?.response?.data?.message || error.message || 'Erro ao atualizar meta')
     }
   }
 
