@@ -19,17 +19,18 @@ interface CommentsDialogProps {
   postId: number | null // Adicionado
 }
 
+
 // Componente Recursivo para Exibir e Editar Comentários Aninhados
 const CommentItem: React.FC<{
   comment: Comentario;
   addReply: (parentId: number, descricao: string) => void;
   updateComment: (commentId: number, descricao: string, idPublicacao: number) => void; // Atualizado
-}> = ({ comment, addReply, updateComment }) => {
+  loggedUser: Usuario | null; // Adicionado
+}> = ({ comment, addReply, updateComment, loggedUser }) => {
   const [showReply, setShowReply] = useState(false)
   const [replyContent, setReplyContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(comment.descricao)
-  const { loggedUser } = useFeed() // Obter usuário logado
 
   const handleReply = async () => {
     if (replyContent.trim()) {
@@ -72,8 +73,8 @@ const CommentItem: React.FC<{
             </span>
           </div>
           <div className="flex space-x-2">
-            {(loggedUser?.permissao === 'ACADEMICO' && 
-              loggedUser?.idUsuario === comment.Usuario.idUsuario) && ( // Verifica permissão e idUsuario
+            {(loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && 
+              loggedUser?.idUsuario === comment.Usuario.idUsuario) && ( // Verifica permissão e idUsuario de forma case-insensitive
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="text-xs text-yellow-500 hover:underline"
@@ -117,6 +118,7 @@ const CommentItem: React.FC<{
           comment={reply} 
           addReply={addReply} 
           updateComment={updateComment} 
+          loggedUser={loggedUser} // Passar loggedUser
         />
       ))}
     </div>
@@ -124,7 +126,7 @@ const CommentItem: React.FC<{
 }
 
 const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, comments, loading, postId }) => {
-  const { handleCreateComment, handleUpdateComment } = useFeed() // Usar o hook
+  const { handleCreateComment, handleUpdateComment, loggedUser } = useFeed() // Usar o hook
   const [newComment, setNewComment] = useState('')
   const [localComments, setLocalComments] = useState<Comentario[]>(comments)
 
@@ -212,6 +214,7 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, commen
                     comment={comment} 
                     addReply={addReply} 
                     updateComment={updateCommentHandler} 
+                    loggedUser={loggedUser} // Passar loggedUser
                   />
                 ))
               ) : (
@@ -239,6 +242,6 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, commen
       </DialogContent>
     </Dialog>
   )
-}
+} // Fechar o componente CommentsDialog corretamente
 
 export default CommentsDialog

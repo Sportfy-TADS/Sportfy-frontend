@@ -209,8 +209,8 @@ export default function FeedPage() {
                               <span>{post.listaComentario.length}</span>
                             )}
                           </button>
-                          {(loggedUser?.permissao === 'ACADEMICO' && 
-                            post.Usuario.idUsuario === loggedUser.idUsuario) && ( // Verifica permissão e idUsuario
+                          {(loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && 
+                            post.Usuario.idUsuario === loggedUser.idUsuario) && ( // Adicionado '?' para permissao
                             <button
                               onClick={() => startEditingPost(post)}
                               className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
@@ -237,6 +237,7 @@ export default function FeedPage() {
         comments={selectedPostComments}
         loading={commentsLoading}
         postId={selectedPostId} // Adicionado
+        loggedUser={loggedUser} // Certificar-se de passar loggedUser
       />
     </>
   )

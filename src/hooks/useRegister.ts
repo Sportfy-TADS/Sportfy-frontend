@@ -11,6 +11,7 @@ export const useRegister = () => {
 
   const mutation = useMutation({
     mutationFn: registerAcademico,
+    // Ensure password and foto are not required
     onSuccess: (data, variables) => {
       toast.success('Registro bem-sucedido!', {
         action: {

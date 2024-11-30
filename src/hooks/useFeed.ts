@@ -25,6 +25,26 @@ export const useFeed = () => {
   const [newPostCanal, setNewPostCanal] = useState('')
   const [newPostModalidadeEsportiva, setNewPostModalidadeEsportiva] = useState('')
 
+  const fetchLoggedUser = (): Usuario | null => { 
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        const decoded: DecodedToken = jwtDecode(token) // Usar jwtDecode corretamente
+        return {
+          idUsuario: decoded.idUsuario,
+          username: decoded.sub,
+          nome: decoded.nome || '', // Garantir que 'nome' esteja presente
+          permissao: decoded.role || 'USUARIO', // Adicionado valor padrão
+          idAcademico: decoded.idAcademico || decoded.idUsuario, // Garantir que 'idAcademico' esteja presente
+        }
+      } catch (error) {
+        console.error('Erro ao decodificar o token:', error)
+        return null
+      }
+    }
+    return null
+  }
+
   useEffect(() => {
     const loadPosts = async () => {
       try {
@@ -48,26 +68,6 @@ export const useFeed = () => {
 
     return () => clearInterval(intervalId)
   }, [])
-
-  const fetchLoggedUser = (): Usuario | null => { // Atualizado para retornar Usuario
-    const token = localStorage.getItem('token')
-    if (token) {
-      try {
-        const decoded: DecodedToken = jwtDecode(token) // Usar jwtDecode corretamente
-        return {
-          idUsuario: decoded.idUsuario,
-          username: decoded.sub,
-          nome: decoded.nome || '', // Garantir que 'nome' esteja presente
-          permissao: decoded.role,
-          idAcademico: decoded.idAcademico || decoded.idUsuario, // Garantir que 'idAcademico' esteja presente
-        }
-      } catch (error) {
-        console.error('Erro ao decodificar o token:', error)
-        return null
-      }
-    }
-    return null
-  }
 
   const formatDate = (date: string | null | undefined) => {
     if (!date) return 'Data não disponível'
@@ -146,32 +146,31 @@ export const useFeed = () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        throw new Error('Token not found')
+        throw new Error('Token não encontrado')
       }
 
-      const decodedToken = JSON.parse(atob(token.split('.')[1]))
-      const userId = decodedToken.idUsuario
-
-      const payload = {
-        idPublicacao: 0,
+      const newPost = {
         titulo: newPostTitle,
         descricao: newPostContent,
-        dataPublicacao: null,
         idCanal: 1,
-        idModalidadeEsportiva: null,
+        idModalidadeEsportiva: null, // Se necessário
+        // Remover idPublicacao e dataPublicacao, pois são gerenciados pelo backend
         Usuario: {
-          idUsuario: userId,
-          username: loggedUser.username,
-          nome: loggedUser.nome,
-          foto: loggedUser.foto,
-          permissao: loggedUser.permissao,
+          idUsuario: loggedUser?.idUsuario,
+          username: loggedUser?.username,
+          nome: loggedUser?.nome,
+          foto: loggedUser?.foto || null,
+          permissao: loggedUser?.permissao,
+          idAcademico: loggedUser?.idAcademico || loggedUser?.idUsuario,
         },
-        listaUsuarioCurtida: [], // Inicializar como vazio
-        listaComentario: [], // Inicializar como vazio
       }
-      await axios.post('http://localhost:8081/publicacao/cadastrarPublicacao', payload)
+
+      await createPost(newPost, token) // Usar createPost com token
+
       toast.success('Publicação criada com sucesso!')
       refreshPosts()
+      setNewPostTitle('')
+      setNewPostContent('')
     } catch (error) {
       console.error('Error creating new post:', error)
       toast.error('Erro ao criar a publicação.')
@@ -182,37 +181,48 @@ export const useFeed = () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        throw new Error('Token not found')
+        throw new Error('Token não encontrado')
       }
-
-      const decodedToken = JSON.parse(atob(token.split('.')[1]))
-      const userId = decodedToken.idUsuario
 
       const post = posts.find((p) => p.idPublicacao === postId)
       if (!post) {
         throw new Error('Post não encontrado')
       }
 
-      const payload = {
-        idPublicacao: postId,
+      const updatedPost = {
         titulo: newPostTitle,
         descricao: newPostContent,
-        dataPublicacao: null,
-        idCanal: 1,
-        idModalidadeEsportiva: null,
+        idCanal: post.idCanal,
+        idModalidadeEsportiva: post.idModalidadeEsportiva,
+        // Remover idPublicacao e dataPublicacao, pois são gerenciados pelo backend
         Usuario: {
-          idUsuario: userId,
-          username: loggedUser.username,
-          nome: loggedUser.nome,
-          foto: loggedUser.foto,
-          permissao: loggedUser.permissao,
+          idUsuario: loggedUser?.idUsuario,
+          username: loggedUser?.username,
+          nome: loggedUser?.nome,
+          foto: loggedUser?.foto || null,
+          permissao: loggedUser?.permissao,
+          idAcademico: loggedUser?.idAcademico || loggedUser?.idUsuario,
         },
-        listaUsuarioCurtida: post.listaUsuarioCurtida, // Preservar curtidas existentes
-        listaComentario: post.listaComentario, // Preservar comentários existentes
+        listaUsuarioCurtida: post.listaUsuarioCurtida,
+        listaComentario: post.listaComentario,
       }
-      await axios.put(`http://localhost:8081/publicacao/atualizarPublicacao/${postId}`, payload)
+
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/publicacao/atualizarPublicacao/${postId}`,
+        updatedPost,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
       toast.success('Publicação atualizada com sucesso!')
       refreshPosts()
+      setEditingPost(null)
+      setNewPostTitle('')
+      setNewPostContent('')
     } catch (error) {
       console.error('Error updating post:', error)
       toast.error('Erro ao atualizar a publicação.')

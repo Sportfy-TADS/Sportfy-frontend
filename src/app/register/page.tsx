@@ -4,9 +4,10 @@ import { useRouter } from 'next/navigation'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Medal } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { z } from 'zod'
+import { useState, useEffect, Fragment } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { useRegister } from '@/hooks/useRegister'
 import { signUpSchema } from '@/schemas'
+import { Combobox } from '@/components/ui/combobox' 
 
 type SignUpSchema = z.infer<typeof signUpSchema>
 
@@ -27,9 +29,44 @@ export default function RegisterPage() {
   const router = useRouter()
   const { mutateAsync: handleRegister, isLoading: isSubmitting } = useRegister()
 
-  const { register, handleSubmit } = useForm<SignUpSchema>({
+  const { register, handleSubmit, control } = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      curso: "tads",
+      username: "thiago1",
+      email: "thiago11@ufpr.br",
+      nome: "thiago",
+      telefone: "41988885555",
+      dataNascimento: "2000-05-05T21:17:43.547377-03:00",
+      // senha and foto are not necessary
+    },
   })
+
+  const [courses, setCourses] = useState<string[]>([])
+  const [filteredCourses, setFilteredCourses] = useState<string[]>([])
+  const [query, setQuery] = useState('') // Add state for search query
+
+  useEffect(() => {
+    fetch('http://localhost:8081/academico/cursos/ufpr')
+      .then(response => response.json())
+      .then(data => {
+        setCourses(data)
+        setFilteredCourses(data)
+      })
+      .catch(error => console.error(error))
+  }, [])
+
+  useEffect(() => { // Add filtering logic
+    if (query === '') {
+      setFilteredCourses(courses)
+    } else {
+      setFilteredCourses(
+        courses.filter(course =>
+          course.toLowerCase().includes(query.toLowerCase())
+        )
+      )
+    }
+  }, [query, courses])
 
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center antialiased lg:grid lg:grid-cols-2 lg:px-0">
@@ -76,16 +113,20 @@ export default function RegisterPage() {
                   {/* Curso */}
                   <div className="grid gap-2">
                     <Label htmlFor="curso">Curso</Label>
-                    <Input
-                      id="curso"
-                      type="text"
-                      autoCapitalize="none"
-                      autoComplete="curso"
-                      autoCorrect="off"
-                      {...register('curso')}
+                    <Controller
+                      control={control}
+                      name="curso"
+                      render={({ field }) => (
+                        <Combobox
+                          options={courses}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Selecione ou procure o curso"
+                        />
+                      )}
                     />
                   </div>
-
+                  
                   {/* Nome de usuário */}
                   <div className="grid gap-2">
                     <Label htmlFor="username">Nome de Usuário</Label>
