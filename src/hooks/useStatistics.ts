@@ -23,6 +23,7 @@ export function useStatistics() {
       setUserData(data)
     } else {
       toast.error('Usuário não está logado.')
+      localStorage.clear() // Limpar localStorage se o usuário não estiver logado
       router.push('/auth')
     }
   }, [router])

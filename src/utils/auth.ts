@@ -1,4 +1,4 @@
-import { jwtDecode } from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode' // Changed from named import to default import
 
 interface TokenPayload {
   sub: string
@@ -16,10 +16,10 @@ export const getUserIdFromToken = (): number | null => {
     try {
       const decodedToken: TokenPayload = jwtDecode(token)
       console.log('Decoded Token:', decodedToken)
-      // Use idUsuario as idAcademico if idAcademico is not present
+      // Use idAcademico as idUsuario if idUsuario is not present
       return decodedToken.idAcademico ?? decodedToken.idUsuario ?? null
     } catch (error) {
-      console.error('Erro ao decodificar o token:', error)
+      console.error('Error decoding token:', error)
       return null
     }
   }
@@ -32,10 +32,14 @@ export const storeUserData = (userData: any) => {
 }
 
 export const getUserData = (): any => {
-  const userDataStr = localStorage.getItem('userData')
-  console.log('User data from localStorage:', userDataStr) // Debugging line
-  if (userDataStr) {
-    return JSON.parse(userDataStr)
+  const data = localStorage.getItem('userData')
+  if (data) {
+    try {
+      return JSON.parse(data)
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+      return null
+    }
   }
   return null
 }

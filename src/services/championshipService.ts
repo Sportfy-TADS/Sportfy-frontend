@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { jwtDecode } from 'jwt-decode' // Corrected import
+// import { jwtDecode } from 'jwt-decode' // Remove incorrect import
 
 interface TokenPayload {
   sub: string
@@ -27,22 +27,12 @@ const getHttpOptions = (token?: string) => {
 
 export const getUserIdFromToken = (): number | null => {
   try {
-    const userData = localStorage.getItem('userData')
-    if (userData) {
-      const parsed = JSON.parse(userData)
-      return parsed.idAcademico || null
-    }
-
     const token = getToken()
-    if (token) {
-      const decoded: TokenPayload = jwtDecode(token)
-      return decoded.idAcademico || null
-    }
-
-    console.error('No user data or token found')
-    return null
+    if (!token) return null
+    const payload: TokenPayload = JSON.parse(atob(token.split('.')[1]))
+    return payload.idUsuario
   } catch (error) {
-    console.error('Error getting user ID:', error)
+    console.error('Erro ao decodificar token:', error)
     return null
   }
 }
@@ -50,15 +40,17 @@ export const getUserIdFromToken = (): number | null => {
 export const getChampionships = async () => {
   const token = getToken()
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar?sort=dataCriacao,desc`,
+    `/api/campeonatos/listar?sort=dataCriacao,desc`,
     {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${token}`,
+      },
     }
   )
-  if (!response.ok) throw new Error('Erro ao buscar campeonatos')
+  if (!response.ok) {
+    throw new Error('Erro ao buscar campeonatos.')
+  }
   const data = await response.json()
   return data.content
 }
@@ -66,103 +58,80 @@ export const getChampionships = async () => {
 export const createChampionship = async (data: any) => {
   try {
     const token = getToken()
-    const idAcademico = getUserIdFromToken()
-
-    if (!token) {
-      throw new Error('Usuário não autenticado')
-    }
-
-    if (!idAcademico) {
-      throw new Error('ID do acadêmico não encontrado')
-    }
-
-    const payload = {
-      ...data,
-      idAcademico
-    }
-
-    console.log('Sending championship payload:', JSON.stringify(payload, null, 2))
-
-    const response = await axios.post(
-      `http://localhost:8081/campeonatos`, // Updated route
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      }
-    )
-
-    console.log('Championship creation response:', response)
-
-    if (response.status !== 201 && response.status !== 200) {
-      throw new Error('Erro ao criar campeonato')
-    }
-
-    // Verifica se response.data está vazio
-    if (!response.data) {
-      // Retorna o payload já que ele contém os dados enviados
-      return payload
-    }
-
-    return response.data
-  } catch (error: any) {
-    console.error('Championship creation error:', {
-      error,
-      response: error.response?.data,
-      status: error.response?.status,
-      message: error.message
+    const response = await fetch(`/api/campeonatos`, {
+      method: 'POST',
+      headers: getHttpOptions(token),
+      body: JSON.stringify(data),
     })
-    throw new Error(error.response?.data?.message || error.message || 'Erro ao criar campeonato')
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Erro ao criar campeonato.')
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Erro na criação do campeonato:', error)
+    throw error
   }
 }
 
 export const updateChampionship = async (id: number, data: any) => {
   const token = getToken()
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
-    {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(data),
-    }
-  )
-  if (!response.ok) throw new Error('Erro ao atualizar campeonato')
+  const response = await fetch(`/api/campeonatos/${id}`, {
+    method: 'PUT',
+    headers: getHttpOptions(token),
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.error || 'Erro ao atualizar campeonato.')
+  }
   return await response.json()
 }
 
 export const deleteChampionship = async (id: number) => {
   const token = getToken()
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
-    {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  )
-  if (!response.ok) throw new Error('Erro ao deletar campeonato')
+  const response = await fetch(`/api/campeonatos/${id}`, {
+    method: 'DELETE',
+    headers: getHttpOptions(token),
+  })
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.error || 'Erro ao excluir campeonato.')
+  }
+  return true
 }
 
 // Modify getChampionshipById to accept a token parameter
 export const getChampionshipById = async (id: string, token?: string) => {
-  console.log(`Fetching championship with ID: ${id}`) // Added log
-  try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
-      getHttpOptions(token),
-    )
-    console.log('API response:', response.data) // Added log
-    return response.data
-  } catch (error) {
-    console.error(`Error fetching championship with ID ${id}:`, error) // Added log
-    throw error // Re-throw the error after logging
+  const response = await fetch(`/api/campeonatos/${id}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  })
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.error || 'Erro ao buscar campeonato.')
   }
+  const data = await response.json()
+  return data
+}
+
+// Add the service function to fetch times by championship ID
+export const getTimesByChampionshipId = async (id: string): Promise<Time[]> => {
+  const token = getToken()
+  const response = await fetch(`/api/championships/${id}/times`, {
+    headers: {
+      // Include authorization headers if required
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.error || 'Failed to fetch times.')
+  }
+
+  const data = await response.json()
+  return data
 }

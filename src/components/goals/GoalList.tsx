@@ -2,6 +2,7 @@ import React from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import GoalCard from './GoalCard'
+import { Button } from '../ui/button'
 
 interface GoalListProps {
   goals: any[]
@@ -37,18 +38,18 @@ const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
           <p>Progresso Item: {goal.progressoItem}</p>
           <p>Situação: {goal.situacaoMetaDiaria === 0 ? 'Em andamento' : 'Concluída'}</p>
           <div className="mt-2 space-x-2">
-            <button
+            <Button
               onClick={() => onEdit(goal)}
-              className="py-1 px-3 bg-yellow-500 text-white rounded-md"
+              className="rounded-md"
             >
               Editar
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => onDelete(goal.idMetaDiaria)}
-              className="py-1 px-3 bg-red-500 text-white rounded-md"
+              className="bg-red-500 text-white rounded-md"
             >
               Excluir
-            </button>
+            </Button>
           </div>
         </div>
       ))}

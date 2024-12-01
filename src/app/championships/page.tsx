@@ -25,8 +25,8 @@ import {
   updateChampionship,
   deleteChampionship,
 } from '@/services/championshipService'
-import { Pencil, Trash, Calendar, Info, Trophy, MapPin,  User, Lock } from 'lucide-react' // Ensure all icons are correctly named
-import { useRouter } from 'next/navigation' // Import useRouter
+import { Pencil, Trash, Calendar, Info, Trophy, MapPin,  User, Lock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Campeonato {
   titulo: string
@@ -63,7 +63,7 @@ export default function CampeonatoPage() {
   const [privacidade, setPrivacidade] = useState('PUBLICO')
   const queryClient = useQueryClient()
   const currentUserId = getUserIdFromToken()
-  const router = useRouter() // Initialize useRouter
+  const router = useRouter()
 
   useEffect(() => {
     // Check if user is authenticated
@@ -271,14 +271,14 @@ export default function CampeonatoPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Aposta e Descrição */}
-            <div>
-              <div className="flex items-center mb-2">
+            <div className="flex flex-col">
+              <div className="flex items-center mb-1">
                 <Trophy className="mr-2" />
                 <p className="text-sm font-semibold">Aposta:</p>
               </div>
-              <p className="text-sm mb-4">{campeonato.aposta}</p>
+              <p className="text-sm mb-3">{campeonato.aposta}</p>
 
-              <div className="flex items-center mb-2">
+              <div className="flex items-center mb-1">
                 <Info className="mr-2" />
                 <p className="text-sm font-semibold">Descrição:</p>
               </div>
@@ -286,14 +286,14 @@ export default function CampeonatoPage() {
             </div>
 
             {/* Datas */}
-            <div>
-              <div className="flex items-center mb-2">
+            <div className="flex flex-col">
+              <div className="flex items-center mb-1">
                 <Calendar className="mr-2" />
                 <p className="text-sm font-semibold">Início:</p>
               </div>
-              <p className="text-sm mb-4">{new Date(campeonato.dataInicio).toLocaleDateString()}</p>
+              <p className="text-sm mb-3">{new Date(campeonato.dataInicio).toLocaleDateString()}</p>
 
-              <div className="flex items-center mb-2">
+              <div className="flex items-center mb-1">
                 <Calendar className="mr-2" />
                 <p className="text-sm font-semibold">Fim:</p>
               </div>
@@ -301,14 +301,14 @@ export default function CampeonatoPage() {
             </div>
 
             {/* Participantes e Times */}
-            <div>
-              <div className="flex items-center mb-2">
+            <div className="flex flex-col">
+              <div className="flex items-center mb-1">
                 <User className="mr-2" />
                 <p className="text-sm font-semibold">Participantes:</p>
               </div>
-              <p className="text-sm mb-4">{campeonato.limiteParticipantes}</p>
+              <p className="text-sm mb-3">{campeonato.limiteParticipantes}</p>
 
-              <div className="flex items-center mb-2">
+              <div className="flex items-center mb-1">
                 <User className="mr-2" />
                 <p className="text-sm font-semibold">Times:</p>
               </div>
@@ -316,14 +316,16 @@ export default function CampeonatoPage() {
             </div>
 
             {/* Privacidade e Criador */}
-            <div>
-              <div className="flex items-center mb-2">
+            <div className="flex flex-col">
+              <div className="flex items-center mb-1">
                 <Lock className="mr-2" />
                 <p className="text-sm font-semibold">Privacidade:</p>
               </div>
-              <p className="text-sm mb-4">{campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}</p>
+              <p className="text-sm mb-3">
+                {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
+              </p>
 
-              <div className="flex items-center mb-2">
+              <div className="flex items-center mb-1">
                 <User className="mr-2" />
                 <p className="text-sm font-semibold">Criador:</p>
               </div>
@@ -332,7 +334,7 @@ export default function CampeonatoPage() {
 
             {/* Endereço */}
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-2">
+              <div className="flex items-center mb-1">
                 <MapPin className="mr-2" />
                 <p className="text-sm font-semibold">Endereço:</p>
               </div>
@@ -342,7 +344,7 @@ export default function CampeonatoPage() {
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-white underline"
               >
                 {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
               </a>

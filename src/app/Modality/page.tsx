@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
+import { getUserIdFromToken } from '@/utils/auth' // Use auth.ts for token validation
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 
@@ -58,11 +58,12 @@ function getIdAcademico(): number {
 
   const userData: UserData = JSON.parse(userDataStr)
   console.log('Dados do usuário após parse:', userData)
+  console.log('ID Acadêmico:', userData.idAcademico) // Added log
   return userData.idAcademico
 }
 
 function decodeToken(token: string): TokenPayload {
-  const decoded = jwtDecode<TokenPayload>(token)
+  const decoded = getUserIdFromToken() // Use auth.ts function
   console.log('Token decodificado:', decoded)
   return decoded
 }
@@ -220,13 +221,13 @@ export default function ModalidadeInscricaoPage() {
       const { roles, sub, idUsuario } = decodeToken(token)
       setIsAdmin(roles === 'ADMIN')
 
-      // Simulação de armazenamento de dados do usuário no localStorage
+      // Retrieve idAcademico from userData instead of hard-coded value
       const userData: UserData = {
-        idAcademico: 11, // Substitua pelo valor correto
-        curso: 'tads', // Substitua pelo valor correto
+        idAcademico: getIdAcademico() || 0, // Use the function to get idAcademico
+        curso: 'tads', // Replace with actual data if available
         username: sub,
-        email: 'carlos@ufpr.br', // Substitua pelo valor correto
-        nome: 'thiago dos Santos', // Substitua pelo valor correto
+        email: 'carlos@ufpr.br', // Replace with actual data if available
+        nome: 'thiago dos Santos', // Replace with actual data if available
       }
       localStorage.setItem('userData', JSON.stringify(userData))
       console.log('Dados do usuário armazenados no localStorage:', userData)
@@ -274,6 +275,9 @@ export default function ModalidadeInscricaoPage() {
         modalidade.nome.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
+
+    console.log('Applied Filters:', { filter, searchTerm })
+    console.log('Displayed Modalidades:', filteredModalidades)
 
     return filteredModalidades
   }, [modalidades, filter, searchTerm])

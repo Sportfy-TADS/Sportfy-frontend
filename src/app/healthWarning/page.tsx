@@ -32,7 +32,7 @@ export default function ApoioSaudePage() {
         <Sidebar className="flex-none" />
         <div className="container mx-auto p-4 flex-1">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Apoio à Saúde</h1>
+            <h1 className="text-3xl font-bold">Canal Saúde</h1>
             <div className="flex space-x-4">
               <Select onValueChange={setFilter} defaultValue="all">
                 <SelectTrigger>

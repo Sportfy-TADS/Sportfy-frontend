@@ -1,18 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getChampionshipById, getTimesByChampionshipId } from '@/services/championshipService'
+import { getChampionshipById } from '@/services/championshipService'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import CampeonatoDetalhes from '@/components/CampeonatoDetalhes'
-import CampeonatoTimes from '@/components/CampeonatoTimes'
-import CampeonatoStatus from '@/components/CampeonatoStatus'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs' // Import ShadCN Tabs
+import { Lock, MapPin } from 'lucide-react'
 
 interface Campeonato {
-  idCampeonato: number
   titulo: string
   descricao: string
   aposta: string
@@ -21,7 +17,6 @@ interface Campeonato {
   limiteTimes: number
   limiteParticipantes: number
   privacidadeCampeonato: string
-  situacaoCampeonato: string
   usernameCriador?: string
   endereco: {
     rua: string
@@ -33,10 +28,34 @@ interface Campeonato {
   }
 }
 
-interface Time {
-  id: number
-  nome: string
-  // ... other fields ...
+interface CampeonatoDetalhesProps {
+  campeonato: Campeonato
+}
+
+const CampeonatoDetalhes: React.FC<CampeonatoDetalhesProps> = ({ campeonato }) => {
+  return (
+    <div className="campeonato-detalhes">
+      <p>
+        <strong>Título:</strong> {campeonato.titulo}
+      </p>
+      <p><strong>Descrição:</strong> {campeonato.descricao}</p>
+      <p><strong>Aposta:</strong> {campeonato.aposta}</p>
+      <p><strong>Início:</strong> {new Date(campeonato.dataInicio).toLocaleDateString()}</p>
+      <p><strong>Fim:</strong> {new Date(campeonato.dataFim).toLocaleDateString()}</p>
+      <p><strong>Participantes:</strong> {campeonato.limiteParticipantes}</p>
+      <p><strong>Times:</strong> {campeonato.limiteTimes}</p>
+      <p>
+        <strong>Privacidade:</strong> {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
+        <Lock className="inline ml-2" size={16} color={campeonato.privacidadeCampeonato === 'PUBLICO' ? 'green' : 'red'} />
+      </p>
+      <p><strong>Criador:</strong> {campeonato.usernameCriador}</p>
+      <p>
+        <strong>Endereço:</strong> {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
+        <MapPin className="inline ml-2" size={16} color="blue" />
+      </p>
+      {/* ...add more details as needed... */}
+    </div>
+  )
 }
 
 export default function ChampionshipDetailsPage({
@@ -46,17 +65,14 @@ export default function ChampionshipDetailsPage({
 }) {
   const { id } = params
   const router = useRouter()
-
-  const [campeonato, setCampeonato] = useState<Campeonato | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedTab, setSelectedTab] = useState<number>(0)
-  const [times, setTimes] = useState<Time[]>([])
+  const [campeonato, setCampeonato] = useState<Campeonato | null>(null)
 
   useEffect(() => {
     const fetchCampeonato = async () => {
+      const token = localStorage.getItem('jwt') || localStorage.getItem('token')
       try {
-        const token = localStorage.getItem('jwt') || localStorage.getItem('token')
         const data = await getChampionshipById(id, token || undefined)
         setCampeonato(data)
       } catch (err: any) {
@@ -68,20 +84,6 @@ export default function ChampionshipDetailsPage({
     }
 
     fetchCampeonato()
-  }, [id])
-
-  useEffect(() => {
-    const fetchTimes = async () => {
-      try {
-        const timesData = await getTimesByChampionshipId(id)
-        setTimes(timesData)
-      } catch (error: any) {
-        console.error('Erro ao carregar times:', error)
-        setError(error.message || 'Erro ao carregar times.')
-      }
-    }
-
-    fetchTimes()
   }, [id])
 
   if (isLoading) {
@@ -121,22 +123,14 @@ export default function ChampionshipDetailsPage({
       <div className="flex h-screen">
         <Sidebar className="h-full" />
         <div className="flex-1 p-4 overflow-y-auto">
-          <Tabs value={selectedTab.toString()} onValueChange={(value) => setSelectedTab(Number(value))}>
-            <TabsList className="flex space-x-4 mb-6">
-              <TabsTrigger value="0">Detalhes</TabsTrigger>
-              <TabsTrigger value="1">Times</TabsTrigger>
-              <TabsTrigger value="2">Andamento</TabsTrigger>
-            </TabsList>
-            <TabsContent value="0">
+          <Card>
+            <CardHeader>
+              <CardTitle>{campeonato.titulo}</CardTitle>
+            </CardHeader>
+            <CardContent>
               <CampeonatoDetalhes campeonato={campeonato} />
-            </TabsContent>
-            <TabsContent value="1">
-              <CampeonatoTimes campeonatoId={campeonato.idCampeonato} times={times} />
-            </TabsContent>
-            <TabsContent value="2">
-              <CampeonatoStatus situacaoCampeonato={campeonato.situacaoCampeonato} />
-            </TabsContent>
-          </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {jwtDecode} from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode' // Changed from named import to default import
 import { LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { getUserIdFromToken, storeUserData } from '@/utils/auth' // Import storeUserData
 
 interface DecodedToken {
   idUsuario: number
@@ -83,6 +84,7 @@ export default function Header() {
           console.log('User Data:', userResponse) // Log dos dados do usuário
         }
 
+        storeUserData(userResponse) // Store user data in localStorage
         setUserName(userResponse.nome)
         setUserImage(userResponse.foto || `https://via.placeholder.com/50`)
       } catch (error) {
@@ -213,8 +215,8 @@ export default function Header() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-500">
-                Logout
                 <LogOut className="ml-2" />
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

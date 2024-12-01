@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { getGoals } from '@/http/goals'
 import { fetchAchievements } from '@/http/achievements'
+import { getChampionships } from '@/services/championshipService' // Add this import
 
 interface User {
   idAcademico?: number
@@ -56,6 +57,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
   const [recentGoals, setRecentGoals] = useState<any[]>([])
+  const [campeonatos, setCampeonatos] = useState<Array<{ nome: string; posicao: string; data: string }>>([]) // Add state for campeonatos
   const router = useRouter()
 
   useEffect(() => {
@@ -93,6 +95,9 @@ export default function ProfilePage() {
           .sort((a: any, b: any) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime())
           .slice(0, 2)
         
+        // Fetch campeonatos using championshipService
+        const fetchedCampeonatos = await getChampionships()
+
         const userDataWithExtras = {
           ...response.data,
           metas: sortedGoals.map((goal: any) => ({
@@ -105,14 +110,15 @@ export default function ProfilePage() {
           conquistas: sortedAchievements.map((achievement: any) => 
             `${achievement.metaEsportiva.titulo} - ${achievement.conquistado ? 'Conquistado' : 'Em andamento'}`
           ),
-          campeonatos: [
-            { nome: 'Brasileiro de Jiu-Jitsu 2023', posicao: '2º lugar', data: '2023' },
-            { nome: 'Copa São Paulo', posicao: '1º lugar', data: '2023' },
-            { nome: 'Campeonato Regional', posicao: '1º lugar', data: '2024' }
-          ]
+          campeonatos: fetchedCampeonatos.map((campeonato: any) => ({
+            nome: campeonato.titulo,
+            posicao: campeonato.posicao,
+            data: campeonato.dataFim,
+          })),
         }
         
         setUser(userDataWithExtras)
+        setCampeonatos(userDataWithExtras.campeonatos) // Set campeonatos state
       } catch (error: unknown) {
         console.error('Erro ao carregar dados do usuário logado:', error)
         router.push('/auth')
@@ -213,6 +219,7 @@ export default function ProfilePage() {
 
               {/* Seções de Metas, Conquistas e Campeonatos */}
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Metas */}
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow">
                   <Link href="/goals">
                     <CardHeader className="pb-2">
@@ -238,6 +245,7 @@ export default function ProfilePage() {
                   </Link>
                 </Card>
 
+                {/* Conquistas */}
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow">
                   <Link href="/achievements">
                     <CardHeader className="pb-2">
@@ -257,22 +265,20 @@ export default function ProfilePage() {
                   </Link>
                 </Card>
 
+                {/* Campeonatos */}
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                  <Link href="/championships">
+                  <Link href="profile/tournament">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <Trophy className="w-5 h-5 text-purple-500" />
+                        <Trophy  className="w-5 h-5 text-purple-500" />
                         Campeonatos
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ul className="space-y-3">
-                        {user?.campeonatos?.map((campeonato, index) => (
+                      <ul className="space-y-2">
+                        {campeonatos.slice(0, 2).map((campeonato, index) => (
                           <li key={index} className="text-sm">
-                            <p className="font-semibold">{campeonato.nome}</p>
-                            <p className="text-gray-600">
-                              {campeonato.posicao} • {campeonato.data}
-                            </p>
+                            {campeonato.nome}
                           </li>
                         ))}
                       </ul>
