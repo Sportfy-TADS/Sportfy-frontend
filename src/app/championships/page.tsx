@@ -19,6 +19,13 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   getChampionships,
   getUserIdFromToken,
   createChampionship,
@@ -349,6 +356,15 @@ export default function CampeonatoPage() {
                 {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
               </a>
             </div>
+
+            {/* Código do Campeonato */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center mb-1">
+                <Info className="mr-2" />
+                <p className="text-sm font-semibold">Código do Campeonato:</p>
+              </div>
+              <p className="text-sm">{campeonato.codigo}</p>
+            </div>
           </div>
 
           {/* Ações */}
@@ -431,10 +447,15 @@ export default function CampeonatoPage() {
                   </div>
                   <div>
                     <Label htmlFor="privacidadeCampeonato">Privacidade do Campeonato <span className="text-red-500">*</span></Label>
-                    <select id="privacidadeCampeonato" name="privacidadeCampeonato" value={privacidade} onChange={(e) => setPrivacidade(e.target.value)} required>
-                      <option value="PUBLICO">Público</option>
-                      <option value="PRIVADO">Privado</option>
-                    </select>
+                    <Select value={privacidade} onValueChange={setPrivacidade}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a privacidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PUBLICO">Público</SelectItem>
+                        <SelectItem value="PRIVADO">Privado</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   {privacidade === 'PRIVADO' && (
                     <div>
