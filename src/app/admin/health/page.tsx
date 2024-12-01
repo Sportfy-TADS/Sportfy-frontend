@@ -87,7 +87,16 @@ export default function ApoioSaudePage() {
     idAdministrador: 1,
     ativo: true,
   })
-  const [editApoioSaude, setEditApoioSaude] = useState(null)
+  const [editApoioSaude, setEditApoioSaude] = useState<{
+    idApoioSaude: number
+    nome: string
+    email: string
+    telefone: string
+    descricao: string
+    dataPublicacao: string
+    idAdministrador: number
+    ativo: boolean
+  } | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -99,8 +108,7 @@ export default function ApoioSaudePage() {
   const createMutation = useMutation({
     mutationFn: createApoioSaude,
     onSuccess: () => {
-      queryClient.invalidateQueries(['apoiosSaude'])
-      toast.success('Apoio à saúde cadastrado com sucesso!')
+      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
       setIsSheetOpen(false)
     },
     onError: () => {
@@ -109,9 +117,9 @@ export default function ApoioSaudePage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: updateApoioSaude,
+    mutationFn: (variables: { id: number, data: { nome: string, email: string, telefone: string, descricao: string } }) => updateApoioSaude(variables.id, variables.data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['apoiosSaude'])
+      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
       toast.success('Apoio à saúde atualizado com sucesso!')
       setIsSheetOpen(false)
     },
@@ -126,19 +134,61 @@ export default function ApoioSaudePage() {
     }
   }, [isError, error])
 
-  const handleCreateApoioSaude = (e) => {
+  interface ApoioSaude {
+    idApoioSaude: number
+    nome: string
+    email: string
+    telefone: string
+    descricao: string
+    dataPublicacao: string
+    idAdministrador: number
+    ativo: boolean
+  }
+
+  interface NewApoioSaude {
+    nome: string
+    email: string
+    telefone: string
+    descricao: string
+    dataPublicacao: string
+    idAdministrador: number
+    ativo: boolean
+  }
+
+  const handleCreateApoioSaude = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     createMutation.mutate(newApoioSaude)
   }
 
-  const handleUpdateApoioSaude = (e) => {
+  const handleUpdateApoioSaude = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (editApoioSaude) {
-      updateMutation.mutate({ id: editApoioSaude.idApoioSaude, ...newApoioSaude })
+      updateMutation.mutate({ id: editApoioSaude.idApoioSaude, data: newApoioSaude })
     }
   }
 
-  const handleEditClick = (apoio) => {
+  interface ApoioSaude {
+    idApoioSaude: number
+    nome: string
+    email: string
+    telefone: string
+    descricao: string
+    dataPublicacao: string
+    idAdministrador: number
+    ativo: boolean
+  }
+
+  interface NewApoioSaude {
+    nome: string
+    email: string
+    telefone: string
+    descricao: string
+    dataPublicacao: string
+    idAdministrador: number
+    ativo: boolean
+  }
+
+  const handleEditClick = (apoio: ApoioSaude) => {
     setEditApoioSaude(apoio)
     setNewApoioSaude({
       nome: apoio.nome,
@@ -156,7 +206,7 @@ export default function ApoioSaudePage() {
     <>
       <Header />
       <div className="flex min-h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar />
         <motion.div
           className="container mx-auto p-4 flex-1"
           initial={{ opacity: 0 }}
@@ -167,12 +217,13 @@ export default function ApoioSaudePage() {
             <h1 className="text-3xl font-bold">Apoios à Saúde</h1>
             <div className="flex space-x-4">
               <Sheet>
+                
                 <SheetTrigger asChild>
                   <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => setIsSheetOpen(true)}>
                     Cadastrar Apoio à Saúde
                   </Button>
                 </SheetTrigger>
-                <SheetContent position="right" size="lg" open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent size="lg" open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                   <SheetHeader>
                     <SheetTitle>{editApoioSaude ? 'Editar Apoio à Saúde' : 'Cadastrar Apoio à Saúde'}</SheetTitle>
                   </SheetHeader>

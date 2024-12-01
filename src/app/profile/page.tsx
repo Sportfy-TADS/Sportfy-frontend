@@ -31,6 +31,7 @@ interface User {
   metas?: Array<{
     titulo: string
     progresso: string
+    status: string
   }>
   conquistas?: string[]
   campeonatos?: Array<{
@@ -39,6 +40,15 @@ interface User {
     data: string
   }>
   [key: string]: string | number | boolean | null | undefined | any[]
+}
+
+function formatPhoneNumber(phoneNumber: string) {
+  const cleaned = phoneNumber.replace(/\D/g, '');
+  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+  if (match) {
+    return `(${match[1]}) ${match[2]}-${match[3]}`;
+  }
+  return phoneNumber;
 }
 
 export default function ProfilePage() {
@@ -86,8 +96,11 @@ export default function ProfilePage() {
         const userDataWithExtras = {
           ...response.data,
           metas: sortedGoals.map((goal: any) => ({
-            titulo: goal.titulo,
-            progresso: `${goal.titulo}: ${goal.quantidadeConcluida}/${goal.quantidadeObjetivo} ${goal.itemQuantificado}`
+            titulo: goal.titulo || 'Sem Título',
+            progresso: `${goal.quantidadeConcluida ?? 0}/${goal.quantidadeObjetivo ?? 0} ${goal.itemQuantificado || ''}`,
+            status: (goal.quantidadeConcluida !== undefined && goal.quantidadeObjetivo !== undefined)
+              ? (goal.quantidadeConcluida >= goal.quantidadeObjetivo ? 'Concluída' : 'Em andamento')
+              : 'Em andamento',
           })),
           conquistas: sortedAchievements.map((achievement: any) => 
             `${achievement.metaEsportiva.titulo} - ${achievement.conquistado ? 'Conquistado' : 'Em andamento'}`
@@ -187,7 +200,7 @@ export default function ProfilePage() {
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                   <p><strong>Email:</strong> {user?.email}</p>
                   {user?.curso && <p><strong>Curso:</strong> {user.curso}</p>}
-                  {user?.telefone && <p><strong>Telefone:</strong> {user.telefone}</p>}
+                  {user?.telefone && <p><strong>Telefone:</strong> {formatPhoneNumber(user.telefone)}</p>}
                   {user?.dataNascimento && (
                     <p>
                       <strong>Data de Nascimento:</strong>{' '}
@@ -213,7 +226,7 @@ export default function ProfilePage() {
                         {user?.metas?.length > 0 ? (
                           user.metas.map((meta, index) => (
                             <li key={index} className="text-sm">
-                              {meta.progresso}
+                              {meta.titulo} - {meta.status || 'Em andamento'}
                             </li>
                           ))
                         ) : (

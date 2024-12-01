@@ -8,6 +8,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { z } from 'zod'
 import { useState, useEffect, Fragment } from 'react'
+import InputMask from 'react-input-mask'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +28,7 @@ type SignUpSchema = z.infer<typeof signUpSchema>
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { mutateAsync: handleRegister, isLoading: isSubmitting } = useRegister()
+  const { mutateAsync: handleRegister, status: { isLoading: isSubmitting } } = useRegister()
 
   const { register, handleSubmit, control } = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema),
@@ -169,13 +170,26 @@ export default function RegisterPage() {
                   {/* Telefone */}
                   <div className="grid gap-2">
                     <Label htmlFor="telefone">Telefone</Label>
-                    <Input
-                      id="telefone"
-                      type="tel"
-                      autoCapitalize="none"
-                      autoComplete="telefone"
-                      autoCorrect="off"
-                      {...register('telefone')}
+                    <Controller
+                      control={control}
+                      name="telefone"
+                      render={({ field }) => (
+                        <InputMask
+                          mask="(99) 99999-9999"
+                          {...field}
+                        >
+                          {(inputProps) => (
+                            <Input
+                              id="telefone"
+                              type="tel"
+                              autoCapitalize="none"
+                              autoComplete="telefone"
+                              autoCorrect="off"
+                              {...inputProps}
+                            />
+                          )}
+                        </InputMask>
+                      )}
                     />
                   </div>
 
