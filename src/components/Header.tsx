@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react' // Removed useCallback and debounce imports
 import { useRouter } from 'next/navigation'
 import {jwtDecode} from 'jwt-decode' // Changed from named import to default import
 import { LogOut } from 'lucide-react'
@@ -22,6 +22,13 @@ interface DecodedToken {
   roles: string
 }
 
+interface SearchResult {
+  id: number;
+  nome: string;
+  username: string;
+  tipo: 'ACADEMICO' | 'ADMINISTRADOR';
+}
+
 export default function Header() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -29,6 +36,7 @@ export default function Header() {
   const [userImage, setUserImage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null) // Add debounce timeout ref
 
   // Carregar os dados do usuário logado
   useEffect(() => {
@@ -96,31 +104,82 @@ export default function Header() {
     fetchUserData()
   }, [router])
 
-  // Função para realizar a busca de acadêmicos
-  const handleSearch = async (term: string) => {
-    setSearchTerm(term)
+  // Função para realizar a busca de usuários
+  const performSearch = async (term: string) => {
     if (term.length > 2) {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/academico/listar?nome_like=${term}`,
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setSearchResults(data)
-          console.log('Search Results:', data) // Log dos resultados da busca
-        }
+        // Buscar acadêmicos e administradores em paralelo
+        const [academicosResponse, adminsResponse] = await Promise.all([
+          fetch(
+            `http://localhost:8081/academico/listar?page=0&size=10&sort=curso,desc&nome_like=${term}`
+          ),
+          fetch(
+            `http://localhost:8081/administrador/listar?page=0&size=10&sort=idAdministrador,desc`
+          )
+        ]);
+
+        const academicosData = await academicosResponse.json();
+        const adminsData = await adminsResponse.json();
+
+        // Formatar resultados de acadêmicos
+        const academicos = academicosData.content.map((user: any) => ({
+          id: user.idAcademico,
+          nome: user.nome,
+          username: user.username,
+          tipo: 'ACADEMICO' as const
+        }));
+
+        // Formatar resultados de administradores
+        const admins = adminsData.content
+          .filter((admin: any) => 
+            admin.nome.toLowerCase().includes(term.toLowerCase()) ||
+            admin.username.toLowerCase().includes(term.toLowerCase())
+          )
+          .map((admin: any) => ({
+            id: admin.idAdministrador,
+            nome: admin.nome,
+            username: admin.username,
+            tipo: 'ADMINISTRADOR' as const
+          }));
+
+        // Combinar e ordenar resultados
+        const combinedResults = [...academicos, ...admins]
+          .sort((a, b) => a.nome.localeCompare(b.nome));
+
+        setSearchResults(combinedResults);
+        console.log('Combined Search Results:', combinedResults);
       } catch (error) {
-        console.error('Erro ao buscar acadêmicos:', error)
+        console.error('Erro ao buscar usuários:', error);
       }
     } else {
-      setSearchResults([])
+      setSearchResults([]);
     }
+  };
+
+  // Função para realizar a busca de acadêmicos com debouncing
+  const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current)
+    }
+    debounceTimeout.current = setTimeout(() => {
+      performSearch(term)
+    }, 300)
   }
 
+  // Limpar timeout ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current)
+      }
+    }
+  }, [])
+
   // Redireciona para o perfil de um acadêmico
-  const handleUserSelect = (userId: string) => {
+  const handleUserSelect = (username: string) => {
     setSearchResults([])
-    router.push(`/profile/${userId}`)
+    router.push(`/profile/${username}`)
   }
 
   const handleLogout = () => {
@@ -154,20 +213,37 @@ export default function Header() {
       <div className="relative">
         <Input
           type="text"
-          placeholder="Buscar acadêmico..."
+          placeholder="Buscar usuário..."
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => {
+            handleSearch(e.target.value)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              if (debounceTimeout.current) {
+                clearTimeout(debounceTimeout.current)
+              }
+              performSearch(searchTerm) // Immediately invoke the search
+            }
+          }}
           className="w-64"
         />
         {searchResults.length > 0 && (
           <div className="absolute bg-white dark:bg-gray-800 text-black dark:text-white mt-2 w-full max-h-60 overflow-y-auto shadow-lg rounded-md">
             {searchResults.map((user) => (
               <div
-                key={user.id}
-                onClick={() => handleUserSelect(user.id)}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+                key={`${user.tipo}-${user.id}`}
+                onClick={() => handleUserSelect(user.username)}
+                className="px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 flex justify-between items-center"
               >
-                {user.nome} ({user.username})
+                <span>{user.nome} (@{user.username})</span>
+                <span className={`text-xs px-2 py-1 rounded ${
+                  user.tipo === 'ADMINISTRADOR' 
+                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                }`}>
+                  {user.tipo}
+                </span>
               </div>
             ))}
           </div>
