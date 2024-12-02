@@ -266,9 +266,9 @@ export default function ApoioSaudePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {apoiosSaude.map((apoio) => (
-                <Card key={apoio.idApoioSaude}>
+                <Card className="border border-emerald-500" key={apoio.idApoioSaude}>
                   <CardHeader>
-                    <CardTitle>{apoio.nome}</CardTitle>
+                    <CardTitle className='text-emerald-500'>{apoio.nome}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p>Email: {apoio.email}</p>

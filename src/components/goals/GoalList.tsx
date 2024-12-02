@@ -22,13 +22,23 @@ import GoalCard from './GoalCard'
 import { Button } from '../ui/button'
 
 interface GoalListProps {
-  goals: any[]
+  goals: {
+    idMetaDiaria: number
+    titulo: string
+    objetivo: string
+    progressoItem: string
+    progressoAtual: number
+    progressoMaximo: number
+    situacaoMetaDiaria: number
+    isSports?: boolean // Optional flag to identify sports goals
+  }[]
   isLoading: boolean
   onEdit: (goal: any) => void
-  onDelete: (goalId: number) => void
+  onDelete?: (goalId: number) => void // Make onDelete optional
+  userRole?: string // Receive user role
 }
 
-const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
+const GoalList = ({ goals, isLoading, onEdit, onDelete, userRole }: GoalListProps) => {
   if (isLoading) {
     return (
       <>
@@ -46,7 +56,7 @@ const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {goals.map((goal: any) => (
+      {goals.map((goal) => (
         <Card key={goal.idMetaDiaria} className="p-4 border border-amber-300 rounded-md shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{goal.titulo}</CardTitle>
@@ -62,9 +72,11 @@ const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
               <Button onClick={() => onEdit(goal)} className="rounded-md">
                 Editar
               </Button>
-              <Button onClick={() => onDelete(goal.idMetaDiaria)} className="bg-red-500 text-white rounded-md">
-                Excluir
-              </Button>
+              {userRole === 'ADMIN' && !goal.isSports && onDelete && (
+                <Button onClick={() => onDelete(goal.idMetaDiaria)} className="bg-red-500 text-white rounded-md">
+                  Excluir
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
