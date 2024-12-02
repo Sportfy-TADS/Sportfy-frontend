@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   XAxis,
   Tooltip,
+  ResponsiveContainer,
 } from 'recharts'
 import {
   ChartContainer,
@@ -32,15 +33,36 @@ export default function Statistics() {
   const chartData = usoAcademico
     ? [
         {
-          name: 'Campeonatos',
+          name: 'Campeonatos Criados',
+          total: usoAcademico.totalCampeonatosCriados,
+        },
+        {
+          name: 'Campeonatos Participados',
           total: usoAcademico.totalCampeonatosParticipados,
         },
         {
           name: 'Modalidades Inscritas',
-          total: usoAcademico.totalModalidadesInscritas,
+          total: usoAcademico.totalModalidadesEsportivasInscritas,
+        },
+        {
+          name: 'Metas Esportivas Inscritas',
+          total: usoAcademico.totalMetasEsportivasInscritas,
+        },
+        {
+          name: 'Conquistas Alcançadas',
+          total: usoAcademico.totalConquistasAlcancadas,
         },
       ]
     : []
+
+  // Prepare chart data for each sport modality
+  const chartDataByModality = usoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map((modality: any) => ({
+    name: modality.nomeModalidadeEsportiva,
+    metas: modality.totalMetasEsportivasInscritas,
+    conquistas: modality.totalConquistasAlcancadas,
+    criados: modality.totalCampeonatosCriados,
+    participados: modality.totalCampeonatosParticipados,
+  })) || []
 
   // Define chartConfig for the chart
   const chartConfig: ChartConfig = {
@@ -67,19 +89,44 @@ export default function Statistics() {
               Erro ao carregar os dados de uso acadêmico.
             </p>
           ) : usoAcademico ? (
-            <ChartContainer config={chartConfig} className="h-[200px] w-full">
-              <BarChart data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="total" fill="var(--color-total)" radius={4} />
-              </BarChart>
-            </ChartContainer>
+            <>
+              <ChartContainer config={chartConfig} className="h-[200px] w-full mb-10">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                    />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="total" fill="var(--color-total)" radius={4} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-6 mb-4">
+                Estatísticas por Modalidade Esportiva
+              </h2>
+              <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartDataByModality} barCategoryGap="20%">
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                    />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="metas" fill="#34d399" radius={4} />
+                    <Bar dataKey="conquistas" fill="#fbbf24" radius={4} />
+                    <Bar dataKey="criados" fill="#60a5fa" radius={4} />
+                    <Bar dataKey="participados" fill="#f87171" radius={4} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </>
           ) : (
             <p className="text-gray-700 dark:text-gray-300">
               Nenhuma informação de uso disponível.

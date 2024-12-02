@@ -1,13 +1,23 @@
-
 {
   "extends": [
     "@rocketseat/eslint-config/react",
-    "next/core-web-vitals",
     "plugin:import/recommended",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "next/core-web-vitals"
   ],
-  "plugins": ["import"],
+  "plugins": ["import", "react-hooks"],
+  "overrides": [
+    {
+      "files": ["*"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off",
+        "react-hooks/exhaustive-deps": "off"
+      }
+    }
+  ],
   "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
     "import/order": [
       "error",
       {

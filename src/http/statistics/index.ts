@@ -2,7 +2,7 @@
 export async function fetchUsoAcademico(idAcademico: number) {
   console.log('Chamando fetchUsoAcademico com idAcademico:', idAcademico)
   const response = await fetch(
-    `http://localhost:8081/academico/uso/${idAcademico}`,
+    `http://localhost:8081/estatistica/visualizarEstatisticasMetasEsportivas/${idAcademico}`,
   )
   if (!response.ok) {
     throw new Error('Erro ao buscar informações de uso do acadêmico')

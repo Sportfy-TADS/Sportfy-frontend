@@ -223,7 +223,7 @@ export default function ApoioSaudePage() {
                     Cadastrar Apoio à Saúde
                   </Button>
                 </SheetTrigger>
-                <SheetContent size="lg" open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent>
                   <SheetHeader>
                     <SheetTitle>{editApoioSaude ? 'Editar Apoio à Saúde' : 'Cadastrar Apoio à Saúde'}</SheetTitle>
                   </SheetHeader>
@@ -262,10 +262,10 @@ export default function ApoioSaudePage() {
           </div>
 
           {isLoading ? (
-            <Skeleton count={5} height={40} />
+            <Skeleton />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {apoiosSaude.map((apoio) => (
+              {apoiosSaude.map((apoio: ApoioSaude) => (
                 <Card className="border border-emerald-500" key={apoio.idApoioSaude}>
                   <CardHeader>
                     <CardTitle className='text-emerald-500'>{apoio.nome}</CardTitle>

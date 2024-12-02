@@ -13,38 +13,7 @@ import {
 } from '@/components/ui/table';
 import Header from '@/components/Header';
 import { Pagination } from '@/components/pagination'; // Supondo que você tenha um componente de paginação
-
-interface Endereco {
-  cep: string
-  uf: string
-  cidade: string
-  bairro: string
-  rua: string
-  numero: number
-  complemento: string | null
-}
-
-interface Tournament {
-  idCampeonato: number
-  codigo: string
-  titulo: string
-  descricao: string
-  aposta: string | null
-  dataCriacao: string
-  dataInicio: string
-  dataFim: string
-  situacaoCampeonato: string
-  usernameCriador: string
-  endereco: Endereco
-}
-
-interface PaginatedResponse {
-  content: Tournament[]
-  totalElements: number
-  totalPages: number
-  size: number
-  number: number
-}
+import { Tournament, PaginatedResponse } from '@/interface/types';
 
 async function getTournaments(pageIndex: number): Promise<PaginatedResponse> {
   const response = await fetch(`http://localhost:8081/campeonatos/11/inscritos?page=${pageIndex}&size=10&sort=dataCriacao,desc`);

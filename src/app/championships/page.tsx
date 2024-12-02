@@ -58,6 +58,7 @@ interface Campeonato {
   idModalidadeEsportiva: number
   situacaoCampeonato: string
   senha?: string
+  idCampeonato: number
 }
 
 export default function CampeonatoPage() {

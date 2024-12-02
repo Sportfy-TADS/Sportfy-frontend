@@ -27,6 +27,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useModalidades, useInscreverUsuario, createModalidade, updateModalidade } from '@/http/modality'
 import { decodeToken } from '@/utils/apiUtils'
 
+export interface Modalidade {
+  id: number;
+  idModalidadeEsportiva: number;
+  nome: string;
+  descricao: string;
+  inscrito: boolean;
+}
+
 export default function ModalidadeInscricaoPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [filter, setFilter] = useState('all')
@@ -66,7 +74,7 @@ export default function ModalidadeInscricaoPage() {
   }, [isError, error])
 
   const displayedModalidades = useMemo(() => {
-    let filteredModalidades = [...modalidades]
+    let filteredModalidades = Array.isArray(modalidades) ? [...modalidades] as Modalidade[] : []
 
     if (filter === 'inscrito') {
       filteredModalidades = filteredModalidades.filter(
@@ -98,7 +106,7 @@ export default function ModalidadeInscricaoPage() {
         descricao: modalidadeDescricao,
       })
       toast.success('Modalidade cadastrada com sucesso!')
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       setIsSheetOpen(false)
     } catch (error) {
       if (error.response && error.response.status === 409) {

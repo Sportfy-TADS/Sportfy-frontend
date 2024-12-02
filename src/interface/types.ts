@@ -138,3 +138,35 @@ export interface TokenPayload {
   iss: string
   exp: number
 }
+
+export interface Endereco {
+  cep: string
+  uf: string
+  cidade: string
+  bairro: string
+  rua: string
+  numero: number
+  complemento: string | null
+}
+
+export interface Tournament {
+  idCampeonato: number
+  codigo: string
+  titulo: string
+  descricao: string
+  aposta: string | null
+  dataCriacao: string
+  dataInicio: string
+  dataFim: string
+  situacaoCampeonato: string
+  usernameCriador: string
+  endereco: Endereco
+}
+
+export interface PaginatedResponse {
+  content: Tournament[]
+  totalElements: number
+  totalPages: number
+  size: number
+  number: number
+}

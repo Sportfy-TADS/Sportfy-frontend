@@ -1,6 +1,8 @@
+'use server'
+
 import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import axios from 'axios'
 
@@ -81,7 +83,13 @@ export async function fetchAdmins() {
   return fetchWithAuth(url)
 }
 
-export async function createAdmin(newAdmin) {
+interface NewAdmin {
+  nome: string;
+  email: string;
+  senha: string;
+}
+
+export async function createAdmin(newAdmin: NewAdmin) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`
   return fetchWithAuth(url, {
     method: 'POST',
@@ -95,23 +103,23 @@ export async function inactivateAdmin(id: number) {
 }
 
 export const useModalidades = () => {
-  return useQuery({
+  return useQuery<Modalidade[], Error>({
     queryKey: ['modalidades'],
     queryFn: fetchModalidades,
-    onSuccess: (data) => {
+    onSuccess: (data: Modalidade[]) => {
       console.log('Modalidades carregadas com sucesso:', data)
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Erro ao carregar modalidades:', error)
     },
   })
 }
 
-export const useInscreverUsuario = (queryClient) => {
+export const useInscreverUsuario = (queryClient: QueryClient) => {
   return useMutation({
     mutationFn: inscreverUsuario,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       toast.success('Inscrição realizada com sucesso!')
       console.log('Inscrição realizada com sucesso:', data)
     },
