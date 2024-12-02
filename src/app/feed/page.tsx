@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Heart, MessageCircle } from 'lucide-react'
+import { Heart, MessageCircle, Star } from 'lucide-react'
 import { Toaster, toast } from 'sonner' // Adicionado 'toast'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -189,12 +189,12 @@ export default function FeedPage() {
                             onClick={() => handleLikePost(post.idPublicacao)}
                             className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
                           >
-                            <Heart
+                            <Star
                               className={`w-5 h-5 ${
                                 post.listaUsuarioCurtida?.some(
                                   (usuario) => usuario.idUsuario === loggedUser?.idUsuario
                                 )
-                                  ? 'text-red-500 fill-red-500'
+                                  ? 'text-amber-300 fill-amber-300'
                                   : 'text-gray-300'
                               }`}
                             />

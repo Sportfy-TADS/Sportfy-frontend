@@ -53,7 +53,7 @@ export const getUserIdFromToken = (): number | null => {
 export const getChampionships = async () => {
   const token = getToken()
   const response = await fetch(
-    `/api/campeonatos/listar?sort=dataCriacao,desc`, // Updated to use proxy
+    `http://localhost:8081/campeonatos/listar?sort=dataCriacao,desc`, // Updated to use full URL
     {
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export const createChampionship = async (data: any) => {
     console.log('Sending championship payload:', JSON.stringify(payload, null, 2))
 
     const response = await axios.post(
-      `/api/campeonatos`, // Updated to use proxy
+      `http://localhost:8081/campeonatos`, // Updated to use full URL
       payload,
       {
         headers: {
@@ -125,7 +125,7 @@ export const createChampionship = async (data: any) => {
 export const updateChampionship = async (id: number, data: any) => {
   const token = getToken()
   const response = await fetch(
-    `/api/campeonatos/${id}`, // Updated to use proxy
+    `http://localhost:8081/campeonatos/${id}`, // Updated to use full URL
     {
       method: 'PUT',
       headers: { 
@@ -142,7 +142,7 @@ export const updateChampionship = async (id: number, data: any) => {
 export const deleteChampionship = async (id: number) => {
   const token = getToken()
   const response = await fetch(
-    `/api/campeonatos/${id}`, // Updated to use proxy
+    `http://localhost:8081/campeonatos/${id}`, // Updated to use full URL
     {
       method: 'DELETE',
       headers: { 
@@ -154,12 +154,11 @@ export const deleteChampionship = async (id: number) => {
   if (!response.ok) throw new Error('Erro ao deletar campeonato')
 }
 
-// Modify getChampionshipById to accept a token parameter
 export const getChampionshipById = async (id: string, token?: string) => {
   console.log(`Fetching championship with ID: ${id}`) // Added log
   try {
     const response = await axios.get(
-      `/api/campeonatos/${id}`, // Ensure proxy is used
+      `http://localhost:8081/campeonatos/${id}`, // Updated to use full URL
       getHttpOptions(token),
     )
     console.log('API response:', response.data) // Added log

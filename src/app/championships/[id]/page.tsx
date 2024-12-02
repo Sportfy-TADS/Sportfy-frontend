@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getChampionshipById, getTimesByChampionshipId } from '@/services/championshipService'
+import { getChampionshipById } from '@/services/championshipService'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'

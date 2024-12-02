@@ -26,6 +26,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Medal } from 'lucide-react'
 
 interface TokenPayload {
   sub: string
@@ -375,7 +376,7 @@ export default function ModalidadeInscricaoPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index}>
+                <Card key={index} className="border border-blue-700">
                   <CardHeader>
                     <Skeleton className="h-6 w-3/4" />
                   </CardHeader>
@@ -393,9 +394,12 @@ export default function ModalidadeInscricaoPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <Card>
+                  <Card className={`border ${modalidade.inscrito ? 'border-blue-700' : 'border-red-700'}`}>
                     <CardHeader>
-                      <CardTitle>{modalidade.nome}</CardTitle>
+                      <CardTitle>
+                        <Medal className={`inline-block mr-2 ${modalidade.inscrito ? 'text-blue-700' : 'text-red-700'}`} />
+                        {modalidade.nome}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm mb-2">{modalidade.descricao}</p>

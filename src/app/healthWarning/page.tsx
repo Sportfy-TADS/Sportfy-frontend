@@ -14,7 +14,12 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApoioSaude } from '@/hooks/useApoioSaude'
-
+import {
+  AtSign,
+  Phone,
+  Stethoscope,
+  User,
+} from 'lucide-react';
 export default function ApoioSaudePage() {
   const {
     filter,
@@ -24,6 +29,15 @@ export default function ApoioSaudePage() {
     displayedApoios,
     isLoading,
   } = useApoioSaude()
+
+  function formatPhoneNumber(phoneNumber: string) {
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return phoneNumber;
+  }
 
   return (
     <>
@@ -71,15 +85,14 @@ export default function ApoioSaudePage() {
               ))
             ) : displayedApoios.length ? (
               displayedApoios.map((apoio) => (
-                <Card key={apoio.idApoioSaude}>
+                <Card key={apoio.idApoioSaude} className="border border-emerald-500">
                   <CardHeader>
-                    <CardTitle>{apoio.nome}</CardTitle>
+                    <CardTitle className='text-emerald-500'>{apoio.nome}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm">Email: {apoio.email}</p>
-                    <p className="text-sm">Telefone: {apoio.telefone}</p>
-                    <p className="text-sm mt-2">Descrição: {apoio.descricao}</p>
-                    <Button className="mt-4 w-full">Ver Detalhes</Button>
+                    <p className="text-sm flex items-center"><Stethoscope className="mr-2 text-emerald-500"/> Descrição: {apoio.descricao}</p>
+                    <p className="text-sm flex items-center"><AtSign size={16} className="mr-2 text-emerald-500" /> Email: {apoio.email}</p>
+                    <p className="text-sm flex items-center"><Phone size={16} className="mr-2 text-emerald-500" /> Telefone: {formatPhoneNumber(apoio.telefone)}</p>
                   </CardContent>
                 </Card>
               ))

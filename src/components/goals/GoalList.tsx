@@ -1,5 +1,22 @@
 import React from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { 
+  BicepsFlexed,
+  CaseUpper,
+  ChevronDown,
+  CircleDashed,
+  ClipboardPen,
+  Clock4,
+  EllipsisVertical,
+  NotebookText,
+  Pencil,
+  Ruler,
+  SquareCheckBig,
+  SquarePen,
+  Target,
+  Trash2 }
+  from 'lucide-react'
 
 import GoalCard from './GoalCard'
 import { Button } from '../ui/button'
@@ -30,28 +47,27 @@ const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {goals.map((goal: any) => (
-        <div key={goal.idMetaDiaria} className="p-4 border rounded-md shadow-sm">
-          <h2 className="text-xl font-bold">{goal.titulo}</h2>
-          <p>{goal.objetivo}</p>
-          <p>Progresso Atual: {goal.progressoAtual}</p>
-          <p>Progresso Máximo: {goal.progressoMaximo}</p>
-          <p>Progresso Item: {goal.progressoItem}</p>
-          <p>Situação: {goal.situacaoMetaDiaria === 0 ? 'Em andamento' : 'Concluída'}</p>
-          <div className="mt-2 space-x-2">
-            <Button
-              onClick={() => onEdit(goal)}
-              className="rounded-md"
-            >
-              Editar
-            </Button>
-            <Button
-              onClick={() => onDelete(goal.idMetaDiaria)}
-              className="bg-red-500 text-white rounded-md"
-            >
-              Excluir
-            </Button>
-          </div>
-        </div>
+        <Card key={goal.idMetaDiaria} className="p-4 border border-amber-300 rounded-md shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">{goal.titulo}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p><Target className="inline-block mr-2 text-amber-300" />{goal.objetivo}</p>
+            <p><CircleDashed className="inline-block mr-2 text-amber-300" />Progresso Item: {goal.progressoItem}</p>
+            <p><CircleDashed className="inline-block mr-2 text-amber-300" />Progresso Atual: {goal.progressoAtual}</p>
+            <p><CircleDashed className="inline-block mr-2 text-amber-300" />Progresso Máximo: {goal.progressoMaximo}</p>
+            
+            <p><ClipboardPen className="inline-block mr-2 text-amber-300" />Situação: {goal.situacaoMetaDiaria === 0 ? 'Em andamento' : 'Concluída'}</p>
+            <div className="mt-4 space-x-2"> {/* Adjusted spacing */}
+              <Button onClick={() => onEdit(goal)} className="rounded-md">
+                Editar
+              </Button>
+              <Button onClick={() => onDelete(goal.idMetaDiaria)} className="bg-red-500 text-white rounded-md">
+                Excluir
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   )
