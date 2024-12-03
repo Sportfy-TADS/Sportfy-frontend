@@ -2,8 +2,16 @@ import axios from 'axios'
 
 // Função para obter o dados do usuário
 export async function getUserData(username: string) {
+  const token = localStorage.getItem('token')
+  if (!token) return null
   const response = await axios.get(
     `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
   )
   if (response.status !== 200) throw new Error('Erro ao obter dados do usuário')
   return response.data

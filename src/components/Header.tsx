@@ -86,6 +86,12 @@ export default function Header() {
         } else {
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            },
           )
           if (!response.ok) throw new Error('Erro ao buscar dados do acadêmico')
           userResponse = await response.json()

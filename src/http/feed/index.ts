@@ -2,9 +2,15 @@ import axios from 'axios'
 // Corrigir importação de jwtDecode para importação padrão
 import {jwtDecode} from 'jwt-decode'
 
-export const fetchPosts = async () => {
+export const fetchPosts = async (token: string) => {
   const response = await axios.get(
     `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=0&size=10&sort=dataPublicacao,desc`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
   )
   return response.data.content || []
 }

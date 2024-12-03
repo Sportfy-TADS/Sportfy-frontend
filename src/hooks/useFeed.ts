@@ -46,9 +46,14 @@ export const useFeed = () => {
   }
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw new Error('Token não encontrado')
+    }
+
     const loadPosts = async () => {
       try {
-        const posts = await fetchPosts()
+        const posts = await fetchPosts(token)
         setPosts(posts)
       } catch (error) {
         console.error('Erro ao carregar os posts:', error)
@@ -133,8 +138,12 @@ export const useFeed = () => {
   }
 
   const refreshPosts = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw new Error('Token não encontrado')
+    }
     try {
-      const posts = await fetchPosts()
+      const posts = await fetchPosts(token)
       setPosts(posts)
     } catch (error) {
       console.error('Erro ao carregar os posts:', error)

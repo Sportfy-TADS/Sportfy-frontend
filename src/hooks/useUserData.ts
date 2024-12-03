@@ -28,7 +28,13 @@ export const useUserData = () => {
         const username = decoded.sub
         
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
+          `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
         )
         
         setUserData(response.data)

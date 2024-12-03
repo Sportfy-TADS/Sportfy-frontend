@@ -63,8 +63,15 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadUser = async () => {
       try {
+        const token = localStorage.getItem('token')
         const response = await fetch(
-          `http://localhost:8081/academico/buscar/${username}`
+          `http://localhost:8081/academico/buscar/${username}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
         )
         const data = await response.json()
         setUser(data)
