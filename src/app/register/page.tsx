@@ -31,16 +31,7 @@ export default function RegisterPage() {
   const { mutateAsync: handleRegister, status: { isLoading: isSubmitting } } = useRegister()
 
   const { register, handleSubmit, control } = useForm<SignUpSchema>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      curso: "tads",
-      username: "thiago1",
-      email: "thiago11@ufpr.br",
-      nome: "thiago",
-      telefone: "41988885555",
-      dataNascimento: "2000-05-05T21:17:43.547377-03:00",
-      // senha and foto are not necessary
-    },
+    resolver: zodResolver(signUpSchema)
   })
 
   const [courses, setCourses] = useState<string[]>([])
