@@ -168,7 +168,7 @@ export default function FeedPage() {
                           alt="Avatar"
                           className="w-12 h-12 rounded-full"
                         />
-                        <div className="flex flex-col">
+                        <div className="flex flex-col justify-center">
                           <span className="font-semibold text-base text-gray-900 dark:text-white">
                             {post.Usuario.nome}
                           </span>
