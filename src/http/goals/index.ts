@@ -19,8 +19,15 @@ export async function getUserData(username: string) {
 
 // Função API para buscar metas
 export async function getGoals(idAcademico: number) {
+  const token = localStorage.getItem('token')
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/listar/${idAcademico}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
   )
   if (!response.ok) throw new Error('Erro ao buscar metas')
 
@@ -33,8 +40,15 @@ export async function getGoals(idAcademico: number) {
 
 // Função API para buscar meta por nome
 export async function searchGoalByName(idAcademico: number, titulo: string) {
+  const token = localStorage.getItem('token')
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/${idAcademico}/buscar/${titulo}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
   )
   if (!response.ok) throw new Error('Erro ao buscar meta por nome')
   return await response.json()
@@ -47,24 +61,29 @@ export async function createGoal(data: {
   progressoAtual: number
   progressoMaximo: number
   progressoItem: string
-  idAcademico: number
-  situacaoMetaDiaria: number
+  idAcademico?: number // Make idAcademico optional
+  situacaoMetaDiaria?: number
 }) {
   const token = localStorage.getItem('token')
-  
+
+  if (!data.idAcademico) {
+    console.error('idAcademico is undefined')
+    throw new Error('idAcademico is required')
+  }
+
   const payload = {
     titulo: data.titulo,
     objetivo: data.objetivo,
     quantidadeConcluida: data.progressoAtual,
     quantidadeObjetivo: data.progressoMaximo,
     itemQuantificado: data.progressoItem,
-    situacaoMetaDiaria: 0,
+    situacaoMetaDiaria: data.situacaoMetaDiaria || 0,
     academico: {
-      idAcademico: data.idAcademico
-    }
+      idAcademico: data.idAcademico,
+    },
   }
 
-  console.log('Creating goal with payload:', payload) // Debug log
+  console.log('Creating goal with payload:', payload)
 
   try {
     const response = await fetch(
@@ -80,13 +99,13 @@ export async function createGoal(data: {
     )
 
     if (!response.ok) {
-      const errorData = await response.json()
-      console.error('Server error details:', errorData)
-      throw new Error(errorData.message || `Error ${response.status}: ${errorData.error}`)
+      const errorText = await response.text()
+      console.error('Server error details:', errorText)
+      throw new Error(`Error ${response.status}: ${errorText}`)
     }
 
     const result = await response.json()
-    console.log('Goal created successfully:', result) // Debug log
+    console.log('Goal created successfully:', result)
     return result
   } catch (error: any) {
     console.error('Failed to create goal:', error)
@@ -135,5 +154,56 @@ export async function updateGoal(data: {
   )
   if (!response.ok) throw new Error('Erro ao atualizar meta')
   return await response.json()
+}
+
+export async function getMetaEsportiva(idAcademico: number) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`http://localhost:8081/modalidadeEsportiva/listar/${idAcademico}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+  if (!response.ok) {
+    throw new Error('Erro ao buscar modalidades esportivas')
+  }
+  const modalidades = await response.json()
+  const metasPromises = modalidades.map((modalidade: any) =>
+    fetch(`http://localhost:8081/modalidadeEsportiva/metaEsportiva/listar/${modalidade.idModalidadeEsportiva}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    }).then((res) => res.json())
+  )
+  const metasEsportivas = await Promise.all(metasPromises)
+  return metasEsportivas.flat()
+}
+
+export async function updateMetaEsportiva(meta: MetaEsportiva) {
+  const userData = useUserData()
+  const token = userData?.token // Ensure you have access to the user's token
+  if (!token) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  const response = await fetch(`http://localhost:8081/modalidadeEsportiva/metaEsportiva/${meta.idMetaEsportiva}`, {
+    method: 'PUT', // Use PUT or PATCH based on API specification
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // Include Authorization header
+    },
+    body: JSON.stringify(meta),
+  });
+
+  if (!response.ok) {
+    const errorDetails = await response.text(); // Get detailed error message
+    console.error('Resposta de erro da API:', errorDetails);
+    throw new Error(`Erro ao atualizar Meta Esportiva: ${errorDetails}`);
+  }
+
+  return response.json();
 }
 

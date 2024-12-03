@@ -29,6 +29,7 @@ import GoalForm from '@/components/goals/GoalForm'
 import GoalList from '@/components/goals/GoalList'
 import { useUserData } from '@/hooks/useUserData'
 import { useGoals } from '@/hooks/useGoals'
+import { getMetaEsportiva, updateMetaEsportiva } from '@/http/goals'
 
 interface MetaEsportiva {
   idMetaEsportiva: number
@@ -39,29 +40,6 @@ interface MetaEsportiva {
   foto: string | null
   ativo: boolean
   idModalidadeEsportiva: number
-}
-
-async function getMetaEsportiva(idAcademico: number) {
-  const response = await fetch(`http://localhost:8081/modalidadeEsportiva/listar/${idAcademico}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-  if (!response.ok) {
-    throw new Error('Erro ao buscar modalidades esportivas')
-  }
-  const modalidades = await response.json()
-  const metasPromises = modalidades.map((modalidade: any) =>
-    fetch(`http://localhost:8081/modalidadeEsportiva/metaEsportiva/listar/${modalidade.idModalidadeEsportiva}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).then((res) => res.json())
-  )
-  const metasEsportivas = await Promise.all(metasPromises)
-  return metasEsportivas.flat()
 }
 
 export default function GoalsPage() {
@@ -78,31 +56,6 @@ export default function GoalsPage() {
     queryFn: () => getMetaEsportiva(userData?.idAcademico),
     enabled: !!userData?.idAcademico,
   })
-
-  // Move updateMetaEsportiva inside the component
-  const updateMetaEsportiva = async (meta: MetaEsportiva) => {
-    const token = userData?.token // Ensure you have access to the user's token
-    if (!token) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    const response = await fetch(`http://localhost:8081/modalidadeEsportiva/metaEsportiva/${meta.idMetaEsportiva}`, {
-      method: 'PUT', // Use PUT or PATCH based on API specification
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include Authorization header
-      },
-      body: JSON.stringify(meta),
-    });
-
-    if (!response.ok) {
-      const errorDetails = await response.text(); // Get detailed error message
-      console.error('Resposta de erro da API:', errorDetails);
-      throw new Error(`Erro ao atualizar Meta Esportiva: ${errorDetails}`);
-    }
-
-    return response.json();
-  };
 
   // Add useMutation for updating MetaEsportiva
   const updateMutation = useMutation({
@@ -284,9 +237,9 @@ export default function GoalsPage() {
                   <SheetTitle>Editar Meta</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-4">
-                  <Skeleton variant="text" className="w-full h-6" />
-                  <Skeleton variant="text" className="w-full h-4" />
-                  <Skeleton variant="text" className="w-full h-4" />
+                  <Skeleton  className="w-full h-6" />
+                  <Skeleton  className="w-full h-4" />
+                  <Skeleton  className="w-full h-4" />
                 </div>
               </SheetContent>
             </Sheet>

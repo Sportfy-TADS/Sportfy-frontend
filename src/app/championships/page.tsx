@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -16,7 +14,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -25,41 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  getChampionships,
-  getUserIdFromToken,
-  createChampionship,
-  updateChampionship,
-  deleteChampionship,
-} from '@/services/championshipService'
-import { Pencil, Trash, Calendar, Info, Trophy, MapPin,  User, Lock } from 'lucide-react'
+import { useChampionships } from './hooks/useChampionships'
+import ChampionshipCard from './components/ChampionshipCard'
+import { getUserIdFromToken } from '@/services/championshipService'
 import { useRouter } from 'next/navigation'
-
-interface Campeonato {
-  titulo: string
-  descricao: string
-  aposta: string
-  dataInicio: string
-  dataFim: string
-  limiteTimes: number
-  limiteParticipantes: number
-  ativo: boolean
-  endereco: {
-    cep: string
-    uf: string
-    cidade: string
-    bairro: string
-    rua: string
-    numero: string
-    complemento: string | null
-  }
-  privacidadeCampeonato: string
-  idAcademico: number
-  idModalidadeEsportiva: number
-  situacaoCampeonato: string
-  senha?: string
-  idCampeonato: number
-}
+import { Card, CardContent } from '@/components/ui/card'
+import { User, Lock } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function CampeonatoPage() {
   const [selectedCampeonato, setSelectedCampeonato] = useState<Campeonato | null>(null)
@@ -70,12 +39,11 @@ export default function CampeonatoPage() {
   const [uf, setUf] = useState('')
   const [privacidade, setPrivacidade] = useState('PUBLICO')
   const [searchTerm, setSearchTerm] = useState('')
-  const queryClient = useQueryClient()
+  const { campeonatos, isLoading, createMutation, updateMutation, deleteMutation } = useChampionships()
   const currentUserId = getUserIdFromToken()
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is authenticated
     const userCheck = () => {
       const id = getUserIdFromToken()
       if (!id) {
@@ -86,89 +54,12 @@ export default function CampeonatoPage() {
     userCheck()
   }, [router])
 
-  const { data: campeonatos = [], isLoading } = useQuery({
-    queryKey: ['campeonatos'],
-    queryFn: getChampionships,
-  })
-
   const filteredCampeonatos = useMemo(() => {
     if (!searchTerm) return campeonatos
     return campeonatos.filter((campeonato) =>
       campeonato.titulo.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [campeonatos, searchTerm])
-
-  const createMutation = useMutation({
-    mutationFn: createChampionship,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
-      toast.success('Campeonato criado com sucesso!')
-    },
-    onError: (error: any) => { // Changed error type to any for better logging
-      console.error('Erro ao criar campeonato:', error)
-      
-      // Add detailed error logging
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-        console.error('Response status:', error.response.status)
-        console.error('Response headers:', error.response.headers)
-      } else if (error.request) {
-        console.error('No response received:', error.request)
-      } else {
-        console.error('Error setting up request:', error.message)
-      }
-
-      toast.error('Erro ao criar campeonato.')
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (data: Campeonato) => updateChampionship(data.idCampeonato, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
-      toast.success('Campeonato atualizado com sucesso!')
-    },
-    onError: (error: any) => { // Changed error type to any for better logging
-      console.error('Erro ao atualizar campeonato:', error)
-      
-      // Add detailed error logging
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-        console.error('Response status:', error.response.status)
-        console.error('Response headers:', error.response.headers)
-      } else if (error.request) {
-        console.error('No response received:', error.request)
-      } else {
-        console.error('Error setting up request:', error.message)
-      }
-
-      toast.error('Erro ao atualizar campeonato.')
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteChampionship(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
-      toast.success('Campeonato excluído com sucesso!')
-    },
-    onError: (error: any) => { // Changed error type to any for better logging
-      console.error('Erro ao excluir campeonato:', error)
-      
-      // Add detailed error logging
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-        console.error('Response status:', error.response.status)
-        console.error('Response headers:', error.response.headers)
-      } else if (error.request) {
-        console.error('No response received:', error.request)
-      } else {
-        console.error('Error setting up request:', error.message)
-      }
-
-      toast.error('Erro ao excluir campeonato.')
-    },
-  })
 
   const handleCreateCampeonato = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -254,159 +145,6 @@ export default function CampeonatoPage() {
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code)
     toast.success('Código copiado para a área de transferência!')
-  }
-
-  const renderCampeonatos = () => {
-    if (isLoading) {
-      return Array.from({ length: 6 }).map((_, index) => (
-        <Card key={`skeleton-${index}`} className="p-4 border border-blue-700">
-          <Skeleton className="h-6 w-3/4 mb-4" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-5/6 mb-2" />
-          <Skeleton className="h-4 w-1/2 mb-4" />
-          <Skeleton className="h-10 w-full bg-gray-300" />
-        </Card>
-      ))
-    }
-
-    if (!Array.isArray(campeonatos) || campeonatos.length === 0) {
-      return (
-        <Card className="col-span-full p-4 border border-blue-700">
-          <CardContent>
-            <p className="text-center text-gray-500">
-              Nenhum campeonato encontrado ou erro ao carregar dados.
-            </p>
-          </CardContent>
-        </Card>
-      )
-    }
-
-    return campeonatos.map((campeonato: Campeonato) => (
-      <Card key={campeonato.idCampeonato} className="border border-blue-700">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold"> {/* Increased title size */}
-            {campeonato.titulo}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Aposta e Descrição */}
-            <div className="flex flex-col">
-              <div className="flex items-center mb-1">
-                <Trophy className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Aposta:</p>
-              </div>
-              <p className="text-lg ml-6">{campeonato.aposta}</p> {/* Alinhado com o texto */}
-              <div className="flex items-center mb-1">
-                <Info className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Descrição:</p>
-              </div>
-              <p className="text-lg ml-6">{campeonato.descricao}</p> {/* Alinhado com o texto */}
-            </div>
-
-            {/* Datas */}
-            <div className="flex flex-col">
-              <div className="flex items-center mb-1">
-                <Calendar className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Início:</p>
-                <p className="text-lg ml-2">{new Date(campeonato.dataInicio).toLocaleDateString()}</p>
-              </div>
-              <div className="flex items-center mb-1">
-                <Calendar className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Fim:</p>
-                <p className="text-lg ml-2">{new Date(campeonato.dataFim).toLocaleDateString()}</p>
-              </div>
-            </div>
-
-            {/* Participantes e Times */}
-            <div className="flex flex-col">
-              <div className="flex items-center mb-1">
-                <User className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Participantes:</p>
-                <p className="text-lg ml-2">{campeonato.limiteParticipantes}</p>
-              </div>
-              <div className="flex items-center mb-1">
-                <User className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Times:</p>
-                <p className="text-lg ml-2">{campeonato.limiteTimes}</p>
-              </div>
-            </div>
-
-            {/* Privacidade e Criador */}
-            <div className="flex flex-col">
-              <div className="flex items-center mb-1">
-                <Lock className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Privacidade:</p>
-                <p className="text-lg ml-2">
-                  {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
-                </p>
-              </div>
-              <div className="flex items-center mb-1">
-                <User className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Criador:</p>
-                <p className="text-lg ml-2">{campeonato.usernameCriador}</p>
-              </div>
-            </div>
-
-            {/* Endereço */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-1">
-                <MapPin className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Endereço:</p>
-              </div>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-lg ml-6 text-white underline"
-              >
-                {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
-              </a> {/* Alinhado com o texto */}
-            </div>
-
-            {/* Código do Campeonato */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-1">
-                <Info className="mr-2 text-blue-700" />
-                <p className="text-lg font-semibold">Código do Campeonato:</p>
-                <p className="text-lg ml-2 cursor-pointer" onClick={() => handleCopyCode(campeonato.codigo)}>
-                  {campeonato.codigo}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Ações */}
-          <div className="mt-4 flex space-x-2">
-            {campeonato.idAcademico === currentUserId ? ( // Check if current user is the creator
-              <>
-                <Button
-                  onClick={() => setSelectedCampeonato(campeonato)}
-                  className="flex items-center justify-center bg-white hover:bg-zinc-300"
-                >
-                  <Pencil className="mr-2" /> Atualizar
-                </Button>
-                <Button
-                  onClick={() => handleDeleteCampeonato(campeonato.idCampeonato)}
-                  className="flex items-center justify-center bg-red-500 hover:bg-red-600"
-                >
-                  <Trash className="mr-2" /> Excluir
-                </Button>
-              </>
-            ) : (
-              <Button
-                onClick={() => router.push(`/championships/${campeonato.idCampeonato}`)} // Updated onClick handler
-                className="flex items-center justify-center bg-green-500 hover:bg-green-600"
-              >
-                Acessar
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    ))
   }
 
   return (

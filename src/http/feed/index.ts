@@ -26,11 +26,17 @@ export const fetchLoggedUser = () => {
 export const likePost = async (
   userId: number,
   postId: number,
+  token: string
 ) => {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`
     console.log('Sending like request to URL:', url)
-    const response = await axios.post(url, {})
+    const response = await axios.post(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
     console.log('Like response:', response)
     return response.data
   } catch (error) {

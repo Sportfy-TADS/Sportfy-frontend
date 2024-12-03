@@ -1,18 +1,17 @@
 import axios from 'axios';
 import { DecodedToken } from '@/interface/types';
 import { jwtDecode } from 'jwt-decode';
+import { useMutation } from '@tanstack/react-query'
+import { z } from 'zod'
+import { signInSchema } from '@/schemas'
 
-export const authenticateUser = async ({ 
-  username, 
-  password 
-}: { 
-  username: string, 
-  password: string 
-}) => {
+type SignInSchema = z.infer<typeof signInSchema>
+
+export const authenticateUser = async (data: SignInSchema) => {
   try {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/login/efetuarLogin`,
-      { username, password },
+      data,
       {
         headers: {
           'Content-Type': 'application/json'
@@ -42,4 +41,14 @@ export const authenticateUser = async ({
       'Nome de usuário ou senha inválidos'
     );
   }
-};
+}
+
+export const useAuthenticateUser = (options: {
+  onSuccess: () => void,
+  onError: (error: Error) => void,
+}) => {
+  return useMutation({
+    mutationFn: authenticateUser,
+    ...options,
+  })
+}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getUserIdFromToken } from '@/utils/auth' // Use auth.ts for token validation
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 
@@ -28,187 +27,15 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Medal } from 'lucide-react'
 
-interface TokenPayload {
-  sub: string
-  roles: string
-  idUsuario: number
-  iss: string
-  exp: number
-}
-
-interface UserData {
-  idAcademico: number
-  curso: string
-  username: string
-  email: string
-  nome: string
-}
-
-interface Modalidade {
-  idModalidadeEsportiva: number
-  nome: string
-  descricao: string
-  dataCriacao: string
-  inscrito: boolean
-}
-
-function getIdAcademico(): number {
-  const userDataStr = localStorage.getItem('userData')
-  console.log('Dados do usuário no localStorage:', userDataStr)
-  if (!userDataStr) throw new Error('Dados do usuário não encontrados')
-
-  const userData: UserData = JSON.parse(userDataStr)
-  console.log('Dados do usuário após parse:', userData)
-  console.log('ID Acadêmico:', userData.idAcademico) // Added log
-  return userData.idAcademico
-}
-
-function decodeToken(token: string): TokenPayload {
-  const decoded = getUserIdFromToken() // Use auth.ts function
-  console.log('Token decodificado:', decoded)
-  return decoded
-}
-
-async function getModalidades() {
-  const token = localStorage.getItem('token')
-  if (!token) {
-    console.error('Token não encontrado')
-    throw new Error('Token não encontrado')
-  }
-
-  const idAcademico = getIdAcademico()
-  console.log('Buscando modalidades para idAcademico:', idAcademico)
-
-  const allModalidadesUrl = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
-  const inscritasUrl = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar/${idAcademico}`
-  console.log('URL da API para todas modalidades:', allModalidadesUrl)
-  console.log('URL da API para modalidades inscritas:', inscritasUrl)
-
-  try {
-    const [allModalidadesResponse, inscritasResponse] = await Promise.all([
-      fetch(allModalidadesUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-      fetch(inscritasUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-    ])
-
-    console.log('Status da resposta para todas modalidades:', allModalidadesResponse.status)
-    console.log('Status da resposta para modalidades inscritas:', inscritasResponse.status)
-
-    if (!allModalidadesResponse.ok) {
-      const errorText = await allModalidadesResponse.text()
-      console.error('Erro na resposta da API para todas modalidades:', errorText)
-      throw new Error(`Erro ao buscar todas modalidades: ${errorText}`)
-    }
-
-    if (!inscritasResponse.ok) {
-      const errorText = await inscritasResponse.text()
-      console.error('Erro na resposta da API para modalidades inscritas:', errorText)
-      throw new Error(`Erro ao buscar modalidades inscritas: ${errorText}`)
-    }
-
-    const allModalidades = await allModalidadesResponse.json()
-    const inscritas = await inscritasResponse.json()
-    console.log('Dados recebidos da API para todas modalidades:', allModalidades)
-    console.log('Dados recebidos da API para modalidades inscritas:', inscritas)
-
-    // Mark modalidades as inscrito
-    const modalidadesWithInscrito = allModalidades.map((modalidade: Modalidade) => ({
-      ...modalidade,
-      inscrito: inscritas.some(
-        (inscrita: { idModalidadeEsportiva: number }) =>
-          inscrita.idModalidadeEsportiva === modalidade.idModalidadeEsportiva
-      ),
-    }))
-
-    return modalidadesWithInscrito
-  } catch (error) {
-    console.error('Erro ao buscar modalidades:', error)
-    throw error
-  }
-}
-
-async function inscreverUsuario(modalidadeId: number) {
-  const token = localStorage.getItem('token')
-  if (!token) throw new Error('Token não encontrado')
-
-  try {
-    const idAcademico = getIdAcademico()
-    console.log('Inscrevendo usuário:', { idAcademico, modalidadeId })
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${modalidadeId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    )
-
-    console.log('Status da resposta:', response.status)
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Erro na resposta da API:', error)
-      throw new Error(`Erro ao realizar inscrição: ${error}`)
-    }
-
-    // Handle empty response body
-    const data = response.status === 204 || response.status === 200 ? null : await response.json()
-    console.log('Dados recebidos da API após inscrição:', data)
-    return data
-  } catch (error) {
-    console.error('Erro na inscrição:', error)
-    throw error
-  }
-}
-
-async function desinscreverUsuario(modalidadeId: number) {
-  const token = localStorage.getItem('token')
-  if (!token) throw new Error('Token não encontrado')
-
-  try {
-    const idAcademico = getIdAcademico()
-    console.log('Desinscrevendo usuário:', { idAcademico, modalidadeId })
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/remover/${idAcademico}/${modalidadeId}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    )
-
-    console.log('Status da resposta:', response.status)
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Erro na resposta da API:', error)
-      throw new Error(`Erro ao realizar desinscrição: ${error}`)
-    }
-
-    // Handle empty response body
-    const data = response.status === 204 || response.status === 200 ? null : await response.json()
-    console.log('Dados recebidos da API após desinscrição:', data)
-    return data
-  } catch (error) {
-    console.error('Erro na desinscrição:', error)
-    throw error
-  }
-}
+import {
+  decodeToken,
+  getIdAcademico,
+  getModalidades,
+  inscreverUsuario,
+  desinscreverUsuario,
+  Modalidade,
+  UserData,
+} from '@/http/modality'
 
 export default function ModalidadeInscricaoPage() {
   const [isAdmin, setIsAdmin] = useState(false)

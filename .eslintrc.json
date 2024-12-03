@@ -1,8 +1,6 @@
 {
   "extends": [
-    "@rocketseat/eslint-config/react",
-    "plugin:import/recommended",
-    "plugin:import/typescript",
+    "@rocketseat/eslint-config/next", 
     "next/core-web-vitals"
   ],
   "plugins": ["import", "react-hooks"],

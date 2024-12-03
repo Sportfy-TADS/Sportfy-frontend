@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
 import { Medal, User, Lock, Eye, EyeOff } from 'lucide-react' // Add Eye and EyeOff imports
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -15,7 +14,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signInSchema } from '@/schemas'
-import { authenticateUser } from '@/http/auth'
+import { authenticateUser, useAuthenticateUser } from '@/http/auth'
 
 type SignInSchema = z.infer<typeof signInSchema>
 
@@ -31,8 +30,7 @@ export default function SignInPage() {
     resolver: zodResolver(signInSchema),
   })
 
-  const { mutateAsync: authenticate } = useMutation({
-    mutationFn: authenticateUser,
+  const { mutateAsync: authenticate } = useAuthenticateUser({
     onSuccess: () => {
       toast.success('Login bem-sucedido!')
       router.push('/feed')

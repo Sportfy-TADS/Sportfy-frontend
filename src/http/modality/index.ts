@@ -1,10 +1,183 @@
-'use server'
-
 import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
 import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import axios from 'axios'
+import { getUserIdFromToken } from '@/utils/auth'
+
+// Interfaces
+interface TokenPayload {
+  sub: string
+  roles: string
+  idUsuario: number
+  iss: string
+  exp: number
+}
+
+export interface UserData {
+  idAcademico: number
+  curso: string
+  username: string
+  email: string
+  nome: string
+}
+
+export interface Modalidade {
+  idModalidadeEsportiva: number
+  nome: string
+  descricao: string
+  dataCriacao: string
+  inscrito: boolean
+}
+
+// Utility Functions
+export function decodeToken(token: string): TokenPayload {
+  const decoded = getUserIdFromToken()
+  console.log('Token decodificado:', decoded)
+  return decoded
+}
+
+export function getIdAcademico(): number {
+  const userDataStr = localStorage.getItem('userData')
+  console.log('Dados do usuário no localStorage:', userDataStr)
+  if (!userDataStr) throw new Error('Dados do usuário não encontrados')
+
+  const userData: UserData = JSON.parse(userDataStr)
+  console.log('Dados do usuário após parse:', userData)
+  console.log('ID Acadêmico:', userData.idAcademico)
+  return userData.idAcademico
+}
+
+// API Calls
+export async function getModalidades(): Promise<Modalidade[]> {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    console.error('Token não encontrado')
+    throw new Error('Token não encontrado')
+  }
+
+  const idAcademico = getIdAcademico()
+  console.log('Buscando modalidades para idAcademico:', idAcademico)
+
+  const allModalidadesUrl = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
+  const inscritasUrl = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar/${idAcademico}`
+
+  try {
+    const [allModalidadesResponse, inscritasResponse] = await Promise.all([
+      fetch(allModalidadesUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      fetch(inscritasUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    ])
+
+    if (!allModalidadesResponse.ok) {
+      const errorText = await allModalidadesResponse.text()
+      console.error('Erro na resposta da API para todas modalidades:', errorText)
+      throw new Error(`Erro ao buscar todas modalidades: ${errorText}`)
+    }
+
+    if (!inscritasResponse.ok) {
+      const errorText = await inscritasResponse.text()
+      console.error('Erro na resposta da API para modalidades inscritas:', errorText)
+      throw new Error(`Erro ao buscar modalidades inscritas: ${errorText}`)
+    }
+
+    const allModalidades = await allModalidadesResponse.json()
+    const inscritas = await inscritasResponse.json()
+
+    // Mark modalidades as inscrito
+    const modalidadesWithInscrito = allModalidades.map((modalidade: Modalidade) => ({
+      ...modalidade,
+      inscrito: inscritas.some(
+        (inscrita: { idModalidadeEsportiva: number }) =>
+          inscrita.idModalidadeEsportiva === modalidade.idModalidadeEsportiva
+      ),
+    }))
+
+    return modalidadesWithInscrito
+  } catch (error) {
+    console.error('Erro ao buscar modalidades:', error)
+    throw error
+  }
+}
+
+export async function inscreverUsuario(modalidadeId: number) {
+  const token = localStorage.getItem('token')
+  if (!token) throw new Error('Token não encontrado')
+
+  try {
+    const idAcademico = getIdAcademico()
+    console.log('Inscrevendo usuário:', { idAcademico, modalidadeId })
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${modalidadeId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Erro na resposta da API:', error)
+      throw new Error(`Erro ao realizar inscrição: ${error}`)
+    }
+
+    // Handle empty response body
+    const data = response.status === 204 || response.status === 200 ? null : await response.json()
+    console.log('Dados recebidos da API após inscrição:', data)
+    return data
+  } catch (error) {
+    console.error('Erro na inscrição:', error)
+    throw error
+  }
+}
+
+export async function desinscreverUsuario(modalidadeId: number) {
+  const token = localStorage.getItem('token')
+  if (!token) throw new Error('Token não encontrado')
+
+  try {
+    const idAcademico = getIdAcademico()
+    console.log('Desinscrevendo usuário:', { idAcademico, modalidadeId })
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/remover/${idAcademico}/${modalidadeId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Erro na resposta da API:', error)
+      throw new Error(`Erro ao realizar desinscrição: ${error}`)
+    }
+
+    // Handle empty response body
+    const data = response.status === 204 || response.status === 200 ? null : await response.json()
+    console.log('Dados recebidos da API após desinscrição:', data)
+    return data
+  } catch (error) {
+    console.error('Erro na desinscrição:', error)
+    throw error
+  }
+}
 
 export async function fetchModalidades() {
   const token = getToken()
@@ -56,26 +229,6 @@ export async function inscreverModalidade(
 ) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${idModalidadeEsportiva}`
   return fetchWithAuth(url, { method: 'POST' })
-}
-
-export async function inscreverUsuario(modalidadeId: number) {
-  const token = getToken()
-  const idAcademico = getIdAcademico()
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/inscrever/${idAcademico}/${modalidadeId}`
-  return fetchWithAuth(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  })
-}
-
-function getIdAcademico(): number {
-  const userDataStr = localStorage.getItem('userData')
-  if (!userDataStr) throw new Error('Dados do usuário não encontrados')
-  const userData: UserData = JSON.parse(userDataStr)
-  return userData.idAcademico
 }
 
 export async function fetchAdmins() {
