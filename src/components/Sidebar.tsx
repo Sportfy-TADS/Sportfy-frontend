@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation' // Added usePathname
+import { useRouter, usePathname } from 'next/navigation'
 import { jwtDecode } from 'jwt-decode'
 import {
   Home,
@@ -26,17 +26,44 @@ interface DecodedToken {
 
 export default function Sidebar() {
   const router = useRouter()
-  const pathname = usePathname() // Added to get current path
+  const pathname = usePathname()
   const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [visitedRoutes, setVisitedRoutes] = useState<string[]>([])
 
   useEffect(() => {
+    const stored = localStorage.getItem('visitedRoutes')
+    if (stored) {
+      setVisitedRoutes(JSON.parse(stored))
+    }
+
     const token = localStorage.getItem('token')
     if (token) {
       const decoded: DecodedToken = jwtDecode(token)
       setIsAdmin(decoded.roles.includes('ADMINISTRADOR'))
     }
   }, [])
+
+  const handleRouteClick = (route: string) => {
+    if (!visitedRoutes.includes(route)) {
+      const newVisitedRoutes = [...visitedRoutes, route]
+      setVisitedRoutes(newVisitedRoutes)
+      localStorage.setItem('visitedRoutes', JSON.stringify(newVisitedRoutes))
+    }
+    router.push(route)
+  }
+
+  const getItemStyle = (route: string) => {
+    return `flex items-center space-x-3 cursor-pointer 
+    ${visitedRoutes.includes(route) ? 'hover:bg-blue-500' : 'hover:bg-gray-400'} 
+    hover:text-white transition-colors duration-200 p-2 rounded-md
+    ${pathname === route ? 'opacity-75' : ''}
+    ${!visitedRoutes.includes(route) ? 'opacity-50' : ''}`
+  }
+
+  const prefetchRoute = (route: string) => {
+    router.prefetch(route)
+  }
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen)
@@ -57,94 +84,112 @@ export default function Sidebar() {
       >
         <ul className="space-y-6">
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/feed' ? 'opacity-75' : ''
-            }`}
-            onClick={() => router.push('/feed')}
+            className={getItemStyle('/feed')}
+            onClick={() => handleRouteClick('/feed')}
+            onMouseEnter={() => prefetchRoute('/feed')}
           >
-            <Home className="w-6 h-6 text-blue-500" />
+            <Home
+              className={`w-6 h-6 ${visitedRoutes.includes('/feed') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Início</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/profile' ? 'opacity-75' : ''
-            }`}
-            onClick={() => router.push('/profile')}
+            className={getItemStyle('/profile')}
+            onClick={() => handleRouteClick('/profile')}
+            onMouseEnter={() => prefetchRoute('/profile')}
           >
-            <User className="w-6 h-6 text-blue-500" />
+            <User
+              className={`w-6 h-6 ${visitedRoutes.includes('/profile') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Perfil</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/goals' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/goals')}
+            className={getItemStyle('/goals')}
+            onClick={() => handleRouteClick('/goals')}
+            onMouseEnter={() => prefetchRoute('/goals')}
           >
-            <Target className="w-6 h-6 text-blue-500" />
+            <Target
+              className={`w-6 h-6 ${visitedRoutes.includes('/goals') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Metas</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/achievements' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/achievements')}
+            className={getItemStyle('/achievements')}
+            onClick={() => handleRouteClick('/achievements')}
+            onMouseEnter={() => prefetchRoute('/achievements')}
           >
-            <Award className="w-6 h-6 text-blue-500" />
+            <Award
+              className={`w-6 h-6 ${visitedRoutes.includes('/achievements') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Conquistas</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/healthWarning' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/healthWarning')}
+            className={getItemStyle('/healthWarning')}
+            onClick={() => handleRouteClick('/healthWarning')}
+            onMouseEnter={() => prefetchRoute('/healthWarning')}
           >
-            <HeartPulse className="w-6 h-6 text-blue-500" />
+            <HeartPulse
+              className={`w-6 h-6 ${visitedRoutes.includes('/healthWarning') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Saúde</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/Modality' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/Modality')}
+            className={getItemStyle('/Modality')}
+            onClick={() => handleRouteClick('/Modality')}
+            onMouseEnter={() => prefetchRoute('/Modality')}
           >
-            <Activity className="w-6 h-6 text-blue-500" />
+            <Activity
+              className={`w-6 h-6 ${visitedRoutes.includes('/Modality') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Modalidade</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/championships' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/championships')}
+            className={getItemStyle('/championships')}
+            onClick={() => handleRouteClick('/championships')}
+            onMouseEnter={() => prefetchRoute('/championships')}
           >
-            <Trophy className="w-6 h-6 text-blue-500" />
+            <Trophy
+              className={`w-6 h-6 ${visitedRoutes.includes('/championships') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Campeonato</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/statistics' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/statistics')}
+            className={getItemStyle('/statistics')}
+            onClick={() => handleRouteClick('/statistics')}
+            onMouseEnter={() => prefetchRoute('/statistics')}
           >
-            <Layers className="w-6 h-6 text-blue-500" />
+            <Layers
+              className={`w-6 h-6 ${visitedRoutes.includes('/statistics') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Estatísticas</span>
           </li>
           <li
-            className={`flex items-center space-x-3 cursor-pointer hover:bg-blue-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-              pathname === '/settings' ? 'opacity-50' : ''
-            }`}
-            onClick={() => router.push('/settings')}
+            className={getItemStyle('/playerRatings')}
+            onClick={() => handleRouteClick('/playerRatings')}
+            onMouseEnter={() => prefetchRoute('/playerRatings')}
           >
-            <Settings className="w-6 h-6 text-blue-500" />
+            <Layers
+              className={`w-6 h-6 ${visitedRoutes.includes('/playerRatings') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
+            <span className="text-lg font-semibold">Avaliar</span>
+          </li>
+          <li
+            className={getItemStyle('/settings')}
+            onClick={() => handleRouteClick('/settings')}
+            onMouseEnter={() => prefetchRoute('/settings')}
+          >
+            <Settings
+              className={`w-6 h-6 ${visitedRoutes.includes('/settings') ? 'text-blue-500' : 'text-gray-500'}`}
+            />
             <span className="text-lg font-semibold">Configurações</span>
           </li>
 
           {isAdmin && (
             <>
               <li
-                className={`flex items-center space-x-3 cursor-pointer hover:bg-red-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-                  pathname === '/admin' ? 'opacity-75' : ''
-                }`}
-                onClick={() => router.push('/admin')}
+                className={getItemStyle('/admin')}
+                onClick={() => handleRouteClick('/admin')}
+                onMouseEnter={() => prefetchRoute('/admin')}
               >
                 <Shield className="w-6 h-6 text-red-500" />
                 <span className="text-lg font-semibold">
@@ -152,10 +197,9 @@ export default function Sidebar() {
                 </span>
               </li>
               <li
-                className={`flex items-center space-x-3 cursor-pointer hover:bg-red-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-                  pathname === '/admin/modality' ? 'opacity-50' : ''
-                }`}
-                onClick={() => router.push('/admin/modality')}
+                className={getItemStyle('/admin/modality')}
+                onClick={() => handleRouteClick('/admin/modality')}
+                onMouseEnter={() => prefetchRoute('/admin/modality')}
               >
                 <Layers className="w-6 h-6 text-red-500" />
                 <span className="text-lg font-semibold">
@@ -163,10 +207,9 @@ export default function Sidebar() {
                 </span>
               </li>
               <li
-                className={`flex items-center space-x-3 cursor-pointer hover:bg-red-500 hover:text-white transition-colors duration-200 p-2 rounded-md ${
-                  pathname === '/admin/health' ? 'opacity-50' : ''
-                }`}
-                onClick={() => router.push('/admin/health')}
+                className={getItemStyle('/admin/health')}
+                onClick={() => handleRouteClick('/admin/health')}
+                onMouseEnter={() => prefetchRoute('/admin/health')}
               >
                 <Hospital className="w-6 h-6 text-red-500" />
                 <span className="text-lg font-semibold">
@@ -177,7 +220,6 @@ export default function Sidebar() {
           )}
         </ul>
       </nav>
-      {/* Overlay para telas pequenas */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black opacity-25 lg:hidden"
