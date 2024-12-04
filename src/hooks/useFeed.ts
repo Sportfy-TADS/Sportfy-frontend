@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import {
   fetchPosts,
-  fetchLoggedUser as fetchLoggedUserFromAPI,
+  fetchLoggedUser,
   likePost,
   unlikePost,
   createPost,
@@ -14,7 +14,7 @@ import {
   updateComment,
 } from '@/http/feed'
 import { Post, DecodedToken, Usuario } from '@/interface/types'
-import { jwtDecode } from 'jwt-decode' // Importação correta
+import { jwtDecode } from 'jwt-decode' // Changed from named to default import
 
 export const useFeed = () => {
   const [posts, setPosts] = useState<Post[]>([])
@@ -36,7 +36,10 @@ export const useFeed = () => {
         return {
           idUsuario: decoded.idUsuario,
           username: decoded.sub,
-          nome: decoded.nome || '', // Garantir que 'nome' esteja presente
+          nome:
+            decoded.nome && decoded.nome.trim() !== ''
+              ? decoded.nome
+              : decoded.sub, // Set 'nome' to 'username' if empty
           permissao: decoded.role || 'USUARIO', // Adicionado valor padrão
           idAcademico: decoded.idAcademico || decoded.idUsuario, // Garantir que 'idAcademico' esteja presente
         }
@@ -56,7 +59,7 @@ export const useFeed = () => {
 
     const loadInitialPosts = async () => {
       try {
-        const initialPosts = await fetchPosts(token, 0, 10)
+        const initialPosts = await fetchPosts(0, 10) // Removed token parameter
         setPosts(initialPosts)
         setPage(0) // Initialize page
       } catch (error) {
@@ -132,6 +135,8 @@ export const useFeed = () => {
                         nome: loggedUser.nome,
                         foto: loggedUser.foto,
                         permissao: loggedUser.permissao,
+                        idAcademico:
+                          loggedUser.idAcademico || loggedUser.idUsuario,
                       },
                     ],
                   }
@@ -146,40 +151,22 @@ export const useFeed = () => {
     }
   }
 
-  const handleNewPost = async () => {
+  const handleNewPost = async (newPost: Post) => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        throw new Error('Token não encontrado')
+      console.log('Creating new post:', newPost)
+      const createdPost = await createPost(newPost)
+
+      if (!createdPost) {
+        throw new Error('Não foi possível criar a publicação')
       }
 
-      const newPost = {
-        titulo: newPostTitle,
-        descricao: newPostContent,
-        idCanal: 1,
-        idModalidadeEsportiva: null, // Se necessário
-        Usuario: {
-          idUsuario: loggedUser?.idUsuario,
-          username: loggedUser?.username,
-          nome: loggedUser?.nome,
-          foto: loggedUser?.foto || null,
-          permissao: loggedUser?.permissao,
-          idAcademico: loggedUser?.idAcademico || loggedUser?.idUsuario,
-        },
-      }
-
-      const createdPost = await createPost(newPost, token) // Retornar o post criado
-
-      toast.success('Publicação criada com sucesso!')
-
-      // Prepend the new post to the posts list
       setPosts((prevPosts) => [createdPost, ...prevPosts])
-
       setNewPostTitle('')
       setNewPostContent('')
+      return createdPost
     } catch (error) {
-      console.error('Error creating new post:', error)
-      toast.error('Erro ao criar a publicação.')
+      console.error('Error in handleNewPost:', error)
+      throw error
     }
   }
 
@@ -255,11 +242,6 @@ export const useFeed = () => {
   const handleCreateComment = async (postId: number, descricao: string) => {
     if (loggedUser) {
       try {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          throw new Error('Token not found')
-        }
-
         const newComment = {
           idComentario: Date.now(), // Temporário até receber do backend
           descricao,
@@ -276,7 +258,7 @@ export const useFeed = () => {
           listaComentarios: [],
         }
 
-        const createdComment = await createComment(newComment, token)
+        const createdComment = await createComment(newComment) // Removed token parameter
         toast.success('Comentário criado com sucesso!')
 
         // Atualizar os comentários localmente garantindo que listaComentario seja um array
@@ -359,10 +341,9 @@ export const useFeed = () => {
   }
 
   const loadMore = async () => {
-    const token = localStorage.getItem('token') || ''
     const nextPage = page + 1
     try {
-      const morePosts = await fetchPosts(token, nextPage, 10)
+      const morePosts = await fetchPosts(nextPage, 10) // Removed token parameter
       if (morePosts.length === 0) {
         setHasMore(false)
       } else {

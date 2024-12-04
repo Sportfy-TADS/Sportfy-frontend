@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { MessageCircle, Star } from 'lucide-react'
 import { Toaster, toast } from 'sonner' // Adicionado 'toast'
 import Header from '@/components/Header'
@@ -18,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useFeed } from '@/hooks/useFeed'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { fetchComments, fetchPosts } from '@/http/feed' // Adiciona fetchPosts
+import { fetchComments } from '@/http/feed' // Removed fetchPosts import as it's handled in useFeed
 import CommentsDialog from '@/components/CommentsDialog'
 import { Comentario, Post } from '@/interface/types'
 
@@ -72,8 +71,44 @@ export default function FeedPage() {
   }
 
   const createNewPost = async () => {
-    await handleNewPost()
-    setIsDialogOpen(false)
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      toast.error('Título e descrição são obrigatórios')
+      return
+    }
+
+    if (!loggedUser?.idUsuario) {
+      toast.error('Usuário não autenticado')
+      return
+    }
+
+    const newPost = {
+      titulo: newPostTitle.trim(),
+      descricao: newPostContent.trim(),
+      idCanal: 1,
+      idModalidadeEsportiva: null,
+      idUsuario: loggedUser.idUsuario,
+    }
+
+    try {
+      await handleNewPost(newPost)
+      // Only close dialog and show success after the post is created
+      setIsDialogOpen(false)
+      // Delay the toast to prevent the setState during render issue
+      setTimeout(() => {
+        toast.success('Publicação criada com sucesso!')
+      }, 100)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro desconhecido'
+      console.error('Failed to create post:', {
+        error,
+        message: errorMessage,
+        payload: newPost,
+      })
+      setTimeout(() => {
+        toast.error(`Erro ao criar publicação: ${errorMessage}`)
+      }, 100)
+    }
   }
 
   const openCommentsDialog = async (postId: number) => {
