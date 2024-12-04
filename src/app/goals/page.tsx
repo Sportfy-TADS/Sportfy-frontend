@@ -80,10 +80,33 @@ export default function GoalsPage() {
     }
   };
 
+  const handleCreateGoal = async (data: any) => {
+    try {
+      const newGoal = {
+        titulo: String(data.titulo).trim(),
+        descricao: String(data.descricao).trim(),
+        tipoMeta: String(data.tipoMeta),
+        idModalidadeEsportiva: Number(data.idModalidadeEsportiva),
+        progressoMaximo: Number(data.progressoMaximo),
+        // Include any additional required fields
+      }
+
+      console.log('Creating goal with data:', newGoal)
+
+      await createGoal(newGoal)
+
+      toast.success('Meta criada com sucesso!')
+      // Refresh goals or update state as needed
+    } catch (error: any) {
+      console.error('Erro ao criar meta:', error)
+      toast.error('Erro ao criar meta.')
+    }
+  }
+
   const {
     goals,
     isLoading: isLoadingGoals,
-    handleCreateGoal,
+    handleCreateGoal: originalHandleCreateGoal,
     handleDeleteGoal,
   } = useGoals(userData?.idAcademico)
 

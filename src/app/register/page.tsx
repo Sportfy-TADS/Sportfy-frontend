@@ -1,37 +1,30 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Medal } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { z } from 'zod'
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import InputMask from 'react-input-mask'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useRegister } from '@/hooks/useRegister'
 import { signUpSchema } from '@/schemas'
-import { Combobox } from '@/components/ui/combobox' 
+import { Combobox } from '@/components/ui/combobox'
 
 type SignUpSchema = z.infer<typeof signUpSchema>
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const { mutateAsync: handleRegister, status: { isLoading: isSubmitting } } = useRegister()
+  const {
+    mutateAsync: handleRegister,
+    status: { isLoading: isSubmitting },
+  } = useRegister()
 
   const { register, handleSubmit, control } = useForm<SignUpSchema>({
-    resolver: zodResolver(signUpSchema)
+    resolver: zodResolver(signUpSchema),
   })
 
   const [courses, setCourses] = useState<string[]>([])
@@ -40,22 +33,23 @@ export default function RegisterPage() {
 
   useEffect(() => {
     fetch('http://localhost:8081/academico/cursos/ufpr')
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         setCourses(data)
         setFilteredCourses(data)
       })
-      .catch(error => console.error(error))
+      .catch((error) => console.error(error))
   }, [])
 
-  useEffect(() => { // Add filtering logic
+  useEffect(() => {
+    // Add filtering logic
     if (query === '') {
       setFilteredCourses(courses)
     } else {
       setFilteredCourses(
-        courses.filter(course =>
-          course.toLowerCase().includes(query.toLowerCase())
-        )
+        courses.filter((course) =>
+          course.toLowerCase().includes(query.toLowerCase()),
+        ),
       )
     }
   }, [query, courses])
@@ -118,7 +112,7 @@ export default function RegisterPage() {
                       )}
                     />
                   </div>
-                  
+
                   {/* Nome de usuário */}
                   <div className="grid gap-2">
                     <Label htmlFor="username">Nome de Usuário</Label>
@@ -165,10 +159,7 @@ export default function RegisterPage() {
                       control={control}
                       name="telefone"
                       render={({ field }) => (
-                        <InputMask
-                          mask="(99) 99999-9999"
-                          {...field}
-                        >
+                        <InputMask mask="(99) 99999-9999" {...field}>
                           {(inputProps) => (
                             <Input
                               id="telefone"

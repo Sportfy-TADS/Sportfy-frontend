@@ -9,17 +9,17 @@ interface TokenPayload {
   exp: number
 }
 
-const getToken = (): string | null => {
+export const getToken = (): string | null => {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('jwt') || localStorage.getItem('token')
   }
   return null
 }
 
-const getHttpOptions = (token?: string) => {
+export const getHttpOptions = (token?: string) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }), 
+    ...(token && { Authorization: `Bearer ${token}` }),
   }
   return { headers }
 }

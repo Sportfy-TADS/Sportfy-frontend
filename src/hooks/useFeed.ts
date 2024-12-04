@@ -14,7 +14,7 @@ import {
   updateComment,
 } from '@/http/feed'
 import { Post, DecodedToken, Usuario } from '@/interface/types'
-import {jwtDecode} from 'jwt-decode' // Importação correta
+import { jwtDecode } from 'jwt-decode' // Importação correta
 
 export const useFeed = () => {
   const [posts, setPosts] = useState<Post[]>([])
@@ -23,9 +23,12 @@ export const useFeed = () => {
   const [loggedUser, setLoggedUser] = useState<Usuario | null>(null)
   const [newPostTitle, setNewPostTitle] = useState('')
   const [newPostCanal, setNewPostCanal] = useState('')
-  const [newPostModalidadeEsportiva, setNewPostModalidadeEsportiva] = useState('')
+  const [newPostModalidadeEsportiva, setNewPostModalidadeEsportiva] =
+    useState('')
+  const [page, setPage] = useState(0) // Moved page state here
+  const [hasMore, setHasMore] = useState(true)
 
-  const fetchLoggedUser = (): Usuario | null => { 
+  const fetchLoggedUser = (): Usuario | null => {
     const token = localStorage.getItem('token')
     if (token) {
       try {
@@ -51,10 +54,11 @@ export const useFeed = () => {
       throw new Error('Token não encontrado')
     }
 
-    const loadPosts = async () => {
+    const loadInitialPosts = async () => {
       try {
-        const posts = await fetchPosts(token)
-        setPosts(posts)
+        const initialPosts = await fetchPosts(token, 0, 10)
+        setPosts(initialPosts)
+        setPage(0) // Initialize page
       } catch (error) {
         console.error('Erro ao carregar os posts:', error)
         toast.error('Erro ao carregar os posts.')
@@ -63,15 +67,16 @@ export const useFeed = () => {
       }
     }
 
-    loadPosts()
+    loadInitialPosts()
     const user = fetchLoggedUser()
     setLoggedUser(user)
 
-    const intervalId = setInterval(() => {
-      refreshPosts()
-    }, 5000)
+    // Remove the interval to prevent overwriting posts
+    // const intervalId = setInterval(() => {
+    //   refreshPosts()
+    // }, 5000)
 
-    return () => clearInterval(intervalId)
+    // return () => clearInterval(intervalId)
   }, [])
 
   const formatDate = (date: string | null | undefined) => {
@@ -89,10 +94,14 @@ export const useFeed = () => {
       try {
         const post = posts.find((post) => post.idPublicacao === postId)
         const usuarioJaCurtiu = post?.listaUsuarioCurtida.some(
-          (usuario) => usuario.idUsuario === loggedUser.idUsuario
+          (usuario) => usuario.idUsuario === loggedUser.idUsuario,
         )
 
-        console.log('Handling like for post:', { postId, userId: loggedUser.idUsuario, usuarioJaCurtiu })
+        console.log('Handling like for post:', {
+          postId,
+          userId: loggedUser.idUsuario,
+          usuarioJaCurtiu,
+        })
 
         if (usuarioJaCurtiu) {
           await unlikePost(loggedUser.idUsuario, postId)
@@ -137,20 +146,6 @@ export const useFeed = () => {
     }
   }
 
-  const refreshPosts = async () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      throw new Error('Token não encontrado')
-    }
-    try {
-      const posts = await fetchPosts(token)
-      setPosts(posts)
-    } catch (error) {
-      console.error('Erro ao carregar os posts:', error)
-      toast.error('Erro ao carregar os posts.')
-    }
-  }
-
   const handleNewPost = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -163,7 +158,6 @@ export const useFeed = () => {
         descricao: newPostContent,
         idCanal: 1,
         idModalidadeEsportiva: null, // Se necessário
-        // Remover idPublicacao e dataPublicacao, pois são gerenciados pelo backend
         Usuario: {
           idUsuario: loggedUser?.idUsuario,
           username: loggedUser?.username,
@@ -174,10 +168,13 @@ export const useFeed = () => {
         },
       }
 
-      await createPost(newPost, token) // Usar createPost com token
+      const createdPost = await createPost(newPost, token) // Retornar o post criado
 
       toast.success('Publicação criada com sucesso!')
-      refreshPosts()
+
+      // Prepend the new post to the posts list
+      setPosts((prevPosts) => [createdPost, ...prevPosts])
+
       setNewPostTitle('')
       setNewPostContent('')
     } catch (error) {
@@ -203,7 +200,6 @@ export const useFeed = () => {
         descricao: newPostContent,
         idCanal: post.idCanal,
         idModalidadeEsportiva: post.idModalidadeEsportiva,
-        // Remover idPublicacao e dataPublicacao, pois são gerenciados pelo backend
         Usuario: {
           idUsuario: loggedUser?.idUsuario,
           username: loggedUser?.username,
@@ -216,7 +212,7 @@ export const useFeed = () => {
         listaComentario: post.listaComentario,
       }
 
-      await axios.put(
+      const result = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/publicacao/atualizarPublicacao/${postId}`,
         updatedPost,
         {
@@ -228,7 +224,14 @@ export const useFeed = () => {
       )
 
       toast.success('Publicação atualizada com sucesso!')
-      refreshPosts()
+
+      // Update the post in the posts list
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.idPublicacao === postId ? { ...post, ...result.data } : post,
+        ),
+      )
+
       setEditingPost(null)
       setNewPostTitle('')
       setNewPostContent('')
@@ -282,10 +285,13 @@ export const useFeed = () => {
             post.idPublicacao === postId
               ? {
                   ...post,
-                  listaComentario: [createdComment, ...(post.listaComentario || [])],
+                  listaComentario: [
+                    createdComment,
+                    ...(post.listaComentario || []),
+                  ],
                 }
-              : post
-          )
+              : post,
+          ),
         )
 
         return createdComment // Retornar o comentário criado
@@ -297,7 +303,11 @@ export const useFeed = () => {
     }
   }
 
-  const handleUpdateComment = async (commentId: number, descricao: string, idPublicacao: number) => {
+  const handleUpdateComment = async (
+    commentId: number,
+    descricao: string,
+    idPublicacao: number,
+  ) => {
     if (loggedUser) {
       try {
         const token = localStorage.getItem('token')
@@ -322,13 +332,17 @@ export const useFeed = () => {
                   listaComentario: post.listaComentario
                     ? post.listaComentario.map((comment) =>
                         comment.idComentario === commentId
-                          ? { ...comment, descricao: result.descricao, dataComentario: result.dataComentario }
-                          : comment
+                          ? {
+                              ...comment,
+                              descricao: result.descricao,
+                              dataComentario: result.dataComentario,
+                            }
+                          : comment,
                       )
                     : [],
                 }
-              : post
-          )
+              : post,
+          ),
         )
 
         return result // Retornar o comentário atualizado
@@ -340,6 +354,27 @@ export const useFeed = () => {
     }
   }
 
+  const appendPosts = (newPosts: Post[]) => {
+    setPosts((prevPosts) => [...prevPosts, ...newPosts])
+  }
+
+  const loadMore = async () => {
+    const token = localStorage.getItem('token') || ''
+    const nextPage = page + 1
+    try {
+      const morePosts = await fetchPosts(token, nextPage, 10)
+      if (morePosts.length === 0) {
+        setHasMore(false)
+      } else {
+        appendPosts(morePosts)
+        setPage(nextPage)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar mais posts:', error)
+      toast.error('Erro ao carregar mais posts.')
+    }
+  }
+
   return {
     posts,
     loading,
@@ -347,18 +382,20 @@ export const useFeed = () => {
     setNewPostContent,
     formatDate,
     handleLikePost,
-    handleNewPost,
+    handleNewPost, // Updated
     newPostTitle,
     setNewPostTitle,
     newPostCanal,
     setNewPostCanal,
     newPostModalidadeEsportiva,
     setNewPostModalidadeEsportiva,
-    handleEditPost,
-    refreshPosts,
+    handleEditPost, // Updated
     fetchCommentsForPost,
     handleCreateComment, // Adicionado
     handleUpdateComment, // Adicionado
     loggedUser, // Adicionado
+    appendPosts, // Add this
+    loadMore, // Expose loadMore
+    hasMore, // Expose hasMore
   }
 }

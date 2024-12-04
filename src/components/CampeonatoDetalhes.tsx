@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getChampionshipById } from '@/services/championshipService'
+import { getChampionshipById } from '@/http/championship'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -32,25 +32,51 @@ interface CampeonatoDetalhesProps {
   campeonato: Campeonato
 }
 
-const CampeonatoDetalhes: React.FC<CampeonatoDetalhesProps> = ({ campeonato }) => {
+const CampeonatoDetalhes: React.FC<CampeonatoDetalhesProps> = ({
+  campeonato,
+}) => {
   return (
     <div className="campeonato-detalhes">
       <p>
         <strong>Título:</strong> {campeonato.titulo}
       </p>
-      <p><strong>Descrição:</strong> {campeonato.descricao}</p>
-      <p><strong>Aposta:</strong> {campeonato.aposta}</p>
-      <p><strong>Início:</strong> {new Date(campeonato.dataInicio).toLocaleDateString()}</p>
-      <p><strong>Fim:</strong> {new Date(campeonato.dataFim).toLocaleDateString()}</p>
-      <p><strong>Participantes:</strong> {campeonato.limiteParticipantes}</p>
-      <p><strong>Times:</strong> {campeonato.limiteTimes}</p>
       <p>
-        <strong>Privacidade:</strong> {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
-        <Lock className="inline ml-2" size={16} color={campeonato.privacidadeCampeonato === 'PUBLICO' ? 'green' : 'red'} />
+        <strong>Descrição:</strong> {campeonato.descricao}
       </p>
-      <p><strong>Criador:</strong> {campeonato.usernameCriador}</p>
       <p>
-        <strong>Endereço:</strong> {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
+        <strong>Aposta:</strong> {campeonato.aposta}
+      </p>
+      <p>
+        <strong>Início:</strong>{' '}
+        {new Date(campeonato.dataInicio).toLocaleDateString()}
+      </p>
+      <p>
+        <strong>Fim:</strong>{' '}
+        {new Date(campeonato.dataFim).toLocaleDateString()}
+      </p>
+      <p>
+        <strong>Participantes:</strong> {campeonato.limiteParticipantes}
+      </p>
+      <p>
+        <strong>Times:</strong> {campeonato.limiteTimes}
+      </p>
+      <p>
+        <strong>Privacidade:</strong>{' '}
+        {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
+        <Lock
+          className="inline ml-2"
+          size={16}
+          color={
+            campeonato.privacidadeCampeonato === 'PUBLICO' ? 'green' : 'red'
+          }
+        />
+      </p>
+      <p>
+        <strong>Criador:</strong> {campeonato.usernameCriador}
+      </p>
+      <p>
+        <strong>Endereço:</strong>{' '}
+        {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
         <MapPin className="inline ml-2" size={16} color="blue" />
       </p>
       {/* ...add more details as needed... */}
@@ -75,7 +101,7 @@ export default function ChampionshipDetailsPage({
       try {
         const data = await getChampionshipById(id, token || undefined)
         setCampeonato(data)
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erro ao carregar detalhes do campeonato:', err)
         setError('Erro ao carregar detalhes do campeonato.')
       } finally {
@@ -91,7 +117,7 @@ export default function ChampionshipDetailsPage({
       <>
         <Header />
         <div className="flex h-screen">
-          <Sidebar className="h-full" />
+          <Sidebar />
           <div className="flex-1 p-4 overflow-y-auto">
             <p>Carregando detalhes do campeonato...</p>
           </div>
@@ -105,10 +131,13 @@ export default function ChampionshipDetailsPage({
       <>
         <Header />
         <div className="flex h-screen">
-          <Sidebar className="h-full" />
+          <Sidebar />
           <div className="flex-1 p-4 overflow-y-auto">
             <p>{error || 'Campeonato não encontrado.'}</p>
-            <button onClick={() => router.push('/championships')} className="mt-4 text-blue-500 underline">
+            <button
+              onClick={() => router.push('/championships')}
+              className="mt-4 text-blue-500 underline"
+            >
               Voltar para a lista de campeonatos
             </button>
           </div>
@@ -121,7 +150,7 @@ export default function ChampionshipDetailsPage({
     <>
       <Header />
       <div className="flex h-screen">
-        <Sidebar className="h-full" />
+        <Sidebar />
         <div className="flex-1 p-4 overflow-y-auto">
           <Card>
             <CardHeader>

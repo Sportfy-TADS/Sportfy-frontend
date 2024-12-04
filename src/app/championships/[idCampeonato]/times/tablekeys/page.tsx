@@ -1,7 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from '@/components/ui/card'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
+// import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 type Match = {
   id: string
@@ -11,13 +11,13 @@ type Match = {
 }
 
 const matches: Match[] = [
-  { id: "QF1", team1: "Time A", team2: "Time B", winner: "Time A" },
-  { id: "QF2", team1: "Time C", team2: "Time D", winner: "Time C" },
-  { id: "QF3", team1: "Time E", team2: "Time F", winner: "Time F" },
-  { id: "QF4", team1: "Time G", team2: "Time H", winner: "Time H" },
-  { id: "SF1", team1: "Time A", team2: "Time C", winner: "Time A" },
-  { id: "SF2", team1: "Time F", team2: "Time H", winner: "Time H" },
-  { id: "F", team1: "Time A", team2: "Time H" },
+  { id: 'QF1', team1: 'Time A', team2: 'Time B', winner: 'Time A' },
+  { id: 'QF2', team1: 'Time C', team2: 'Time D', winner: 'Time C' },
+  { id: 'QF3', team1: 'Time E', team2: 'Time F', winner: 'Time F' },
+  { id: 'QF4', team1: 'Time G', team2: 'Time H', winner: 'Time H' },
+  { id: 'SF1', team1: 'Time A', team2: 'Time C', winner: 'Time A' },
+  { id: 'SF2', team1: 'Time F', team2: 'Time H', winner: 'Time H' },
+  { id: 'F', team1: 'Time A', team2: 'Time H' },
 ]
 
 function TournamentBracket() {
@@ -48,8 +48,14 @@ function MatchCard({ match }: { match: Match }) {
     <Card className={`w-64 ${match.winner ? 'border-emerald-500' : ''}`}>
       <CardContent className="p-4">
         <div className="space-y-2">
-          <TeamName team={match.team1} isWinner={match.winner === match.team1} />
-          <TeamName team={match.team2} isWinner={match.winner === match.team2} />
+          <TeamName
+            team={match.team1}
+            isWinner={match.winner === match.team1}
+          />
+          <TeamName
+            team={match.team2}
+            isWinner={match.winner === match.team2}
+          />
         </div>
       </CardContent>
     </Card>
@@ -65,14 +71,14 @@ function TeamName({ team, isWinner }: { team: string; isWinner?: boolean }) {
   )
 }
 
-export default function Page({ params }: { params: { idCampeonato: string } }) {
+export default function Page() {
   return (
     <>
       <Header />
       <div className="flex h-screen">
-        <Sidebar className="h-full" />
+        <Sidebar />
         <div className="flex-1 p-4 overflow-y-auto">
-          {/*
+          {/* 
           <Breadcrumb>
             <BreadcrumbItem href="/championships">Campeonatos</BreadcrumbItem>
             <BreadcrumbItem href={`/championships/${params.idCampeonato}`}>Detalhes do Campeonato</BreadcrumbItem>
@@ -87,4 +93,3 @@ export default function Page({ params }: { params: { idCampeonato: string } }) {
     </>
   )
 }
-

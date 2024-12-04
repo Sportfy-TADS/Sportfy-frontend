@@ -21,18 +21,22 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useModalidades, useInscreverUsuario, createModalidade, updateModalidade } from '@/http/modality'
+import {
+  useModalidades,
+  useInscreverUsuario,
+  createModalidade,
+  updateModalidade,
+} from '@/http/modality'
 import { decodeToken } from '@/utils/apiUtils'
 
 export interface Modalidade {
-  id: number;
-  idModalidadeEsportiva: number;
-  nome: string;
-  descricao: string;
-  inscrito: boolean;
+  id: string
+  idModalidadeEsportiva: number
+  nome: string
+  descricao: string
+  inscrito: boolean
 }
 
 export default function ModalidadeInscricaoPage() {
@@ -41,7 +45,7 @@ export default function ModalidadeInscricaoPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [modalidadeNome, setModalidadeNome] = useState('')
   const [modalidadeDescricao, setModalidadeDescricao] = useState('')
-  const [modalidadeId, setModalidadeId] = useState(null)
+  const [modalidadeId, setModalidadeId] = useState<number | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -74,7 +78,9 @@ export default function ModalidadeInscricaoPage() {
   }, [isError, error])
 
   const displayedModalidades = useMemo(() => {
-    let filteredModalidades = Array.isArray(modalidades) ? [...modalidades] as Modalidade[] : []
+    let filteredModalidades = Array.isArray(modalidades)
+      ? ([...modalidades] as Modalidade[])
+      : []
 
     if (filter === 'inscrito') {
       filteredModalidades = filteredModalidades.filter(
@@ -97,19 +103,36 @@ export default function ModalidadeInscricaoPage() {
 
   const { mutate } = useInscreverUsuario(queryClient)
 
-  const handleCreateModalidade = async (e) => {
+  interface CreateModalidadeData {
+    nome: string
+    descricao: string
+  }
+
+  interface CreateModalidadeError {
+    response?: {
+      status: number
+    }
+  }
+
+  const handleCreateModalidade = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ) => {
     e.preventDefault()
     try {
-      console.log('Tentando criar modalidade com:', { nome: modalidadeNome, descricao: modalidadeDescricao })
-      await createModalidade({
+      console.log('Tentando criar modalidade com:', {
         nome: modalidadeNome,
         descricao: modalidadeDescricao,
       })
+      await createModalidade({
+        nome: modalidadeNome,
+        descricao: modalidadeDescricao,
+      } as CreateModalidadeData)
       toast.success('Modalidade cadastrada com sucesso!')
       queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       setIsSheetOpen(false)
     } catch (error) {
-      if (error.response && error.response.status === 409) {
+      const err = error as CreateModalidadeError
+      if (err.response && err.response.status === 409) {
         toast.error('Modalidade já existe')
       } else {
         toast.error('Erro ao cadastrar modalidade')
@@ -118,18 +141,28 @@ export default function ModalidadeInscricaoPage() {
     }
   }
 
-  const handleUpdateModalidade = async (e) => {
+  const handleUpdateModalidade = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ) => {
     e.preventDefault()
     try {
-      console.log('Tentando atualizar modalidade com:', { idModalidadeEsportiva: modalidadeId, nome: modalidadeNome, descricao: modalidadeDescricao })
-      await updateModalidade({
+      console.log('Tentando atualizar modalidade com:', {
         idModalidadeEsportiva: modalidadeId,
         nome: modalidadeNome,
         descricao: modalidadeDescricao,
-        foto: null,
       })
+      if (modalidadeId !== null) {
+        await updateModalidade({
+          id: modalidadeId!.toString(),
+          idModalidadeEsportiva: modalidadeId!,
+          name: modalidadeNome,
+          description: modalidadeDescricao,
+        })
+      } else {
+        toast.error('ID da modalidade é inválido')
+      }
       toast.success('Modalidade atualizada com sucesso!')
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       setIsSheetOpen(false)
     } catch (error) {
       toast.error('Erro ao atualizar modalidade')
@@ -137,7 +170,13 @@ export default function ModalidadeInscricaoPage() {
     }
   }
 
-  const handleEditClick = (modalidade) => {
+  interface ModalidadeEdit {
+    idModalidadeEsportiva: number
+    nome: string
+    descricao: string
+  }
+
+  const handleEditClick = (modalidade: ModalidadeEdit) => {
     setModalidadeId(modalidade.idModalidadeEsportiva)
     setModalidadeNome(modalidade.nome)
     setModalidadeDescricao(modalidade.descricao)
@@ -155,7 +194,7 @@ export default function ModalidadeInscricaoPage() {
     <>
       <Header />
       <div className="flex min-h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar />
         <div className="container mx-auto p-4 flex-1">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Modalidades</h1>
@@ -177,7 +216,10 @@ export default function ModalidadeInscricaoPage() {
                 className="w-full"
               />
               {isAdmin && (
-                <Button className="bg-blue-500 hover:bg-blue-600" onClick={handleNewClick}>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-600"
+                  onClick={handleNewClick}
+                >
                   Cadastrar Modalidade
                 </Button>
               )}
@@ -187,9 +229,18 @@ export default function ModalidadeInscricaoPage() {
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>{modalidadeId ? 'Editar Modalidade' : 'Cadastrar Nova Modalidade'}</SheetTitle>
+                <SheetTitle>
+                  {modalidadeId
+                    ? 'Editar Modalidade'
+                    : 'Cadastrar Nova Modalidade'}
+                </SheetTitle>
               </SheetHeader>
-              <form className="space-y-4 mt-4" onSubmit={modalidadeId ? handleUpdateModalidade : handleCreateModalidade}>
+              <form
+                className="space-y-4 mt-4"
+                onSubmit={
+                  modalidadeId ? handleUpdateModalidade : handleCreateModalidade
+                }
+              >
                 <Input
                   placeholder="Nome da Modalidade"
                   value={modalidadeNome}
@@ -210,7 +261,7 @@ export default function ModalidadeInscricaoPage() {
           </Sheet>
 
           {isLoading ? (
-            <Skeleton count={5} height={40} />
+            <Skeleton />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayedModalidades.map((modalidade) => (
@@ -221,8 +272,8 @@ export default function ModalidadeInscricaoPage() {
                   <CardContent>
                     <p>{modalidade.descricao}</p>
                     {isAdmin && (
-                      <Button 
-                      className='mt-4'
+                      <Button
+                        className="mt-4"
                         onClick={() => handleEditClick(modalidade)}
                       >
                         Editar

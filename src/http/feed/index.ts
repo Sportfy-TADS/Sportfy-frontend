@@ -1,18 +1,27 @@
 import axios from 'axios'
 // Corrigir importação de jwtDecode para importação padrão
-import {jwtDecode} from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 
-export const fetchPosts = async (token: string) => {
-  const response = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=0&size=10&sort=dataPublicacao,desc`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+export const fetchPosts = async (
+  token: string,
+  page: number = 0,
+  size: number = 10,
+) => {
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    },
-  )
-  return response.data.content || []
+    )
+    return response.data.content || []
+  } catch (error) {
+    console.error('Error fetching posts:', error)
+    throw error
+  }
 }
 
 export const fetchLoggedUser = () => {
@@ -26,7 +35,7 @@ export const fetchLoggedUser = () => {
 export const likePost = async (
   userId: number,
   postId: number,
-  token: string
+  token: string,
 ) => {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`
@@ -48,11 +57,19 @@ export const likePost = async (
 export const unlikePost = async (
   userId: number,
   postId: number,
+  token: string,
 ) => {
+  // Add token parameter
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${userId}/${postId}`
     console.log('Sending unlike request to URL:', url)
-    const response = await axios.delete(url)
+    const response = await axios.delete(url, {
+      headers: {
+        // Include headers for authorization
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
     console.log('Unlike response:', response)
     return response.data
   } catch (error) {
@@ -61,7 +78,13 @@ export const unlikePost = async (
   }
 }
 
-export const createPost = async (newPost: any, token: string) => {
+interface Post {
+  title: string;
+  content: string;
+  // Add other fields as necessary
+}
+
+export const createPost = async (newPost: Post, token: string) => {
   const response = await axios.post(
     `${process.env.NEXT_PUBLIC_API_URL}/publicacao/cadastrarPublicacao`,
     newPost,
@@ -78,7 +101,7 @@ export const createPost = async (newPost: any, token: string) => {
 export const fetchComments = async (postId: number) => {
   try {
     const response = await axios.get(
-      `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=10&sort=dataComentario,desc`
+      `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=10&sort=dataComentario,desc`,
     )
     return response.data.content || []
   } catch (error) {
@@ -107,7 +130,11 @@ export const createComment = async (comment: any, token: string) => {
   }
 }
 
-export const updateComment = async (commentId: number, updatedComment: any, token: string) => {
+export const updateComment = async (
+  commentId: number,
+  updatedComment: any,
+  token: string,
+) => {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/comentario/atualizarComentario/${commentId}`
     const response = await axios.put(url, updatedComment, {

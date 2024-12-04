@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Heart, MessageCircle, Star } from 'lucide-react'
+import { MessageCircle, Star } from 'lucide-react'
 import { Toaster, toast } from 'sonner' // Adicionado 'toast'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -19,9 +18,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { useFeed } from '@/hooks/useFeed'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { fetchComments } from '@/http/feed'
+import { fetchComments, fetchPosts } from '@/http/feed' // Adiciona fetchPosts
 import CommentsDialog from '@/components/CommentsDialog'
-import { Comentario } from '@/interface/types'
+import { Comentario, Post } from '@/interface/types'
 
 export default function FeedPage() {
   const {
@@ -36,17 +35,19 @@ export default function FeedPage() {
     loggedUser,
     newPostTitle,
     setNewPostTitle,
-    refreshPosts,
+    loadMore, // Use loadMore
+    hasMore, // Use hasMore
   } = useFeed()
-  const router = useRouter()
-  const [editingPost, setEditingPost] = useState<any>(null) // Especificar tipo se possível
+  const [editingPost, setEditingPost] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false)
-  const [selectedPostComments, setSelectedPostComments] = useState<Comentario[]>([])
+  const [selectedPostComments, setSelectedPostComments] = useState<
+    Comentario[]
+  >([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
 
-  const startEditingPost = (post: Post) => { // Especificar tipo
+  const startEditingPost = (post: Post) => {
     setEditingPost(post)
     setNewPostTitle(post.titulo)
     setNewPostContent(post.descricao)
@@ -60,7 +61,6 @@ export default function FeedPage() {
       setNewPostTitle('')
       setNewPostContent('')
       setIsDialogOpen(false)
-      refreshPosts()
     }
   }
 
@@ -74,7 +74,6 @@ export default function FeedPage() {
   const createNewPost = async () => {
     await handleNewPost()
     setIsDialogOpen(false)
-    refreshPosts()
   }
 
   const openCommentsDialog = async (postId: number) => {
@@ -103,11 +102,13 @@ export default function FeedPage() {
       <Toaster /> {/* Adicionado Toaster */}
       <Header />
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-        <Sidebar className="flex-none w-64" />
+        <Sidebar />
         <div className="container mx-auto p-4 flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Comunidade</h1>
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                Comunidade
+              </h1>
             </div>
             <Button
               onClick={openNewPostDialog}
@@ -119,7 +120,9 @@ export default function FeedPage() {
               <DialogContent className="dark:bg-gray-800">
                 <DialogHeader>
                   <DialogTitle className="dark:text-white">
-                    {editingPost ? 'Editar Publicação' : 'Criar Nova Publicação'}
+                    {editingPost
+                      ? 'Editar Publicação'
+                      : 'Criar Nova Publicação'}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -164,7 +167,10 @@ export default function FeedPage() {
                     <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
                       <CardHeader className="flex items-start space-x-3 pb-2">
                         <img
-                          src={post.Usuario.foto || `https://via.placeholder.com/50`}
+                          src={
+                            post.Usuario.foto ||
+                            `https://via.placeholder.com/50`
+                          }
                           alt="Avatar"
                           className="w-12 h-12 rounded-full"
                         />
@@ -173,7 +179,8 @@ export default function FeedPage() {
                             {post.Usuario.nome}
                           </span>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            @{post.Usuario.username} • {formatDate(post.dataPublicacao)}
+                            @{post.Usuario.username} •{' '}
+                            {formatDate(post.dataPublicacao)}
                           </span>
                         </div>
                       </CardHeader>
@@ -192,7 +199,8 @@ export default function FeedPage() {
                             <Star
                               className={`w-5 h-5 ${
                                 post.listaUsuarioCurtida?.some(
-                                  (usuario) => usuario.idUsuario === loggedUser?.idUsuario
+                                  (usuario) =>
+                                    usuario.idUsuario === loggedUser?.idUsuario,
                                 )
                                   ? 'text-amber-300 fill-amber-300'
                                   : 'text-gray-300'
@@ -201,7 +209,9 @@ export default function FeedPage() {
                             <span>{post.listaUsuarioCurtida?.length || 0}</span>
                           </button>
                           <button
-                            onClick={() => openCommentsDialog(post.idPublicacao)}
+                            onClick={() =>
+                              openCommentsDialog(post.idPublicacao)
+                            }
                             className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
                           >
                             <MessageCircle className="w-5 h-5" />
@@ -209,28 +219,35 @@ export default function FeedPage() {
                               <span>{post.listaComentario.length}</span>
                             )}
                           </button>
-                          {(loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && 
-                            post.Usuario.idUsuario === loggedUser.idUsuario) && ( // Adicionado '?' para permissao
-                            <button
-                              onClick={() => startEditingPost(post)}
-                              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-                            >
-                              Editar
-                            </button>
-                          )}
+                          {loggedUser?.permissao?.toUpperCase() ===
+                            'ACADEMICO' &&
+                            post.Usuario.idUsuario === loggedUser.idUsuario && ( // Adicionado '?' para permissao
+                              <button
+                                onClick={() => startEditingPost(post)}
+                                className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                              >
+                                Editar
+                              </button>
+                            )}
                         </div>
                       </CardContent>
                     </Card>
                   </motion.div>
                 ))
               ) : (
-                <p className="text-gray-600 dark:text-gray-400">Não há publicações.</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Não há publicações.
+                </p>
               )}
             </div>
+            {hasMore && (
+              <Button onClick={loadMore} className="mt-4 w-full">
+                Carregar Mais
+              </Button>
+            )}
           </div>
         </div>
       </div>
-
       <CommentsDialog
         isOpen={isCommentsDialogOpen}
         onClose={closeCommentsDialog}

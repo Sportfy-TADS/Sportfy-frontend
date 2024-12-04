@@ -21,17 +21,29 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import { useChampionships } from './hooks/useChampionships'
-import ChampionshipCard from './components/ChampionshipCard'
+
 import { getUserIdFromToken } from '@/services/championshipService'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { User, Lock } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  User,
+  Lock,
+  Calendar,
+  Info,
+  MapPin,
+  Pencil,
+  Trash,
+  Trophy,
+} from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { format } from 'date-fns' // Import date-fns
+import { Campeonato } from '@/interface/types'
 
 export default function CampeonatoPage() {
-  const [selectedCampeonato, setSelectedCampeonato] = useState<Campeonato | null>(null)
+  const [selectedCampeonato, setSelectedCampeonato] =
+    useState<Campeonato | null>(null)
   const [cep, setCep] = useState('')
   const [logradouro, setLogradouro] = useState('')
   const [bairro, setBairro] = useState('')
@@ -39,42 +51,49 @@ export default function CampeonatoPage() {
   const [uf, setUf] = useState('')
   const [privacidade, setPrivacidade] = useState('PUBLICO')
   const [searchTerm, setSearchTerm] = useState('')
-  const { campeonatos, isLoading, createMutation, updateMutation, deleteMutation } = useChampionships()
-  const currentUserId = getUserIdFromToken()
+  const {
+    campeonatos,
+    isLoading,
+    createMutation,
+    updateMutation,
+    deleteMutation,
+  } = useChampionships()
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const userCheck = () => {
-      const id = getUserIdFromToken()
-      if (!id) {
-        toast.error('Usuário não autenticado')
-        router.push('/auth')
-      }
+    const userId = getUserIdFromToken()
+    if (!userId) {
+      toast.error('Usuário não autenticado')
+      router.push('/auth')
+    } else {
+      setCurrentUserId(userId)
     }
-    userCheck()
   }, [router])
 
   const filteredCampeonatos = useMemo(() => {
     if (!searchTerm) return campeonatos
     return campeonatos.filter((campeonato) =>
-      campeonato.titulo.toLowerCase().includes(searchTerm.toLowerCase())
+      campeonato.titulo.toLowerCase().includes(searchTerm.toLowerCase()),
     )
   }, [campeonatos, searchTerm])
 
-  const handleCreateCampeonato = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateCampeonato = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault()
     const idAcademico = getUserIdFromToken()
-  
+
     if (!idAcademico) {
       toast.error('Usuário não identificado. Por favor, faça login novamente.')
       router.push('/auth')
       return
     }
-  
+
     try {
       const formData = new FormData(event.currentTarget)
       const data = Object.fromEntries(formData.entries())
-  
+
       const newCampeonato = {
         titulo: String(data.titulo).trim(),
         descricao: String(data.descricao).trim(),
@@ -91,19 +110,22 @@ export default function CampeonatoPage() {
           bairro: String(data.bairro),
           rua: String(data.logradouro),
           numero: String(data.numero),
-          complemento: data.complemento ? String(data.complemento) : ""
+          complemento: data.complemento ? String(data.complemento) : '',
         },
         privacidadeCampeonato: data.privacidadeCampeonato || 'PUBLICO',
         idAcademico,
         idModalidadeEsportiva: 1,
-        situacaoCampeonato: 'EM_ABERTO'
+        situacaoCampeonato: 'EM_ABERTO',
       }
-  
+
       if (data.privacidadeCampeonato === 'PRIVADO' && data.senha) {
         newCampeonato.senha = String(data.senha)
       }
-  
-      console.log('Creating championship with data:', JSON.stringify(newCampeonato, null, 2))
+
+      console.log(
+        'Creating championship with data:',
+        JSON.stringify(newCampeonato, null, 2),
+      )
       await createMutation.mutateAsync(newCampeonato)
     } catch (error) {
       console.error('Error preparing championship data:', error)
@@ -125,7 +147,9 @@ export default function CampeonatoPage() {
 
     if (cepValue.length === 8) {
       try {
-        const response = await fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
+        const response = await fetch(
+          `https://viacep.com.br/ws/${cepValue}/json/`,
+        )
         const data = await response.json()
         if (!data.erro) {
           setLogradouro(data.logradouro)
@@ -172,82 +196,175 @@ export default function CampeonatoPage() {
                   <SheetHeader>
                     <SheetTitle>Cadastrar Novo Campeonato</SheetTitle>
                   </SheetHeader>
-                  <form onSubmit={handleCreateCampeonato} className="space-y-4 mt-4 max-h-[70vh] overflow-y-auto">
+                  <form
+                    onSubmit={handleCreateCampeonato}
+                    className="space-y-4 mt-4 max-h-[70vh] overflow-y-auto"
+                  >
                     <div>
-                      <Label htmlFor="titulo">Título <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="titulo">
+                        Título <span className="text-red-500">*</span>
+                      </Label>
                       <Input id="titulo" name="titulo" required />
                     </div>
                     <div>
-                      <Label htmlFor="descricao">Descrição <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="descricao">
+                        Descrição <span className="text-red-500">*</span>
+                      </Label>
                       <Textarea id="descricao" name="descricao" required />
                     </div>
                     <div>
-                      <Label htmlFor="aposta">Aposta <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="aposta">
+                        Aposta <span className="text-red-500">*</span>
+                      </Label>
                       <Input id="aposta" name="aposta" required />
                     </div>
                     <div>
-                      <Label htmlFor="dataInicio">Data de Início <span className="text-red-500">*</span></Label>
-                      <Input id="dataInicio" name="dataInicio" type="date" required />
+                      <Label htmlFor="dataInicio">
+                        Data de Início <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="dataInicio"
+                        name="dataInicio"
+                        type="date"
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="dataFim">Data de Fim <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="dataFim">
+                        Data de Fim <span className="text-red-500">*</span>
+                      </Label>
                       <Input id="dataFim" name="dataFim" type="date" required />
                     </div>
                     <div>
-                      <Label htmlFor="limiteTimes">Limite de Times <span className="text-red-500">*</span></Label>
-                      <Input id="limiteTimes" name="limiteTimes" type="number" required />
+                      <Label htmlFor="limiteTimes">
+                        Limite de Times <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="limiteTimes"
+                        name="limiteTimes"
+                        type="number"
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="limiteParticipantes">Limite de Participantes <span className="text-red-500">*</span></Label>
-                      <Input id="limiteParticipantes" name="limiteParticipantes" type="number" required />
+                      <Label htmlFor="limiteParticipantes">
+                        Limite de Participantes{' '}
+                        <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="limiteParticipantes"
+                        name="limiteParticipantes"
+                        type="number"
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="privacidadeCampeonato">Privacidade do Campeonato <span className="text-red-500">*</span></Label>
-                      <Select value={privacidade} onValueChange={setPrivacidade}>
+                      <Label htmlFor="privacidadeCampeonato">
+                        Privacidade do Campeonato{' '}
+                        <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={privacidade}
+                        onValueChange={setPrivacidade}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a privacidade" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="PUBLICO">Público</SelectItem>
-                          <SelectItem value="PRIVADO">Privado</SelectItem> {/* Fixed closing tag */}
+                          <SelectItem value="PRIVADO">Privado</SelectItem>{' '}
+                          {/* Fixed closing tag */}
                         </SelectContent>
                       </Select>
                     </div>
                     {privacidade === 'PRIVADO' && (
                       <div>
-                        <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
-                        <Input id="senha" name="senha" type="password" required />
+                        <Label htmlFor="senha">
+                          Senha <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="senha"
+                          name="senha"
+                          type="password"
+                          required
+                        />
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="cep">CEP <span className="text-red-500">*</span></Label>
-                      <Input id="cep" name="cep" type="text" value={cep} onChange={handleCepChange} required />
+                      <Label htmlFor="cep">
+                        CEP <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="cep"
+                        name="cep"
+                        type="text"
+                        value={cep}
+                        onChange={handleCepChange}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="logradouro">Logradouro <span className="text-red-500">*</span></Label>
-                      <Input id="logradouro" name="logradouro" type="text" value={logradouro} required />
+                      <Label htmlFor="logradouro">
+                        Logradouro <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="logradouro"
+                        name="logradouro"
+                        type="text"
+                        value={logradouro}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="numero">Número <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="numero">
+                        Número <span className="text-red-500">*</span>
+                      </Label>
                       <Input id="numero" name="numero" type="text" required />
                     </div>
                     <div>
-                      <Label htmlFor="cidade">Cidade <span className="text-red-500">*</span></Label>
-                      <Input id="cidade" name="cidade" type="text" value={cidade} required />
+                      <Label htmlFor="cidade">
+                        Cidade <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="cidade"
+                        name="cidade"
+                        type="text"
+                        value={cidade}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="uf">UF <span className="text-red-500">*</span></Label>
-                      <Input id="uf" name="uf" type="text" value={uf} required />
+                      <Label htmlFor="uf">
+                        UF <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="uf"
+                        name="uf"
+                        type="text"
+                        value={uf}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="bairro">Bairro <span className="text-red-500">*</span></Label>
-                      <Input id="bairro" name="bairro" type="text" value={bairro} required />
+                      <Label htmlFor="bairro">
+                        Bairro <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="bairro"
+                        name="bairro"
+                        type="text"
+                        value={bairro}
+                        required
+                      />
                     </div>
                     <div>
                       <Label htmlFor="complemento">Complemento</Label>
                       <Textarea id="complemento" name="complemento" />
                     </div>
-                    <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                    <Button
+                      type="submit"
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
                       Salvar
                     </Button>
                   </form>
@@ -259,7 +376,10 @@ export default function CampeonatoPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => (
-                <Card key={`skeleton-${index}`} className="p-4 border border-blue-700">
+                <Card
+                  key={`skeleton-${index}`}
+                  className="p-4 border border-blue-700"
+                >
                   <Skeleton className="h-6 w-3/4 mb-4" />
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-4 w-5/6 mb-2" />
@@ -277,9 +397,14 @@ export default function CampeonatoPage() {
               </Card>
             ) : (
               filteredCampeonatos.map((campeonato: Campeonato) => (
-                <Card key={campeonato.idCampeonato} className="border border-blue-700">
+                <Card
+                  key={campeonato.idCampeonato}
+                  className="border border-blue-700"
+                >
                   <CardHeader>
-                    <CardTitle className="text-2xl font-bold"> {/* Increased title size */}
+                    <CardTitle className="text-2xl font-bold">
+                      {' '}
+                      {/* Increased title size */}
                       {campeonato.titulo}
                     </CardTitle>
                   </CardHeader>
@@ -291,12 +416,14 @@ export default function CampeonatoPage() {
                           <Trophy className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Aposta:</p>
                         </div>
-                        <p className="text-lg ml-6">{campeonato.aposta}</p> {/* Alinhado com o texto */}
+                        <p className="text-lg ml-6">{campeonato.aposta}</p>{' '}
+                        {/* Alinhado com o texto */}
                         <div className="flex items-center mb-1">
                           <Info className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Descrição:</p>
                         </div>
-                        <p className="text-lg ml-6">{campeonato.descricao}</p> {/* Alinhado com o texto */}
+                        <p className="text-lg ml-6">{campeonato.descricao}</p>{' '}
+                        {/* Alinhado com o texto */}
                       </div>
 
                       {/* Datas */}
@@ -304,12 +431,19 @@ export default function CampeonatoPage() {
                         <div className="flex items-center mb-1">
                           <Calendar className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Início:</p>
-                          <p className="text-lg ml-2">{new Date(campeonato.dataInicio).toLocaleDateString()}</p>
+                          <p className="text-lg ml-2">
+                            {format(
+                              new Date(campeonato.dataInicio),
+                              'dd/MM/yyyy',
+                            )}
+                          </p>
                         </div>
                         <div className="flex items-center mb-1">
                           <Calendar className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Fim:</p>
-                          <p className="text-lg ml-2">{new Date(campeonato.dataFim).toLocaleDateString()}</p>
+                          <p className="text-lg ml-2">
+                            {format(new Date(campeonato.dataFim), 'dd/MM/yyyy')}
+                          </p>
                         </div>
                       </div>
 
@@ -317,13 +451,19 @@ export default function CampeonatoPage() {
                       <div className="flex flex-col">
                         <div className="flex items-center mb-1">
                           <User className="mr-2 text-blue-700" />
-                          <p className="text-lg font-semibold">Participantes:</p>
-                          <p className="text-lg ml-2">{campeonato.limiteParticipantes}</p>
+                          <p className="text-lg font-semibold">
+                            Participantes:
+                          </p>
+                          <p className="text-lg ml-2">
+                            {campeonato.limiteParticipantes}
+                          </p>
                         </div>
                         <div className="flex items-center mb-1">
                           <User className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Times:</p>
-                          <p className="text-lg ml-2">{campeonato.limiteTimes}</p>
+                          <p className="text-lg ml-2">
+                            {campeonato.limiteTimes}
+                          </p>
                         </div>
                       </div>
 
@@ -333,13 +473,17 @@ export default function CampeonatoPage() {
                           <Lock className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Privacidade:</p>
                           <p className="text-lg ml-2">
-                            {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
+                            {campeonato.privacidadeCampeonato === 'PUBLICO'
+                              ? 'Público'
+                              : 'Privado'}
                           </p>
                         </div>
                         <div className="flex items-center mb-1">
                           <User className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Criador:</p>
-                          <p className="text-lg ml-2">{campeonato.usernameCriador}</p>
+                          <p className="text-lg ml-2">
+                            {campeonato.usernameCriador}
+                          </p>
                         </div>
                       </div>
 
@@ -351,22 +495,28 @@ export default function CampeonatoPage() {
                         </div>
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                            `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`
+                            `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`,
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-lg ml-6 text-white underline"
                         >
                           {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
-                        </a> {/* Alinhado com o texto */}
+                        </a>{' '}
+                        {/* Alinhado com o texto */}
                       </div>
 
                       {/* Código do Campeonato */}
                       <div className="col-span-1 md:col-span-2">
                         <div className="flex items-center mb-1">
                           <Info className="mr-2 text-blue-700" />
-                          <p className="text-lg font-semibold">Código do Campeonato:</p>
-                          <p className="text-lg ml-2 cursor-pointer" onClick={() => handleCopyCode(campeonato.codigo)}>
+                          <p className="text-lg font-semibold">
+                            Código do Campeonato:
+                          </p>
+                          <p
+                            className="text-lg ml-2 cursor-pointer"
+                            onClick={() => handleCopyCode(campeonato.codigo)}
+                          >
                             {campeonato.codigo}
                           </p>
                         </div>
@@ -384,7 +534,9 @@ export default function CampeonatoPage() {
                             <Pencil className="mr-2" /> Atualizar
                           </Button>
                           <Button
-                            onClick={() => handleDeleteCampeonato(campeonato.idCampeonato)}
+                            onClick={() =>
+                              handleDeleteCampeonato(campeonato.idCampeonato)
+                            }
                             className="flex items-center justify-center bg-red-500 hover:bg-red-600"
                           >
                             <Trash className="mr-2" /> Excluir
@@ -392,7 +544,11 @@ export default function CampeonatoPage() {
                         </>
                       ) : (
                         <Button
-                          onClick={() => router.push(`/championships/${campeonato.idCampeonato}`)}
+                          onClick={() =>
+                            router.push(
+                              `/championships/${campeonato.idCampeonato}`,
+                            )
+                          }
                           className="flex items-center justify-center bg-green-500 hover:bg-green-600"
                         >
                           Acessar

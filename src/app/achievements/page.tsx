@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'  // Import date-fns
 
 import { useRouter } from 'next/navigation'
 
@@ -43,9 +44,10 @@ export default function AchievementsPage() {
       }
 
       try {
+        const token = localStorage.getItem('token')
         const achievementsData = await fetchAchievements(
           userData.idAcademico,
-          localStorage.getItem('token'),
+          token,
         )
         setAchievements(achievementsData)
       } catch (error: any) {
@@ -206,6 +208,8 @@ export default function AchievementsPage() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
+                        {/* Ensure any date formatting is consistent */}
+                        {/* Example: If you display achievement dates */}
                         <div className="flex items-center text-sm">
                           <Target
                             className={`w-5 h-5 mr-3 ${achievement.conquistado ? 'text-green-500' : 'text-gray-500'}`}

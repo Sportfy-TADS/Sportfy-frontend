@@ -1,9 +1,9 @@
 {
   "extends": [
-    "@rocketseat/eslint-config/next", 
+    "@rocketseat/eslint-config/next",
     "next/core-web-vitals"
   ],
-  "plugins": ["import", "react-hooks"],
+  "plugins": ["import", "react-hooks", "react"],
   "overrides": [
     {
       "files": ["*"],
@@ -16,12 +16,13 @@
   "rules": {
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
+    "react/no-unknown-property": "error",
     "import/order": [
       "error",
       {
         "groups": [
           "builtin",
-          "external",
+          "external", 
           "internal",
           ["parent", "sibling"],
           "index",

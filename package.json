@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "json-server": "json-server --watch db.json --port 3001"
   },
   "dependencies": {
@@ -44,14 +44,15 @@
     "lucide-react": "^0.435.0",
     "motion": "^11.11.17",
     "msw": "^2.6.0",
-    "next": "14.2.5",
+    "next": "15.0.3",
     "next-themes": "^0.3.0",
-    "react": "^18",
+    "react": "19.0.0-rc-66855b96-20241106",
     "react-day-picker": "8.10.1",
-    "react-dom": "^18",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-hook-form": "^7.53.0",
     "react-icons": "^5.3.0",
     "react-input-mask": "^2.0.4",
+    "react-number-format": "^5.4.2",
     "recharts": "^2.12.7",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
@@ -61,14 +62,22 @@
   "devDependencies": {
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/node": "^20.16.5",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
+    "@types/react-input-mask": "^3.0.6",
     "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.5",
+    "eslint-config-next": "15.0.3",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.0.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "npm:types-react@19.0.0-rc.1",
+      "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
+    }
   }
 }

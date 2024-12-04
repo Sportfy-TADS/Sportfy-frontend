@@ -11,11 +11,11 @@ import {
 import { Button } from '../ui/button'
 
 interface GoalFormProps {
-  onSubmit: (data: any) => void
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void
   defaultValues?: any
 }
 
-const GoalForm = ({ onSubmit, defaultValues }: GoalFormProps) => {
+export default function GoalForm({ onSubmit, defaultValues }: GoalFormProps) {
   const [titulo, setTitulo] = useState(defaultValues?.titulo || '')
   const [objetivo, setObjetivo] = useState(defaultValues?.objetivo || '')
   const [progressoAtual, setProgressoAtual] = useState(defaultValues?.progressoAtual || 0)
@@ -124,15 +124,4 @@ const GoalForm = ({ onSubmit, defaultValues }: GoalFormProps) => {
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma opção" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0">Em andamento</SelectItem>
-            <SelectItem value="1">Concluída</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <Button type="submit">Salvar</Button>
-    </form>
-  )
-}
-
-export default GoalForm
+                    <SelectContent>            <SelectItem value="0">Em andamento</SelectItem>            <SelectItem value="1">Concluída</SelectItem>          </SelectContent>        </Select>      </div>      <button type="submit">Salvar</button>    </form>  )}

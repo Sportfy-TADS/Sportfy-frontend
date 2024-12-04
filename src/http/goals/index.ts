@@ -92,24 +92,37 @@ export async function createGoal(data: {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       },
     )
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Server error details:', errorText)
-      throw new Error(`Error ${response.status}: ${errorText}`)
+    let result = null
+    try {
+      // Attempt to parse the response body
+      result = await response.json()
+    } catch (err) {
+      // If response is empty or not JSON, result remains null
+      console.error('Failed to parse response JSON:', err)
     }
 
-    const result = await response.json()
+    if (!response.ok) {
+      let errorMessage = `Error ${response.status}`
+      errorMessage += `: ${result?.message || JSON.stringify(result) || 'Unknown error'}`
+      console.error('Server error details:', errorMessage)
+      throw new Error(errorMessage)
+    }
+
     console.log('Goal created successfully:', result)
     return result
   } catch (error: any) {
     console.error('Failed to create goal:', error)
-    throw new Error(error.message || 'Erro ao criar meta')
+    if (error instanceof Error) {
+      throw error
+    } else {
+      throw new Error('Erro ao criar meta')
+    }
   }
 }
 

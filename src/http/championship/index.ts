@@ -1,6 +1,10 @@
+import {
+  getToken,
+  getUserIdFromToken,
+  getHttpOptions,
+} from '@/services/championshipService'
 
 import axios from 'axios'
-import { getToken, getUserIdFromToken, getHttpOptions } from '@/services/championshipService'
 
 export const getChampionships = async () => {
   const token = getToken()
@@ -9,16 +13,23 @@ export const getChampionships = async () => {
     {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }
+        Authorization: `Bearer ${token}`,
+      },
+    },
   )
   if (!response.ok) throw new Error('Erro ao buscar campeonatos')
   const data = await response.json()
   return data.content
 }
 
-export const createChampionship = async (data: any) => {
+interface ChampionshipData {
+  name: string
+  date: string
+  location: string
+  // Add other fields as necessary
+}
+
+export const createChampionship = async (data: ChampionshipData) => {
   try {
     const token = getToken()
     const idAcademico = getUserIdFromToken()
@@ -33,10 +44,13 @@ export const createChampionship = async (data: any) => {
 
     const payload = {
       ...data,
-      idAcademico
+      idAcademico,
     }
 
-    console.log('Sending championship payload:', JSON.stringify(payload, null, 2))
+    console.log(
+      'Sending championship payload:',
+      JSON.stringify(payload, null, 2),
+    )
 
     const response = await axios.post(
       `http://localhost:8081/campeonatos`,
@@ -44,10 +58,10 @@ export const createChampionship = async (data: any) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      }
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      },
     )
 
     console.log('Championship creation response:', response)
@@ -61,46 +75,38 @@ export const createChampionship = async (data: any) => {
     }
 
     return response.data
-  } catch (error: any) {
-    console.error('Championship creation error:', {
-      error,
-      response: error.response?.data,
-      status: error.response?.status,
-      message: error.message
-    })
-    throw new Error(error.response?.data?.message || error.message || 'Erro ao criar campeonato')
+  } catch (error) {
+    console.error('Error creating championship:', error)
+    throw error
   }
 }
 
-export const updateChampionship = async (id: number, data: any) => {
+export const updateChampionship = async (
+  id: number,
+  data: ChampionshipData,
+) => {
   const token = getToken()
-  const response = await fetch(
-    `http://localhost:8081/campeonatos/${id}`,
-    {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(data),
-    }
-  )
+  const response = await fetch(`http://localhost:8081/campeonatos/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
   if (!response.ok) throw new Error('Erro ao atualizar campeonato')
   return await response.json()
 }
 
 export const deleteChampionship = async (id: number) => {
   const token = getToken()
-  const response = await fetch(
-    `http://localhost:8081/campeonatos/${id}`,
-    {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  )
+  const response = await fetch(`http://localhost:8081/campeonatos/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
   if (!response.ok) throw new Error('Erro ao deletar campeonato')
 }
 
@@ -113,8 +119,8 @@ export const getChampionshipById = async (id: string, token?: string) => {
     )
     console.log('API response:', response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error) {
     console.error(`Error fetching championship with ID ${id}:`, error)
-    throw new Error(error.response?.data?.message || 'Erro ao buscar campeonato.')
+    throw new Error('Erro ao buscar campeonato.')
   }
 }

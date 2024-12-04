@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { getGoals } from '@/http/goals'
 import { fetchAchievements } from '@/http/achievements'
-import { getChampionships } from '@/services/championshipService' // Add this import
+import { getCampeonatos } from '@/http/championships'
 
 interface User {
   idAcademico?: number
@@ -55,7 +55,7 @@ function formatPhoneNumber(phoneNumber: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  const [bannerUrl, setBannerUrl] = useState<string | null>('https://your-fixed-image-url.com/default-banner.jpg')
   const [recentGoals, setRecentGoals] = useState<any[]>([])
   const [campeonatos, setCampeonatos] = useState<Array<{ nome: string; posicao: string; data: string }>>([]) // Add state for campeonatos
   const router = useRouter()
@@ -96,7 +96,7 @@ export default function ProfilePage() {
           .slice(0, 2)
         
         // Fetch campeonatos using championshipService
-        const fetchedCampeonatos = await getChampionships()
+        const fetchedCampeonatos = await getCampeonatos()
 
         const userDataWithExtras = {
           ...response.data,
@@ -136,8 +136,8 @@ export default function ProfilePage() {
       }
     }
 
-    loadUser()
     fetchBannerImage()
+    loadUser()
   }, [router])
 
   if (loading) {

@@ -50,17 +50,23 @@ export const useGoals = (idAcademico: number | undefined) => {
         progressoMaximo: goalData.progressoMaximo,
         progressoItem: goalData.progressoItem,
         idAcademico,
-        situacaoMetaDiaria: goalData.situacaoMetaDiaria
+        situacaoMetaDiaria: goalData.situacaoMetaDiaria,
       }
 
       const response = await createGoal(payload)
-      setGoals(prev => prev.map((goal: Goal) => goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal))
-      
-      setGoals(prev => [...prev, response])
+
+      // Since we're creating a new goal, add it to the goals list
+      setGoals((prev) => [...prev, response])
       return response
     } catch (error: any) {
       console.error('Error creating goal:', error)
-      throw new Error(error?.response?.data?.message || error.message || 'Erro ao criar meta')
+
+      // Provide more detailed error messages
+      if (error instanceof Error) {
+        throw new Error(error.message || 'Erro ao criar meta')
+      } else {
+        throw new Error('Erro ao criar meta')
+      }
     }
   }
 
