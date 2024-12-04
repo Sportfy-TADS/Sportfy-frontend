@@ -131,6 +131,9 @@ dependencies:
   react-input-mask:
     specifier: ^2.0.4
     version: 2.0.4(react-dom@18.3.1)(react@18.3.1)
+  react-input-mask-next:
+    specifier: 3.0.0-alpha.12
+    version: 3.0.0-alpha.12(react-dom@18.3.1)(react@18.3.1)
   recharts:
     specifier: ^2.12.7
     version: 2.13.3(react-dom@18.3.1)(react@18.3.1)
@@ -4841,6 +4844,19 @@ packages:
       react: '*'
     dependencies:
       react: 18.3.1
+    dev: false
+
+  /react-input-mask-next@3.0.0-alpha.12(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-ATUbd4vigFCmGxTDCjjZ3tAaqzLrebfTR8/XbcYXp0yQSUB14vav1ggUTEGMSu5FnrKyMGxnn/iGx6CLziKwxQ==}
+    peerDependencies:
+      react: '>=18.0'
+      react-dom: '>=18.0'
+    dependencies:
+      invariant: 2.2.4
+      prop-types: 15.8.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      warning: 4.0.3
     dev: false
 
   /react-input-mask@2.0.4(react-dom@18.3.1)(react@18.3.1):
