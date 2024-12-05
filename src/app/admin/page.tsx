@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import {jwtDecode} from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -28,77 +28,80 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 
 async function fetchAdmins() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
     {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
-  if (!res.ok) throw new Error('Erro ao buscar administradores.');
-  const data = await res.json();
-  return data.content || []; // Retorna o conteúdo ou um array vazio
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+  if (!res.ok) throw new Error('Erro ao buscar administradores.')
+  const data = await res.json()
+  return data.content || [] // Retorna o conteúdo ou um array vazio
 }
 
 async function createAdmin(newAdmin) {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(newAdmin),
     },
-  );
-  if (!res.ok) throw new Error('Erro ao cadastrar administrador.');
-  return await res.json();
+  )
+  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
+  return await res.json()
 }
 
 async function updateAdmin(idAdministrador, updatedAdmin) {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/atualizar/${idAdministrador}`,
     {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(updatedAdmin),
     },
-  );
-  if (!res.ok) throw new Error('Erro ao atualizar administrador.');
-  return await res.json();
+  )
+  if (!res.ok) throw new Error('Erro ao atualizar administrador.')
+  return await res.json()
 }
 
 async function inactivateAdmin(idAdministrador) {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${idAdministrador}`,
     {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       mode: 'no-cors', // Adiciona o modo no-cors
     },
-  );
-  if (!res.ok) throw new Error('Erro ao inativar administrador.');
-  return await res.json();
+  )
+  if (!res.ok) throw new Error('Erro ao inativar administrador.')
+  return await res.json()
 }
 
 function formatPhoneNumber(phoneNumber) {
   const cleaned = ('' + phoneNumber).replace(/\D/g, '')
-  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/)
+  const match = cleaned.match(/^(\d{0,11})$/)
   if (match) {
-    return `(${match[1]}) ${match[2]}-${match[3]}`
+    const value = match[0]
+    if (value.length <= 2) return value
+    if (value.length <= 7) return `(${value.slice(0, 2)}) ${value.slice(2)}`
+    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7, 11)}`
   }
   return phoneNumber
 }
@@ -126,6 +129,8 @@ export default function AdminCrudPage() {
   })
   const [editAdmin, setEditAdmin] = useState(null)
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
+  const [phone, setPhone] = useState('')
+
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -196,11 +201,14 @@ export default function AdminCrudPage() {
 
   const handleUpdateAdmin = async () => {
     try {
-      const updatedAdmin = await updateAdmin(editAdmin.idAdministrador, editAdmin)
+      const updatedAdmin = await updateAdmin(
+        editAdmin.idAdministrador,
+        editAdmin,
+      )
       toast.success('Administrador atualizado com sucesso.')
       queryClient.invalidateQueries(['admins'])
       setEditAdmin(null) // Fechar o formulário de edição
-  
+
       // Atualize o estado do administrador atual se o administrador atualizado for o mesmo
       if (currentAdmin && currentAdmin.id === updatedAdmin.idAdministrador) {
         setCurrentAdmin({
@@ -211,7 +219,7 @@ export default function AdminCrudPage() {
           dataNascimento: updatedAdmin.dataNascimento,
         })
       }
-  
+
       // Recarregue a página para garantir que os dados sejam atualizados
       router.reload()
     } catch (error) {
@@ -229,9 +237,16 @@ export default function AdminCrudPage() {
     }
   }
 
-  const handlePhoneChange = (e) => {
+  const handlePhoneChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isEditMode = false,
+  ) => {
     const formattedPhone = formatPhoneNumber(e.target.value)
-    setNewAdmin({ ...newAdmin, telefone: formattedPhone })
+    if (isEditMode) {
+      setEditAdmin({ ...editAdmin, telefone: formattedPhone })
+    } else {
+      setNewAdmin({ ...newAdmin, telefone: formattedPhone })
+    }
   }
 
   const handleDateChange = (e) => {
@@ -263,11 +278,8 @@ export default function AdminCrudPage() {
               </Select>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className="bg-white text-black"
-                  >
-                      Cadastrar Novo Administrador
+                  <Button variant="outline" className="bg-white text-black">
+                    Cadastrar Novo Administrador
                   </Button>
                 </SheetTrigger>
                 <SheetContent position="right" size="lg">
@@ -300,12 +312,14 @@ export default function AdminCrudPage() {
                     <Input
                       placeholder="Telefone"
                       value={newAdmin.telefone}
-                      onChange={handlePhoneChange}
+                      onChange={(e) => handlePhoneChange(e, false)}
+                      maxLength={15}
                     />
                     <Input
                       placeholder="Data de Nascimento"
                       value={newAdmin.dataNascimento}
                       onChange={handleDateChange}
+                      type="date"
                     />
                     <Button
                       onClick={handleCreateAdmin}
@@ -353,13 +367,13 @@ export default function AdminCrudPage() {
                   <Input
                     placeholder="Telefone"
                     value={editAdmin.telefone}
-                    onChange={(e) =>
-                      setEditAdmin({ ...editAdmin, telefone: e.target.value })
-                    }
+                    onChange={(e) => handlePhoneChange(e, true)}
+                    maxLength={15}
                   />
                   <Input
                     placeholder="Data de Nascimento"
                     value={editAdmin.dataNascimento}
+                    type="date"
                     onChange={(e) =>
                       setEditAdmin({
                         ...editAdmin,
@@ -367,13 +381,13 @@ export default function AdminCrudPage() {
                       })
                     }
                   />
-                    <Button
+                  <Button
                     onClick={handleUpdateAdmin}
                     variant="outline"
                     className="mt-4 bg-white text-black"
-                    >
+                  >
                     Salvar
-                    </Button>
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -409,7 +423,9 @@ export default function AdminCrudPage() {
                         </Button>
                         <Button
                           variant="destructive"
-                          onClick={() => handleInactivateAdmin(admin.idAdministrador)}
+                          onClick={() =>
+                            handleInactivateAdmin(admin.idAdministrador)
+                          }
                         >
                           Inativar
                         </Button>

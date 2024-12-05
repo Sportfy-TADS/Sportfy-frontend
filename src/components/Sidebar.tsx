@@ -83,109 +83,123 @@ export default function Sidebar() {
         } transition-transform duration-200 ease-in-out lg:translate-x-0 z-50`}
       >
         <ul className="space-y-6">
-          <li
-            className={getItemStyle('/feed')}
-            onClick={() => handleRouteClick('/feed')}
-            onMouseEnter={() => prefetchRoute('/feed')}
-          >
-            <Home
-              className={`w-6 h-6 ${visitedRoutes.includes('/feed') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Início</span>
-          </li>
-          <li
-            className={getItemStyle('/profile')}
-            onClick={() => handleRouteClick('/profile')}
-            onMouseEnter={() => prefetchRoute('/profile')}
-          >
-            <User
-              className={`w-6 h-6 ${visitedRoutes.includes('/profile') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Perfil</span>
-          </li>
-          <li
-            className={getItemStyle('/goals')}
-            onClick={() => handleRouteClick('/goals')}
-            onMouseEnter={() => prefetchRoute('/goals')}
-          >
-            <Target
-              className={`w-6 h-6 ${visitedRoutes.includes('/goals') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Metas</span>
-          </li>
-          <li
-            className={getItemStyle('/achievements')}
-            onClick={() => handleRouteClick('/achievements')}
-            onMouseEnter={() => prefetchRoute('/achievements')}
-          >
-            <Award
-              className={`w-6 h-6 ${visitedRoutes.includes('/achievements') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Conquistas</span>
-          </li>
-          <li
-            className={getItemStyle('/healthWarning')}
-            onClick={() => handleRouteClick('/healthWarning')}
-            onMouseEnter={() => prefetchRoute('/healthWarning')}
-          >
-            <HeartPulse
-              className={`w-6 h-6 ${visitedRoutes.includes('/healthWarning') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Saúde</span>
-          </li>
-          <li
-            className={getItemStyle('/Modality')}
-            onClick={() => handleRouteClick('/Modality')}
-            onMouseEnter={() => prefetchRoute('/Modality')}
-          >
-            <Activity
-              className={`w-6 h-6 ${visitedRoutes.includes('/Modality') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Modalidade</span>
-          </li>
-          <li
-            className={getItemStyle('/championships')}
-            onClick={() => handleRouteClick('/championships')}
-            onMouseEnter={() => prefetchRoute('/championships')}
-          >
-            <Trophy
-              className={`w-6 h-6 ${visitedRoutes.includes('/championships') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Campeonato</span>
-          </li>
-          <li
-            className={getItemStyle('/statistics')}
-            onClick={() => handleRouteClick('/statistics')}
-            onMouseEnter={() => prefetchRoute('/statistics')}
-          >
-            <Layers
-              className={`w-6 h-6 ${visitedRoutes.includes('/statistics') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Estatísticas</span>
-          </li>
-          <li
-            className={getItemStyle('/playerRatings')}
-            onClick={() => handleRouteClick('/playerRatings')}
-            onMouseEnter={() => prefetchRoute('/playerRatings')}
-          >
-            <Layers
-              className={`w-6 h-6 ${visitedRoutes.includes('/playerRatings') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Avaliar</span>
-          </li>
-          <li
-            className={getItemStyle('/settings')}
-            onClick={() => handleRouteClick('/settings')}
-            onMouseEnter={() => prefetchRoute('/settings')}
-          >
-            <Settings
-              className={`w-6 h-6 ${visitedRoutes.includes('/settings') ? 'text-blue-500' : 'text-gray-500'}`}
-            />
-            <span className="text-lg font-semibold">Configurações</span>
-          </li>
+          {!isAdmin && (
+            <>
+              <li
+                className={getItemStyle('/feed')}
+                onClick={() => handleRouteClick('/feed')}
+                onMouseEnter={() => prefetchRoute('/feed')}
+              >
+                <Home
+                  className={`w-6 h-6 ${visitedRoutes.includes('/feed') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Início</span>
+              </li>
+              <li
+                className={getItemStyle('/profile')}
+                onClick={() => handleRouteClick('/profile')}
+                onMouseEnter={() => prefetchRoute('/profile')}
+              >
+                <User
+                  className={`w-6 h-6 ${visitedRoutes.includes('/profile') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Perfil</span>
+              </li>
+              <li
+                className={getItemStyle('/goals')}
+                onClick={() => handleRouteClick('/goals')}
+                onMouseEnter={() => prefetchRoute('/goals')}
+              >
+                <Target
+                  className={`w-6 h-6 ${visitedRoutes.includes('/goals') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Metas</span>
+              </li>
+              <li
+                className={getItemStyle('/achievements')}
+                onClick={() => handleRouteClick('/achievements')}
+                onMouseEnter={() => prefetchRoute('/achievements')}
+              >
+                <Award
+                  className={`w-6 h-6 ${visitedRoutes.includes('/achievements') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Conquistas</span>
+              </li>
+              <li
+                className={getItemStyle('/healthWarning')}
+                onClick={() => handleRouteClick('/healthWarning')}
+                onMouseEnter={() => prefetchRoute('/healthWarning')}
+              >
+                <HeartPulse
+                  className={`w-6 h-6 ${visitedRoutes.includes('/healthWarning') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Saúde</span>
+              </li>
+              <li
+                className={getItemStyle('/Modality')}
+                onClick={() => handleRouteClick('/Modality')}
+                onMouseEnter={() => prefetchRoute('/Modality')}
+              >
+                <Activity
+                  className={`w-6 h-6 ${visitedRoutes.includes('/Modality') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Modalidade</span>
+              </li>
+              <li
+                className={getItemStyle('/championships')}
+                onClick={() => handleRouteClick('/championships')}
+                onMouseEnter={() => prefetchRoute('/championships')}
+              >
+                <Trophy
+                  className={`w-6 h-6 ${visitedRoutes.includes('/championships') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Campeonato</span>
+              </li>
+              <li
+                className={getItemStyle('/statistics')}
+                onClick={() => handleRouteClick('/statistics')}
+                onMouseEnter={() => prefetchRoute('/statistics')}
+              >
+                <Layers
+                  className={`w-6 h-6 ${visitedRoutes.includes('/statistics') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Estatísticas</span>
+              </li>
+              <li
+                className={getItemStyle('/playerRatings')}
+                onClick={() => handleRouteClick('/playerRatings')}
+                onMouseEnter={() => prefetchRoute('/playerRatings')}
+              >
+                <Layers
+                  className={`w-6 h-6 ${visitedRoutes.includes('/playerRatings') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Avaliar</span>
+              </li>
+              <li
+                className={getItemStyle('/settings')}
+                onClick={() => handleRouteClick('/settings')}
+                onMouseEnter={() => prefetchRoute('/settings')}
+              >
+                <Settings
+                  className={`w-6 h-6 ${visitedRoutes.includes('/settings') ? 'text-blue-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Configurações</span>
+              </li>
+            </>
+          )}
 
           {isAdmin && (
             <>
+              <li
+                className={getItemStyle('/feed')}
+                onClick={() => handleRouteClick('/feed')}
+                onMouseEnter={() => prefetchRoute('/feed')}
+              >
+                <Home
+                  className={`w-6 h-6 ${visitedRoutes.includes('/feed') ? 'text-red-500' : 'text-gray-500'}`}
+                />
+                <span className="text-lg font-semibold">Início</span>
+              </li>
               <li
                 className={getItemStyle('/admin')}
                 onClick={() => handleRouteClick('/admin')}
