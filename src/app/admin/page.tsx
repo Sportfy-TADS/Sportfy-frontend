@@ -196,10 +196,24 @@ export default function AdminCrudPage() {
 
   const handleUpdateAdmin = async () => {
     try {
-      await updateAdmin(editAdmin.idAdministrador, editAdmin)
+      const updatedAdmin = await updateAdmin(editAdmin.idAdministrador, editAdmin)
       toast.success('Administrador atualizado com sucesso.')
       queryClient.invalidateQueries(['admins'])
       setEditAdmin(null) // Fechar o formulário de edição
+  
+      // Atualize o estado do administrador atual se o administrador atualizado for o mesmo
+      if (currentAdmin && currentAdmin.id === updatedAdmin.idAdministrador) {
+        setCurrentAdmin({
+          ...currentAdmin,
+          username: updatedAdmin.username,
+          nome: updatedAdmin.nome,
+          telefone: updatedAdmin.telefone,
+          dataNascimento: updatedAdmin.dataNascimento,
+        })
+      }
+  
+      // Recarregue a página para garantir que os dados sejam atualizados
+      router.reload()
     } catch (error) {
       toast.error('Erro ao atualizar o administrador.')
     }
