@@ -541,6 +541,16 @@ export default function CampeonatoPage() {
                           >
                             <Trash className="mr-2" /> Excluir
                           </Button>
+                          <Button
+                          onClick={() =>
+                            router.push(
+                              `/championships/${campeonato.idCampeonato}`,
+                            )
+                          }
+                          className="flex items-center justify-center bg-green-500 hover:bg-green-600"
+                        >
+                          Acessar
+                        </Button>
                         </>
                       ) : (
                         <Button
