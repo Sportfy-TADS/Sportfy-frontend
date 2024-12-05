@@ -103,6 +103,15 @@ function formatPhoneNumber(phoneNumber) {
   return phoneNumber
 }
 
+function formatDate(date) {
+  const cleaned = ('' + date).replace(/\D/g, '')
+  const match = cleaned.match(/^(\d{2})(\d{2})(\d{4})$/)
+  if (match) {
+    return `${match[1]}/${match[2]}/${match[3]}`
+  }
+  return date
+}
+
 export default function AdminCrudPage() {
   const [currentAdmin, setCurrentAdmin] = useState(null)
   const [newAdmin, setNewAdmin] = useState({
@@ -206,6 +215,16 @@ export default function AdminCrudPage() {
     }
   }
 
+  const handlePhoneChange = (e) => {
+    const formattedPhone = formatPhoneNumber(e.target.value)
+    setNewAdmin({ ...newAdmin, telefone: formattedPhone })
+  }
+
+  const handleDateChange = (e) => {
+    const formattedDate = formatDate(e.target.value)
+    setNewAdmin({ ...newAdmin, dataNascimento: formattedDate })
+  }
+
   return (
     <>
       <Header />
@@ -267,16 +286,12 @@ export default function AdminCrudPage() {
                     <Input
                       placeholder="Telefone"
                       value={newAdmin.telefone}
-                      onChange={(e) =>
-                        setNewAdmin({ ...newAdmin, telefone: e.target.value })
-                      }
+                      onChange={handlePhoneChange}
                     />
                     <Input
                       placeholder="Data de Nascimento"
                       value={newAdmin.dataNascimento}
-                      onChange={(e) =>
-                        setNewAdmin({ ...newAdmin, dataNascimento: e.target.value })
-                      }
+                      onChange={handleDateChange}
                     />
                     <Button
                       onClick={handleCreateAdmin}
