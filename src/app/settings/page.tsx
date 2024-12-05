@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const handleLogout = () => {
     // Logic to log out
     console.log('Logout clicked')
-    router.push('/auth/logout')
+    router.push('/auth')
   }
 
   return (
@@ -82,9 +82,9 @@ export default function SettingsPage() {
               <div className="mt-6 space-y-4">
                 <Button
                   onClick={handleResetPassword}
-                  className="w-full bg-yellow-500 hover:bg-yellow-400"
+                  className="w-full bg-zinc-500 hover:bg-zinc-400"
                 >
-                  Resetar Senha
+                  Resetar configurações
                 </Button>
                 <Button
                   onClick={handleLogout}
