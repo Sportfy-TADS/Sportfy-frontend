@@ -56,16 +56,6 @@ export default function ModalidadeInscricaoPage() {
       console.log('Roles:', roles)
       setIsAdmin(roles.includes('ADMIN'))
       console.log('isAdmin:', roles.includes('ADMIN'))
-
-      const userData = {
-        idAcademico: 11,
-        curso: 'tads',
-        username: sub,
-        email: 'carlos@ufpr.br',
-        nome: 'thiago dos Santos',
-      }
-      localStorage.setItem('userData', JSON.stringify(userData))
-      console.log('Dados do usuário armazenados no localStorage:', userData)
     }
   }, [])
 
@@ -153,6 +143,12 @@ export default function ModalidadeInscricaoPage() {
       })
       if (modalidadeId !== null) {
         await updateModalidade({
+          id: modalidadeId!.toString(),
+          idModalidadeEsportiva: modalidadeId!,
+          name: modalidadeNome,
+          description: modalidadeDescricao,
+        })
+        console.log('Dados enviados para o back-end:', {
           id: modalidadeId!.toString(),
           idModalidadeEsportiva: modalidadeId!,
           name: modalidadeNome,
