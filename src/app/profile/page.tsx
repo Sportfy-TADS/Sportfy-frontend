@@ -44,20 +44,24 @@ interface User {
 }
 
 function formatPhoneNumber(phoneNumber: string) {
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+  const cleaned = phoneNumber.replace(/\D/g, '')
+  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/)
   if (match) {
-    return `(${match[1]}) ${match[2]}-${match[3]}`;
+    return `(${match[1]}) ${match[2]}-${match[3]}`
   }
-  return phoneNumber;
+  return phoneNumber
 }
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [bannerUrl, setBannerUrl] = useState<string | null>('https://your-fixed-image-url.com/default-banner.jpg')
+  const [bannerUrl, setBannerUrl] = useState<string | null>(
+    'https://your-fixed-image-url.com/default-banner.jpg',
+  )
   const [recentGoals, setRecentGoals] = useState<any[]>([])
-  const [campeonatos, setCampeonatos] = useState<Array<{ nome: string; posicao: string; data: string }>>([]) // Add state for campeonatos
+  const [campeonatos, setCampeonatos] = useState<
+    Array<{ nome: string; posicao: string; data: string }>
+  >([]) // Add state for campeonatos
   const router = useRouter()
 
   useEffect(() => {
@@ -80,28 +84,36 @@ export default function ProfilePage() {
             : `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
 
         const token = localStorage.getItem('token')
-        const response = await axios.get(
-          userEndpoint, 
-          {
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        )
-        
+        const response = await axios.get(userEndpoint, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
         // Fetch goals and format them correctly
         const goals = await getGoals(response.data.idAcademico)
         const sortedGoals = goals
-          .sort((a: any, b: any) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime())
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.dataCriacao).getTime() -
+              new Date(a.dataCriacao).getTime(),
+          )
           .slice(0, 2) // Get only 2 most recent goals
 
         // Fetch achievements
-        const achievements = await fetchAchievements(response.data.idAcademico, localStorage.getItem('token'))
+        const achievements = await fetchAchievements(
+          response.data.idAcademico,
+          localStorage.getItem('token'),
+        )
         const sortedAchievements = achievements
-          .sort((a: any, b: any) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime())
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.dataCriacao).getTime() -
+              new Date(a.dataCriacao).getTime(),
+          )
           .slice(0, 2)
-        
+
         // Fetch campeonatos using championshipService
         const fetchedCampeonatos = await getCampeonatos()
 
@@ -110,12 +122,17 @@ export default function ProfilePage() {
           metas: sortedGoals.map((goal: any) => ({
             titulo: goal.titulo || 'Sem Título',
             progresso: `${goal.quantidadeConcluida ?? 0}/${goal.quantidadeObjetivo ?? 0} ${goal.itemQuantificado || ''}`,
-            status: (goal.quantidadeConcluida !== undefined && goal.quantidadeObjetivo !== undefined)
-              ? (goal.quantidadeConcluida >= goal.quantidadeObjetivo ? 'Concluída' : 'Em andamento')
-              : 'Em andamento',
+            status:
+              goal.quantidadeConcluida !== undefined &&
+              goal.quantidadeObjetivo !== undefined
+                ? goal.quantidadeConcluida >= goal.quantidadeObjetivo
+                  ? 'Concluída'
+                  : 'Em andamento'
+                : 'Em andamento',
           })),
-          conquistas: sortedAchievements.map((achievement: any) => 
-            `${achievement.metaEsportiva.titulo} - ${achievement.conquistado ? 'Conquistado' : 'Em andamento'}`
+          conquistas: sortedAchievements.map(
+            (achievement: any) =>
+              `${achievement.metaEsportiva.titulo} - ${achievement.conquistado ? 'Conquistado' : 'Em andamento'}`,
           ),
           campeonatos: fetchedCampeonatos.map((campeonato: any) => ({
             nome: campeonato.titulo,
@@ -123,7 +140,7 @@ export default function ProfilePage() {
             data: campeonato.dataFim,
           })),
         }
-        
+
         setUser(userDataWithExtras)
         setCampeonatos(userDataWithExtras.campeonatos) // Set campeonatos state
       } catch (error: unknown) {
@@ -136,7 +153,9 @@ export default function ProfilePage() {
 
     const fetchBannerImage = async () => {
       try {
-        const response = await fetch('https://source.unsplash.com/random/1600x400')
+        const response = await fetch(
+          'https://source.unsplash.com/random/1600x400',
+        )
         setBannerUrl(response.url)
       } catch (error) {
         console.error('Erro ao carregar imagem do banner:', error)
@@ -185,7 +204,7 @@ export default function ProfilePage() {
                 backgroundPosition: 'center',
               }}
             />
-            
+
             {/* Foto e Botão Editar */}
             <div className="flex justify-between items-start px-4">
               <img
@@ -207,20 +226,37 @@ export default function ProfilePage() {
                 {user?.nome}
               </h1>
               <p className="text-gray-500">@{user?.username}</p>
-              
+
               {/* Bio e Informações Básicas */}
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <p><strong>Email:</strong> {user?.email}</p>
-                  {user?.curso && <p><strong>Curso:</strong> {user.curso}</p>}
-                  {user?.telefone && <p><strong>Telefone:</strong> {formatPhoneNumber(user.telefone)}</p>}
+                  <p>
+                    <strong>Email:</strong> {user?.email}
+                  </p>
+                  {user?.curso && (
+                    <p>
+                      <strong>Curso:</strong> {user.curso}
+                    </p>
+                  )}
+                  {user?.telefone && (
+                    <p>
+                      <strong>Telefone:</strong>{' '}
+                      {formatPhoneNumber(user.telefone)}
+                    </p>
+                  )}
                   {user?.dataNascimento && (
                     <p>
                       <strong>Data de Nascimento:</strong>{' '}
-                      {new Date(user.dataNascimento).toLocaleDateString('pt-BR')}
+                      {new Date(user.dataNascimento).toLocaleDateString(
+                        'pt-BR',
+                      )}
                     </p>
                   )}
-                  {user?.genero && <p><strong>Gênero:</strong> {user.genero}</p>}
+                  {user?.genero && (
+                    <p>
+                      <strong>Gênero:</strong> {user.genero}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -244,7 +280,9 @@ export default function ProfilePage() {
                             </li>
                           ))
                         ) : (
-                          <li className="text-sm text-gray-500">Nenhuma meta cadastrada</li>
+                          <li className="text-sm text-gray-500">
+                            Nenhuma meta cadastrada
+                          </li>
                         )}
                       </ul>
                       <p className="text-blue-500 mt-2">Ver todas as metas</p>
@@ -264,10 +302,14 @@ export default function ProfilePage() {
                     <CardContent>
                       <ul className="space-y-2">
                         {user?.conquistas?.map((conquista, index) => (
-                          <li key={index} className="text-sm">{conquista}</li>
+                          <li key={index} className="text-sm">
+                            {conquista}
+                          </li>
                         ))}
                       </ul>
-                      <p className="text-yellow-500 mt-2">Ver todas as conquistas</p>
+                      <p className="text-yellow-500 mt-2">
+                        Ver todas as conquistas
+                      </p>
                     </CardContent>
                   </Link>
                 </Card>
@@ -277,7 +319,7 @@ export default function ProfilePage() {
                   <Link href="profile/tournament">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <Trophy  className="w-5 h-5 text-purple-500" />
+                        <Trophy className="w-5 h-5 text-purple-500" />
                         Campeonatos
                       </CardTitle>
                     </CardHeader>
@@ -289,7 +331,9 @@ export default function ProfilePage() {
                           </li>
                         ))}
                       </ul>
-                      <p className="text-purple-500 mt-2">Ver todos os campeonatos</p>
+                      <p className="text-purple-500 mt-2">
+                        Ver todos os campeonatos
+                      </p>
                     </CardContent>
                   </Link>
                 </Card>

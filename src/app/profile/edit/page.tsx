@@ -41,7 +41,7 @@ export default function EditProfilePage() {
     curso: '',
     dataNascimento: '',
     foto: null,
-    ativo: true
+    ativo: true,
   })
   const [isLoading, setIsLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,24 +51,42 @@ export default function EditProfilePage() {
   useEffect(() => {
     const loadUserData = async () => {
       const authData = getUserData()
-      if (!authData?.idAcademico) {
+      const token = localStorage.getItem('token')
+      if (!authData?.idAcademico || !token) {
         toast({ title: 'Erro', description: 'Usuário não autenticado' })
         router.push('/auth')
         return
       }
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/${authData.idAcademico}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (!response.ok) throw new Error('Falha ao carregar dados');
-        const data = await response.json();
-        setUserData(data);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${authData.idAcademico}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
+        if (!response.ok) throw new Error('Falha ao carregar dados')
+        const data = await response.json()
+        setUserData({
+          nome: data.nome,
+          email: data.email,
+          username: data.username,
+          password: '', // Do not pre-fill the password
+          genero: data.genero,
+          telefone: data.telefone,
+          curso: data.curso,
+          dataNascimento: data.dataNascimento.split('T')[0],
+          foto: data.foto,
+          ativo: data.ativo,
+        })
       } catch (error) {
-        toast({ title: 'Erro', description: 'Erro ao carregar dados do usuário' });
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar dados do usuário',
+        })
       }
     }
 
@@ -78,19 +96,40 @@ export default function EditProfilePage() {
   const handleUpdate = async () => {
     setIsLoading(true)
     const authData = getUserData()
+    const token = localStorage.getItem('token')
+
+    if (!authData?.idAcademico || !token) {
+      toast({ title: 'Erro', description: 'Usuário não autenticado' })
+      setIsLoading(false)
+      return
+    }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/atualizar/${authData?.idAcademico}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/academico/atualizar/${authData.idAcademico}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            curso: userData.curso,
+            email: userData.email,
+            username: userData.username,
+            password: userData.password,
+            nome: userData.nome,
+            genero: userData.genero,
+            telefone: userData.telefone,
+            dataNascimento: `${userData.dataNascimento}T00:00:00.000Z`,
+            foto: userData.foto,
+            ativo: userData.ativo,
+          }),
         },
-        body: JSON.stringify(userData)
-      })
+      )
 
       if (!response.ok) throw new Error('Falha ao atualizar')
-      
+
       toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso' })
       router.push('/profile')
     } catch (error) {
@@ -104,9 +143,9 @@ export default function EditProfilePage() {
     <>
       <Header />
       <div className="container mx-auto p-6">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold mb-6">Editar Perfil</h1>
-          
+
           <div className="space-y-4">
             <div className="flex justify-center mb-6">
               <Avatar className="w-32 h-32">
@@ -120,23 +159,31 @@ export default function EditProfilePage() {
                 <label className="block text-sm font-medium mb-1">Nome</label>
                 <Input
                   value={userData.nome}
-                  onChange={e => setUserData({...userData, nome: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <Input
-                  value={userData.email}
-                  onChange={e => setUserData({...userData, email: e.target.value})}
+                  onChange={(e) =>
+                    setUserData({ ...userData, nome: e.target.value })
+                  }
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Username</label>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <Input
+                  value={userData.email}
+                  onChange={(e) =>
+                    setUserData({ ...userData, email: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Username
+                </label>
                 <Input
                   value={userData.username}
-                  onChange={e => setUserData({...userData, username: e.target.value})}
+                  onChange={(e) =>
+                    setUserData({ ...userData, username: e.target.value })
+                  }
                 />
               </div>
 
@@ -145,7 +192,9 @@ export default function EditProfilePage() {
                 <Input
                   type="password"
                   value={userData.password}
-                  onChange={e => setUserData({...userData, password: e.target.value})}
+                  onChange={(e) =>
+                    setUserData({ ...userData, password: e.target.value })
+                  }
                 />
               </div>
 
@@ -153,7 +202,9 @@ export default function EditProfilePage() {
                 <label className="block text-sm font-medium mb-1">Gênero</label>
                 <Select
                   value={userData.genero}
-                  onValueChange={value => setUserData({...userData, genero: value})}
+                  onValueChange={(value) =>
+                    setUserData({ ...userData, genero: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o gênero" />
@@ -167,10 +218,14 @@ export default function EditProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Telefone</label>
+                <label className="block text-sm font-medium mb-1">
+                  Telefone
+                </label>
                 <Input
                   value={userData.telefone}
-                  onChange={e => setUserData({...userData, telefone: e.target.value})}
+                  onChange={(e) =>
+                    setUserData({ ...userData, telefone: e.target.value })
+                  }
                 />
               </div>
 
@@ -178,16 +233,34 @@ export default function EditProfilePage() {
                 <label className="block text-sm font-medium mb-1">Curso</label>
                 <Input
                   value={userData.curso}
-                  onChange={e => setUserData({...userData, curso: e.target.value})}
+                  onChange={(e) =>
+                    setUserData({ ...userData, curso: e.target.value })
+                  }
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Data de Nascimento</label>
+                <label className="block text-sm font-medium mb-1">
+                  Data de Nascimento
+                </label>
                 <Input
                   type="date"
-                  value={userData.dataNascimento.split('T')[0]}
-                  onChange={e => setUserData({...userData, dataNascimento: e.target.value})}
+                  value={userData.dataNascimento}
+                  onChange={(e) =>
+                    setUserData({ ...userData, dataNascimento: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium mb-1">
+                  Foto (URL)
+                </label>
+                <Input
+                  value={userData.foto || ''}
+                  onChange={(e) =>
+                    setUserData({ ...userData, foto: e.target.value })
+                  }
                 />
               </div>
             </div>

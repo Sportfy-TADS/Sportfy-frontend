@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns'  // Import date-fns
+import { format } from 'date-fns' // Import date-fns
 
 import { useRouter } from 'next/navigation'
 
@@ -89,15 +89,15 @@ export default function AchievementsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
         <Header />
         <div className="flex">
           <Sidebar />
           <div className="container mx-auto p-4">
-            <Skeleton className="w-full h-48 bg-gray-800" />
+            <Skeleton className="w-full h-48 bg-gray-300 dark:bg-gray-800" />
             <div className="mt-4 space-y-4">
-              <Skeleton className="h-8 w-48 bg-gray-800" />
-              <Skeleton className="w-full h-32 bg-gray-800" />
+              <Skeleton className="h-8 w-48 bg-gray-300 dark:bg-gray-800" />
+              <Skeleton className="w-full h-32 bg-gray-300 dark:bg-gray-800" />
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function AchievementsPage() {
 
   if (isBlocked) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -136,7 +136,7 @@ export default function AchievementsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
       <Header />
       <div className="flex flex-col lg:flex-row">
         <Sidebar />
@@ -148,7 +148,7 @@ export default function AchievementsPage() {
               <div key={modalidade} className="mb-12">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold">{modalidade}</h2>
-                  <button className="text-sm text-gray-400 hover:text-white transition-colors">
+                  <button className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
                     Ver tudo
                   </button>
                 </div>
@@ -163,7 +163,7 @@ export default function AchievementsPage() {
                         className={`relative w-24 h-24 rounded-full mb-3 ${
                           achievement.conquistado
                             ? 'bg-gradient-to-br from-orange-500 to-yellow-500'
-                            : 'bg-gray-800 opacity-50'
+                            : 'bg-gray-300 dark:bg-gray-800 opacity-50'
                         } before:absolute before:inset-0 before:rounded-full before:border-2 before:border-yellow-500 before:transform before:scale-110`}
                       >
                         <div className="absolute inset-0 flex items-center justify-center text-3xl">
@@ -176,7 +176,7 @@ export default function AchievementsPage() {
                         <h3 className="font-medium text-sm mb-1">
                           {achievement.metaEsportiva.titulo}
                         </h3>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           {(
                             (achievement.progressoAtual /
                               achievement.metaEsportiva.progressoMaximo) *
@@ -193,8 +193,10 @@ export default function AchievementsPage() {
                   {modalidadeAchievements.map((achievement) => (
                     <Card
                       key={achievement.id}
-                      className={`border border-gray-800 ${
-                        achievement.conquistado ? 'bg-gray-800' : 'bg-gray-900'
+                      className={`border border-gray-300 dark:border-gray-800 ${
+                        achievement.conquistado
+                          ? 'bg-gray-300 dark:bg-gray-800'
+                          : 'bg-gray-100 dark:bg-gray-900'
                       }`}
                     >
                       <CardHeader>
