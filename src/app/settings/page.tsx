@@ -156,20 +156,7 @@ export default function SettingsPage() {
             <div className="mb-4">
               <ModeToggle />
             </div>
-            <div className="mt-4">
-              <label className="block text-sm font-semibold mb-2 dark:text-white">
-                Idioma:
-              </label>
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o Idioma" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="en">Inglês</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
             <Sheet>
               <SheetTrigger asChild>
                 <Button className="w-full mb-4">
@@ -292,7 +279,7 @@ export default function SettingsPage() {
               onClick={handleDelete}
               className="w-full bg-red-600 hover:bg-red-500 mt-4"
             >
-              Deletar Configurações
+              Resetar Configurações
             </Button>
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <AlertDialogContent>
