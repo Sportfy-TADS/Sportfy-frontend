@@ -29,7 +29,16 @@ export default function RegisterPage() {
 
   const [courses, setCourses] = useState<string[]>([])
   const [filteredCourses, setFilteredCourses] = useState<string[]>([])
-  const [query, setQuery] = useState('') // Add state for search query
+  const [query, setQuery] = useState('') 
+  const [phone, setPhone] = useState('');
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numericValue = e.target.value.replace(/\D/g, '');
+    const formattedPhone = numericValue
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d{4})$/, '$1-$2');
+    setPhone(formattedPhone);
+  };
 
   useEffect(() => {
     fetch('http://localhost:8081/academico/cursos/ufpr')
@@ -53,6 +62,9 @@ export default function RegisterPage() {
       )
     }
   }, [query, courses])
+
+
+
 
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center antialiased lg:grid lg:grid-cols-2 lg:px-0">
@@ -162,10 +174,14 @@ export default function RegisterPage() {
                         <Input
                           id="telefone"
                           type="tel"
+                          value={phone}
+                          onChange={(e) => {
+                            handlePhoneChange(e);
+                            field.onChange(e);
+                          }}
                           autoCapitalize="none"
                           autoComplete="telefone"
                           autoCorrect="off"
-                          {...register('telefone')}
                         />
                       )}
                     />
