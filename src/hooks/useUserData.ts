@@ -10,7 +10,7 @@ interface DecodedToken {
 
 interface UserData {
   username: string
-  idAcademico?: number
+  idAcademico: number // Make idAcademico required
   nome?: string
   // ...other user data fields
 }
@@ -26,7 +26,7 @@ export const useUserData = () => {
       try {
         const decoded: DecodedToken = jwtDecode(token)
         const username = decoded.sub
-        
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
           {
@@ -36,8 +36,13 @@ export const useUserData = () => {
             },
           },
         )
-        
-        setUserData(response.data)
+
+        setUserData({
+          username: response.data.username,
+          idAcademico: response.data.idAcademico, // Ensure idAcademico is set
+          nome: response.data.nome,
+          // ...other fields
+        })
       } catch (error) {
         console.error('Erro ao obter dados do usuário:', error)
       }

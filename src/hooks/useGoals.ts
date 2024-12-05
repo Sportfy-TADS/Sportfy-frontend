@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
 
-export const useGoals = (idAcademico: number | undefined) => {
+export const useGoals = (idAcademico: number) => {
+  // Make idAcademico required
   interface Goal {
-    idMetaDiaria: number;
-    titulo: string;
-    objetivo: string;
-    quantidadeConcluida: number;
-    quantidadeObjetivo: number;
-    itemQuantificado: string;
-    situacaoMetaDiaria: string;
+    idMetaDiaria: number
+    titulo: string
+    objetivo: string
+    quantidadeConcluida: number
+    quantidadeObjetivo: number
+    itemQuantificado: string
+    situacaoMetaDiaria: string
     academico: {
-      idAcademico: number;
-    };
+      idAcademico: number
+    }
   }
 
   const [goals, setGoals] = useState<Goal[]>([])
@@ -20,7 +21,6 @@ export const useGoals = (idAcademico: number | undefined) => {
 
   useEffect(() => {
     const fetchGoals = async () => {
-      if (!idAcademico) return
       try {
         const data = await getGoals(idAcademico)
         setGoals(data)
@@ -31,9 +31,7 @@ export const useGoals = (idAcademico: number | undefined) => {
       }
     }
 
-    if (idAcademico) {
-      fetchGoals()
-    }
+    fetchGoals()
   }, [idAcademico])
 
   const handleCreateGoal = async (goalData: any) => {
@@ -46,7 +44,7 @@ export const useGoals = (idAcademico: number | undefined) => {
       const payload = {
         titulo: goalData.titulo,
         objetivo: goalData.objetivo,
-        progressoAtual: goalData.progressoAtual,
+        progressoAtual: 0, // Set to zero by default
         progressoMaximo: goalData.progressoMaximo,
         progressoItem: goalData.progressoItem,
         idAcademico,
@@ -79,34 +77,48 @@ export const useGoals = (idAcademico: number | undefined) => {
         objetivo: goalData.objetivo,
         quantidadeConcluida: Number(goalData.progressoAtual),
         quantidadeObjetivo: Number(goalData.progressoMaximo),
-        itemQuantificado: goalData.progressoItem === 'outro' ? 
-          goalData.customProgressoItem : goalData.progressoItem,
+        itemQuantificado:
+          goalData.progressoItem === 'outro'
+            ? goalData.customProgressoItem
+            : goalData.progressoItem,
         situacaoMetaDiaria: Number(goalData.situacaoMetaDiaria),
         academico: {
-          idAcademico
-        }
+          idAcademico,
+        },
       }
 
       const response = await updateGoal(payload)
-      setGoals(prev => prev.map(goal => 
-        goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal
-      ))
+      setGoals((prev) =>
+        prev.map((goal) =>
+          goal.idMetaDiaria === goalData.idMetaDiaria ? response : goal,
+        ),
+      )
       return response
     } catch (error: any) {
       console.error('Error updating goal:', error)
-      throw new Error(error?.response?.data?.message || error.message || 'Erro ao atualizar meta')
+      throw new Error(
+        error?.response?.data?.message ||
+          error.message ||
+          'Erro ao atualizar meta',
+      )
     }
   }
 
   const handleDeleteGoal = async (goalId: number) => {
     try {
       await deleteGoal(goalId)
-      setGoals(prev => prev.filter(goal => goal.idMetaDiaria !== goalId))
+      setGoals((prev) => prev.filter((goal) => goal.idMetaDiaria !== goalId))
     } catch (error) {
       console.error('Error deleting goal:', error)
       throw error
     }
   }
 
-  return { goals, isLoading, handleCreateGoal, handleUpdateGoal, handleDeleteGoal }
+  return {
+    goals,
+    isLoading,
+    handleCreateGoal,
+    handleUpdateGoal,
+    handleDeleteGoal,
+  }
 }

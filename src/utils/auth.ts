@@ -1,4 +1,4 @@
-import {jwtDecode} from 'jwt-decode' // Changed from named import to default import
+import { jwtDecode } from 'jwt-decode' // Corrected default import
 
 interface TokenPayload {
   sub: string
@@ -31,15 +31,15 @@ export const storeUserData = (userData: any) => {
   localStorage.setItem('userData', JSON.stringify(userData))
 }
 
-export const getUserData = (): any => {
-  const data = localStorage.getItem('userData')
-  if (data) {
-    try {
-      return JSON.parse(data)
-    } catch (error) {
-      console.error('Error parsing user data:', error)
-      return null
-    }
+export const getUserData = () => {
+  const token = localStorage.getItem('token')
+  if (!token) return null
+
+  try {
+    const decoded = jwtDecode(token)
+    return decoded
+  } catch (error) {
+    console.error('Error decoding token:', error)
+    return null
   }
-  return null
 }

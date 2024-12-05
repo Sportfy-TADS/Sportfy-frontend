@@ -1,3 +1,4 @@
+import { useUserData } from '@/hooks/useUserData'
 import axios from 'axios'
 
 // Função para obter o dados do usuário
@@ -19,7 +20,13 @@ export async function getUserData(username: string) {
 
 // Função API para buscar metas
 export async function getGoals(idAcademico: number) {
+  // Make idAcademico required
+  if (!idAcademico) {
+    console.error('idAcademico is undefined')
+    throw new Error('idAcademico is required')
+  }
   const token = localStorage.getItem('token')
+  if (!token) return null
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/listar/${idAcademico}`,
     {
@@ -27,7 +34,7 @@ export async function getGoals(idAcademico: number) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   )
   if (!response.ok) throw new Error('Erro ao buscar metas')
 
@@ -48,7 +55,7 @@ export async function searchGoalByName(idAcademico: number, titulo: string) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   )
   if (!response.ok) throw new Error('Erro ao buscar meta por nome')
   return await response.json()
@@ -57,11 +64,11 @@ export async function searchGoalByName(idAcademico: number, titulo: string) {
 // Função API para criar uma nova meta
 export async function createGoal(data: {
   titulo: string
-  objetivo: string
+  descricao: string // Change objetivo to descricao
   progressoAtual: number
   progressoMaximo: number
   progressoItem: string
-  idAcademico?: number // Make idAcademico optional
+  idAcademico: number // Ensure idAcademico is required
   situacaoMetaDiaria?: number
 }) {
   const token = localStorage.getItem('token')
@@ -73,14 +80,12 @@ export async function createGoal(data: {
 
   const payload = {
     titulo: data.titulo,
-    objetivo: data.objetivo,
-    quantidadeConcluida: data.progressoAtual,
-    quantidadeObjetivo: data.progressoMaximo,
-    itemQuantificado: data.progressoItem,
-    situacaoMetaDiaria: data.situacaoMetaDiaria || 0,
-    academico: {
-      idAcademico: data.idAcademico,
-    },
+    objetivo: data.descricao, // Map descricao to objetivo
+    progressoAtual: data.progressoAtual, // Ensure this is set to zero by default
+    progressoMaximo: data.progressoMaximo,
+    progressoItem: data.progressoItem,
+    idAcademico: data.idAcademico,
+    situacaoMetaDiaria: data.situacaoMetaDiaria || 0, // Handle default if needed
   }
 
   console.log('Creating goal with payload:', payload)
@@ -90,9 +95,9 @@ export async function createGoal(data: {
       `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
       {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       },
@@ -133,10 +138,10 @@ export async function deleteGoal(idMetaDiaria: number) {
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria/excluir/${idMetaDiaria}`,
     {
       method: 'DELETE',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     },
   )
   if (!response.ok) throw new Error('Erro ao deletar meta')
@@ -158,9 +163,9 @@ export async function updateGoal(data: {
     `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
     {
       method: 'PUT',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     },
@@ -170,26 +175,37 @@ export async function updateGoal(data: {
 }
 
 export async function getMetaEsportiva(idAcademico: number) {
+  // Make idAcademico required
+  if (!idAcademico) {
+    console.error('idAcademico is undefined')
+    throw new Error('idAcademico is required')
+  }
   const token = localStorage.getItem('token')
-  const response = await fetch(`http://localhost:8081/modalidadeEsportiva/listar/${idAcademico}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+  const response = await fetch(
+    `http://localhost:8081/modalidadeEsportiva/listar/${idAcademico}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     },
-  })
+  )
   if (!response.ok) {
     throw new Error('Erro ao buscar modalidades esportivas')
   }
   const modalidades = await response.json()
   const metasPromises = modalidades.map((modalidade: any) =>
-    fetch(`http://localhost:8081/modalidadeEsportiva/metaEsportiva/listar/${modalidade.idModalidadeEsportiva}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+    fetch(
+      `http://localhost:8081/modalidadeEsportiva/metaEsportiva/listar/${modalidade.idModalidadeEsportiva}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    }).then((res) => res.json())
+    ).then((res) => res.json()),
   )
   const metasEsportivas = await Promise.all(metasPromises)
   return metasEsportivas.flat()
@@ -199,24 +215,26 @@ export async function updateMetaEsportiva(meta: MetaEsportiva) {
   const userData = useUserData()
   const token = userData?.token // Ensure you have access to the user's token
   if (!token) {
-    throw new Error('Usuário não autenticado');
+    throw new Error('Usuário não autenticado')
   }
 
-  const response = await fetch(`http://localhost:8081/modalidadeEsportiva/metaEsportiva/${meta.idMetaEsportiva}`, {
-    method: 'PUT', // Use PUT or PATCH based on API specification
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Include Authorization header
+  const response = await fetch(
+    `http://localhost:8081/modalidadeEsportiva/metaEsportiva/${meta.idMetaEsportiva}`,
+    {
+      method: 'PUT', // Use PUT or PATCH based on API specification
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Include Authorization header
+      },
+      body: JSON.stringify(meta),
     },
-    body: JSON.stringify(meta),
-  });
+  )
 
   if (!response.ok) {
-    const errorDetails = await response.text(); // Get detailed error message
-    console.error('Resposta de erro da API:', errorDetails);
-    throw new Error(`Erro ao atualizar Meta Esportiva: ${errorDetails}`);
+    const errorDetails = await response.text() // Get detailed error message
+    console.error('Resposta de erro da API:', errorDetails)
+    throw new Error(`Erro ao atualizar Meta Esportiva: ${errorDetails}`)
   }
 
-  return response.json();
+  return response.json()
 }
-

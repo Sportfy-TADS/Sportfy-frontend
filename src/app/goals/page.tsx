@@ -23,13 +23,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import {Skeleton} from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Medal } from 'lucide-react'
 import GoalForm from '@/components/goals/GoalForm'
 import GoalList from '@/components/goals/GoalList'
 import { useUserData } from '@/hooks/useUserData'
 import { useGoals } from '@/hooks/useGoals'
-import { getMetaEsportiva, updateMetaEsportiva } from '@/http/goals'
+import { createGoal, getMetaEsportiva, updateMetaEsportiva } from '@/http/goals'
 
 interface MetaEsportiva {
   idMetaEsportiva: number
@@ -50,8 +50,14 @@ export default function GoalsPage() {
   const userData = useUserData()
   const isAdmin = userData?.role === 'ADMIN' // Assuming userData contains a role field
   const queryClient = useQueryClient()
+  const idAcademico = userData?.idAcademico
 
-  const { data: metasEsportivas = [], isLoading: isLoadingMetasEsportivas, isError: isErrorMetasEsportivas, error: errorMetasEsportivas } = useQuery({
+  const {
+    data: metasEsportivas = [],
+    isLoading: isLoadingMetasEsportivas,
+    isError: isErrorMetasEsportivas,
+    error: errorMetasEsportivas,
+  } = useQuery({
     queryKey: ['metasEsportivas', userData?.idAcademico],
     queryFn: () => getMetaEsportiva(userData?.idAcademico),
     enabled: !!userData?.idAcademico,
@@ -61,33 +67,37 @@ export default function GoalsPage() {
   const updateMutation = useMutation({
     mutationFn: updateMetaEsportiva,
     onSuccess: () => {
-      queryClient.invalidateQueries(['metasEsportivas', userData?.idAcademico]);
-      toast.success('Meta esportiva atualizada com sucesso!');
+      queryClient.invalidateQueries(['metasEsportivas', userData?.idAcademico])
+      toast.success('Meta esportiva atualizada com sucesso!')
     },
     onError: (error: any) => {
-      console.error('Erro ao atualizar meta esportiva:', error);
-      toast.error('Erro ao atualizar meta esportiva.');
+      console.error('Erro ao atualizar meta esportiva:', error)
+      toast.error('Erro ao atualizar meta esportiva.')
     },
-  });
+  })
 
   // Modify handleUpdateGoal to catch and log detailed errors
   const handleUpdateGoal = async (meta: MetaEsportiva) => {
     try {
-      await updateMutation.mutateAsync(meta);
+      await updateMutation.mutateAsync(meta)
     } catch (error: any) {
-      console.error('Erro detalhado ao atualizar meta esportiva:', error.message);
-      toast.error(`Erro ao atualizar meta esportiva: ${error.message}`);
+      console.error(
+        'Erro detalhado ao atualizar meta esportiva:',
+        error.message,
+      )
+      toast.error(`Erro ao atualizar meta esportiva: ${error.message}`)
     }
-  };
+  }
 
   const handleCreateGoal = async (data: any) => {
     try {
       const newGoal = {
         titulo: String(data.titulo).trim(),
-        descricao: String(data.descricao).trim(),
+        descricao: String(data.descricao).trim(), // Ensure descricao is passed correctly
         tipoMeta: String(data.tipoMeta),
         idModalidadeEsportiva: Number(data.idModalidadeEsportiva),
         progressoMaximo: Number(data.progressoMaximo),
+        idAcademico, // Ensure idAcademico is included
         // Include any additional required fields
       }
 
@@ -108,7 +118,7 @@ export default function GoalsPage() {
     isLoading: isLoadingGoals,
     handleCreateGoal: originalHandleCreateGoal,
     handleDeleteGoal,
-  } = useGoals(userData?.idAcademico)
+  } = useGoals(idAcademico || 0) // Ensure useGoals is always called
 
   useEffect(() => {
     if (isErrorMetasEsportivas) {
@@ -119,8 +129,8 @@ export default function GoalsPage() {
 
   const filteredMetasEsportivas = useMemo(() => {
     if (!searchTerm) return metasEsportivas
-    return metasEsportivas.filter((meta) =>
-      meta.titulo.toLowerCase().includes(searchTerm.toLowerCase()) // Changed 'nome' to 'titulo'
+    return metasEsportivas.filter(
+      (meta) => meta.titulo.toLowerCase().includes(searchTerm.toLowerCase()), // Changed 'nome' to 'titulo'
     )
   }, [metasEsportivas, searchTerm])
 
@@ -136,8 +146,8 @@ export default function GoalsPage() {
         <Sidebar className="flex-none" />
         <div className="container mx-auto p-4 flex-1">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Metas</h1> {/* Add the page title */}
-            
+            <h1 className="text-3xl font-bold">Metas</h1>{' '}
+            {/* Add the page title */}
             <div className="flex space-x-4">
               {/* Filter for metas completas e em andamento */}
               <Select onValueChange={setFilter} defaultValue="all">
@@ -170,7 +180,6 @@ export default function GoalsPage() {
                 className="w-64"
               />
             </div>
-
             {/* Cadastrar Meta Button */}
             <Sheet>
               <SheetTrigger asChild>
@@ -192,7 +201,10 @@ export default function GoalsPage() {
               {isLoadingGoals ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {Array.from({ length: 4 }).map((_, index) => (
-                    <Card key={index} className="p-4 border border-amber-300 rounded-md shadow-sm">
+                    <Card
+                      key={index}
+                      className="p-4 border border-amber-300 rounded-md shadow-sm"
+                    >
                       <CardHeader>
                         <Skeleton variant="text" className="w-1/2 h-6 mb-2" />
                       </CardHeader>
@@ -214,7 +226,7 @@ export default function GoalsPage() {
             </>
           ) : (
             <GoalList
-              goals={metasEsportivas.map(meta => ({
+              goals={metasEsportivas.map((meta) => ({
                 idMetaDiaria: meta.idMetaEsportiva,
                 titulo: meta.titulo,
                 objetivo: meta.descricao,
@@ -243,8 +255,8 @@ export default function GoalsPage() {
                 </SheetHeader>
                 <GoalForm
                   onSubmit={(data: any) => {
-                    handleUpdateGoal({ ...editingGoal, ...data });
-                    setEditingGoal(null);
+                    handleUpdateGoal({ ...editingGoal, ...data })
+                    setEditingGoal(null)
                   }}
                   defaultValues={editingGoal}
                 />
@@ -260,9 +272,9 @@ export default function GoalsPage() {
                   <SheetTitle>Editar Meta</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-4">
-                  <Skeleton  className="w-full h-6" />
-                  <Skeleton  className="w-full h-4" />
-                  <Skeleton  className="w-full h-4" />
+                  <Skeleton className="w-full h-6" />
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full h-4" />
                 </div>
               </SheetContent>
             </Sheet>

@@ -1,13 +1,6 @@
 import { useState } from 'react'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '../ui/select'
 import { Button } from '../ui/button'
 
 interface GoalFormProps {
@@ -17,24 +10,25 @@ interface GoalFormProps {
 
 export default function GoalForm({ onSubmit, defaultValues }: GoalFormProps) {
   const [titulo, setTitulo] = useState(defaultValues?.titulo || '')
-  const [objetivo, setObjetivo] = useState(defaultValues?.objetivo || '')
-  const [progressoAtual, setProgressoAtual] = useState(defaultValues?.progressoAtual || 0)
-  const [progressoMaximo, setProgressoMaximo] = useState(defaultValues?.progressoMaximo || 0)
-  const [progressoItem, setProgressoItem] = useState(defaultValues?.progressoItem || 'unidade')
-  const [situacaoMetaDiaria, setSituacaoMetaDiaria] = useState(defaultValues?.situacaoMetaDiaria || 0)
+  const [descricao, setDescricao] = useState(defaultValues?.descricao || '')
+  const [progressoMaximo, setProgressoMaximo] = useState(
+    defaultValues?.progressoMaximo || 0,
+  )
+  const [progressoItem, setProgressoItem] = useState(
+    defaultValues?.progressoItem || 'unidade',
+  )
   const [customProgressoItem, setCustomProgressoItem] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const formData = {
       titulo,
-      objetivo,
-      progressoAtual,
+      descricao,
       progressoMaximo,
-      progressoItem: progressoItem === 'outro' ? customProgressoItem : progressoItem,
-      situacaoMetaDiaria: Number(situacaoMetaDiaria)
+      progressoItem:
+        progressoItem === 'outro' ? customProgressoItem : progressoItem,
     }
-    
+
     try {
       onSubmit(formData)
     } catch (error) {
@@ -50,78 +44,58 @@ export default function GoalForm({ onSubmit, defaultValues }: GoalFormProps) {
           type="text"
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Exemplo: Hidrate-se"
           required
         />
+        {titulo === '' && (
+          <p className="error-message">O título é obrigatório.</p>
+        )}
+      </div>
+      <div className="mb-4">
+        <Label>Descrição</Label>
+        <Input
+          type="text"
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          placeholder="Exemplo: Beber 2 litros de água"
+          required
+        />
+        {descricao === '' && (
+          <p className="error-message">A descrição é obrigatória.</p>
+        )}
       </div>
       <div className="mb-4">
         <Label>Objetivo</Label>
         <Input
-          type="text"
-          value={objetivo}
-          onChange={(e) => setObjetivo(e.target.value)}
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <Label>Progresso Atual</Label>
-        <Input
-          type="number"
-          value={progressoAtual}
-          onChange={(e) => setProgressoAtual(Number(e.target.value))}
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <Label>Progresso Máximo</Label>
-        <Input
           type="number"
           value={progressoMaximo}
           onChange={(e) => setProgressoMaximo(Number(e.target.value))}
+          placeholder="Exemplo: 2"
           required
         />
+        {progressoMaximo === 0 && (
+          <p className="error-message">O objetivo é obrigatório.</p>
+        )}
       </div>
       <div className="mb-4">
-        <Label>Progresso Item</Label>
-        <Select
+        <Label>Medida</Label>
+        <Input
+          type="text"
           value={progressoItem}
-          onValueChange={(value) => setProgressoItem(value)}
+          onChange={(e) => setProgressoItem(e.target.value)}
+          placeholder="Exemplo: Litros, Quilômetros, Páginas"
           required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma opção" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="litros">Litros</SelectItem>
-            <SelectItem value="metros">Metros</SelectItem>
-            <SelectItem value="quilometros">Quilômetros</SelectItem>
-            <SelectItem value="repeticoes">Repetições</SelectItem>
-            <SelectItem value="paginas">Páginas</SelectItem>
-            <SelectItem value="horas_estudo">Horas de Estudo</SelectItem>
-            <SelectItem value="horas_exercicio">Horas de Exercício</SelectItem>
-            <SelectItem value="nao_se_aplica">Não se aplica</SelectItem>
-            <SelectItem value="outro">Outro</SelectItem>
-          </SelectContent>
-        </Select>
+        />
+        {progressoItem === '' && (
+          <p className="error-message">A medida é obrigatória.</p>
+        )}
       </div>
-      {progressoItem === 'outro' && (
-        <div className="mb-4">
-          <Label>Especifique o Progresso Item</Label>
-          <Input
-            type="text"
-            value={customProgressoItem}
-            onChange={(e) => setCustomProgressoItem(e.target.value)}
-            required
-          />
-        </div>
-      )}
-      <div className="mb-4">
-        <Label>Situação Meta Diária</Label>
-        <Select
-          value={situacaoMetaDiaria.toString()}
-          onValueChange={(value) => setSituacaoMetaDiaria(Number(value))}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma opção" />
-          </SelectTrigger>
-                    <SelectContent>            <SelectItem value="0">Em andamento</SelectItem>            <SelectItem value="1">Concluída</SelectItem>          </SelectContent>        </Select>      </div>      <button type="submit">Salvar</button>    </form>  )}
+      <Button
+        type="submit"
+        disabled={!titulo || !descricao || !progressoMaximo || !progressoItem}
+      >
+        Criar
+      </Button>
+    </form>
+  )
+}
