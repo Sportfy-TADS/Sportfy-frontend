@@ -60,14 +60,15 @@ export default function EditProfilePage() {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/academico/${authData.idAcademico}`, {
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        })
-        if (!response.ok) throw new Error('Falha ao carregar dados')
-        const data = await response.json()
-        setUserData(data)
+        });
+        if (!response.ok) throw new Error('Falha ao carregar dados');
+        const data = await response.json();
+        setUserData(data);
       } catch (error) {
-        toast({ title: 'Erro', description: 'Erro ao carregar dados do usuário' })
+        toast({ title: 'Erro', description: 'Erro ao carregar dados do usuário' });
       }
     }
 

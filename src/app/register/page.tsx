@@ -159,18 +159,14 @@ export default function RegisterPage() {
                       control={control}
                       name="telefone"
                       render={({ field }) => (
-                        <InputMask mask="(99) 99999-9999" {...field}>
-                          {(inputProps) => (
-                            <Input
-                              id="telefone"
-                              type="tel"
-                              autoCapitalize="none"
-                              autoComplete="telefone"
-                              autoCorrect="off"
-                              {...inputProps}
-                            />
-                          )}
-                        </InputMask>
+                        <Input
+                          id="telefone"
+                          type="tel"
+                          autoCapitalize="none"
+                          autoComplete="telefone"
+                          autoCorrect="off"
+                          {...register('telefone')}
+                        />
                       )}
                     />
                   </div>

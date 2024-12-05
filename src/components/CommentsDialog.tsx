@@ -24,7 +24,7 @@ interface CommentsDialogProps {
 const CommentItem: React.FC<{
   comment: Comentario;
   addReply: (parentId: number, descricao: string) => void;
-  updateComment: (commentId: number, descricao: string, idPublicacao: number) => void; // Atualizado
+  updateComment: (commentId: number, descricao: string, idPublicacao: number, dataComentario: Date) => void; // Atualizado
   loggedUser: Usuario | null; // Adicionado
 }> = ({ comment, addReply, updateComment, loggedUser }) => {
   const [showReply, setShowReply] = useState(false)
@@ -44,7 +44,9 @@ const CommentItem: React.FC<{
 
   const handleEdit = async () => {
     if (editedContent.trim()) {
-      await updateComment(comment.idComentario, editedContent, comment.idPublicacao) // Passar idPublicacao
+      const date = new Date();
+      const dateString = date.toISOString();
+      await updateComment(comment.idComentario, editedContent, comment.idPublicacao, new Date(comment.dataComentario)) // Passar idPublicacao
       setIsEditing(false)
     } else {
       toast.error('Digite um conteúdo válido.')
@@ -159,10 +161,10 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, commen
     }
   }
 
-  const updateCommentHandler = async (commentId: number, descricao: string) => {
+  const updateCommentHandler = async (commentId: number, descricao: string, dataComentario: Date) => {
     if (postId !== null) {
       try {
-        const updatedComment = await handleUpdateComment(commentId, descricao, postId)
+        const updatedComment = await handleUpdateComment(commentId, descricao, postId, dataComentario)
         // Atualizar localComments com o comentário atualizado
         setLocalComments((prev) =>
           prev.map((comment) =>

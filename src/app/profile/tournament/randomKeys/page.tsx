@@ -39,10 +39,12 @@ export default function Component() {
 
       // Enviando os dados para o json-server
       try {
+        const token = localStorage.getItem('token');
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/competitions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
             name: competitionName,
@@ -77,10 +79,12 @@ export default function Component() {
 
       // Enviando os dados para o json-server
       try {
+        const token = localStorage.getItem('token');
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/competitions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
             name: competitionName,

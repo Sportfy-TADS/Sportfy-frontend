@@ -69,7 +69,13 @@ export default function Header() {
         if (decoded.roles.includes('ADMINISTRADOR')) {
           const adminResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
-          )
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
           const adminData = await adminResponse.json()
           console.log('Admin Data:', adminData) // Log dos dados do administrador
 
@@ -115,12 +121,25 @@ export default function Header() {
     if (term.length > 2) {
       try {
         // Buscar acadêmicos e administradores em paralelo
+        const token = localStorage.getItem('token');
         const [academicosResponse, adminsResponse] = await Promise.all([
           fetch(
-            `http://localhost:8081/academico/listar?page=0&size=10&sort=curso,desc&nome_like=${term}`
+            `http://localhost:8081/academico/listar?page=0&size=10&sort=curso,desc&nome_like=${term}`,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }
           ),
           fetch(
-            `http://localhost:8081/administrador/listar?page=0&size=10&sort=idAdministrador,desc`
+            `http://localhost:8081/administrador/listar?page=0&size=10&sort=idAdministrador,desc`,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }
           )
         ]);
 

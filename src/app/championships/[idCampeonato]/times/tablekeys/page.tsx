@@ -23,17 +23,22 @@ type Match = {
 
 async function getTimes(idCampeonato: string): Promise<Team[]> {
   try {
+    const token = localStorage.getItem('token');
     const res = await fetch(
       `http://localhost:8081/campeonatos/${idCampeonato}/times`,
       {
         cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       },
-    )
-    if (!res.ok) throw new Error('Falha ao carregar os times.')
-    const times: Team[] = await res.json()
-    return times
+    );
+    if (!res.ok) throw new Error('Falha ao carregar os times.');
+    const times: Team[] = await res.json();
+    return times;
   } catch (error) {
-    throw new Error('Erro desconhecido ao carregar os times.')
+    throw new Error('Erro desconhecido ao carregar os times.');
   }
 }
 

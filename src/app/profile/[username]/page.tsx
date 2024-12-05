@@ -79,17 +79,29 @@ export default function ProfilePage() {
         if (data.modalidades) {
           const statsPromises = data.modalidades.map(async (modalidade) => {
             const statsResponse = await fetch(
-              `http://localhost:8081/academico/buscar/estatisticas/${data.idAcademico}/modalidade/${modalidade.idModalidade}`
-            )
-            return statsResponse.json()
-          })
-          const stats = await Promise.all(statsPromises)
-          setEstatisticas(stats)
+              `http://localhost:8081/academico/buscar/estatisticas/${data.idAcademico}/modalidade/${modalidade.idModalidade}`,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+            return statsResponse.json();
+          });
+          const stats = await Promise.all(statsPromises);
+          setEstatisticas(stats);
         }
 
         const champResponse = await fetch(
-          `http://localhost:8081/campeonatos/historico/academico/${data.idAcademico}?page=0&size=3&sort=dataCriacao,desc`
-        )
+          `http://localhost:8081/campeonatos/historico/academico/${data.idAcademico}?page=0&size=3&sort=dataCriacao,desc`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
         if (champResponse.ok) {
           const champData = await champResponse.json()
           setCampeonatos(champData.content)

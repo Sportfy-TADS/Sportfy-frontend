@@ -40,7 +40,7 @@ export const useFeed = () => {
             decoded.nome && decoded.nome.trim() !== ''
               ? decoded.nome
               : decoded.sub, // Set 'nome' to 'username' if empty
-          permissao: decoded.role || 'USUARIO', // Adicionado valor padrão
+          permissao: decoded.role || 'ACADEMICO', // Adicionado valor padrão
           idAcademico: decoded.idAcademico || decoded.idUsuario, // Garantir que 'idAcademico' esteja presente
         }
       } catch (error) {
@@ -243,7 +243,7 @@ export const useFeed = () => {
     if (loggedUser) {
       try {
         const newComment = {
-          idComentario: Date.now(), // Temporário até receber do backend
+          idComentario: 0,
           descricao,
           dataComentario: new Date().toISOString(),
           idPublicacao: postId,
@@ -255,7 +255,6 @@ export const useFeed = () => {
             permissao: loggedUser.permissao,
           },
           listaUsuarioCurtida: [],
-          listaComentarios: [],
         }
 
         const createdComment = await createComment(newComment) // Removed token parameter
@@ -289,6 +288,7 @@ export const useFeed = () => {
     commentId: number,
     descricao: string,
     idPublicacao: number,
+    dataComentario: Date,
   ) => {
     if (loggedUser) {
       try {
@@ -298,8 +298,18 @@ export const useFeed = () => {
         }
 
         const updatedComment = {
-          descricao,
-          dataComentario: new Date().toISOString(),
+          idComentario: commentId,
+          descricao: descricao,
+          dataComentario: dataComentario,
+          idPublicacao: idPublicacao,
+          Usuario: {
+            idUsuario: loggedUser.idUsuario,
+            username: loggedUser.username,
+            nome: loggedUser.nome,
+            foto: loggedUser.foto || null,
+            permissao: loggedUser.permissao,
+          },
+          listaUsuarioCurtida: [],
         }
 
         const result = await updateComment(commentId, updatedComment, token)

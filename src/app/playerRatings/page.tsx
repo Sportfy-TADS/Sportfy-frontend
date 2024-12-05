@@ -51,7 +51,13 @@ export default function Component() {
   const [campeonatos, setCampeonatos] = useState<Campeonato[]>([])
 
   useEffect(() => {
-    fetch('http://localhost:8081/academico/listar?page=0&size=10&sort=curso,desc')
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:8081/academico/listar?page=0&size=10&sort=curso,desc', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(response => response.json())
       .then(data => {
         const formattedData = data.content.map((item: any) => ({
@@ -59,18 +65,24 @@ export default function Component() {
           nome: item.nome,
           username: item.username,
           avaliacao: 0 // default rating
-        }))
-        setJogadores(formattedData)
-      })
-  }, [])
-
+        }));
+        setJogadores(formattedData);
+      });
+  }, []);
+  
   useEffect(() => {
-    fetch('http://localhost:8081/campeonatos/11/inscritos?page=0&size=10&sort=dataCriacao,desc')
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:8081/campeonatos/11/inscritos?page=0&size=10&sort=dataCriacao,desc', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(response => response.json())
       .then(data => {
-        setCampeonatos(data.content)
-      })
-  }, [])
+        setCampeonatos(data.content);
+      });
+  }, []);
 
   const jogadoresFiltrados = jogadores.filter(jogador =>
     jogador.nome.toLowerCase().includes(busca.toLowerCase())

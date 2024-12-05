@@ -165,9 +165,17 @@ export const createPost = async (newPost: Post) => {
 }
 
 export const fetchComments = async (postId: number) => {
+  const token = localStorage.getItem('token')
   try {
+    const url = `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=10&sort=dataComentario,desc`
     const response = await axios.get(
-      `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=10&sort=dataComentario,desc`,
+      url,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
     )
     return response.data.content || []
   } catch (error) {
@@ -197,7 +205,7 @@ export const createComment = async (comment: any) => {
   }
 }
 
-export const updateComment = async (commentId: number, updatedComment) => {
+export const updateComment = async (commentId: number, updatedComment: any) => {
   const token = localStorage.getItem('token')
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/comentario/atualizarComentario/${commentId}`

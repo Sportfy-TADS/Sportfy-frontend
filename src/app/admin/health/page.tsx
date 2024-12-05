@@ -30,16 +30,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 // Funções de API
 async function fetchApoioSaude() {
+  const token = localStorage.getItem('token');
   const response = await fetch('http://localhost:8081/apoioSaude/listar', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
     },
-  })
+  });
   if (!response.ok) {
-    throw new Error('Erro ao buscar apoios à saúde')
+    throw new Error('Erro ao buscar apoios à saúde');
   }
-  return response.json()
+  return response.json();
 }
 
 async function createApoioSaude(data: {
@@ -51,15 +53,19 @@ async function createApoioSaude(data: {
   idAdministrador: number
   ativo: boolean
 }): Promise<any> {
+  const token = localStorage.getItem('token');
   const response = await fetch('http://localhost:8081/apoioSaude', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(data),
-  })
+  });
   if (!response.ok) {
-    throw new Error('Erro ao cadastrar apoio à saúde')
+    throw new Error('Erro ao cadastrar apoio à saúde');
   }
-  return response.json()
+  return response.json();
 }
 
 async function updateApoioSaude(
@@ -71,15 +77,19 @@ async function updateApoioSaude(
     descricao: string
   },
 ): Promise<any> {
+  const token = localStorage.getItem('token');
   const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(data),
-  })
+  });
   if (!response.ok) {
-    throw new Error('Erro ao atualizar apoio à saúde')
+    throw new Error('Erro ao atualizar apoio à saúde');
   }
-  return response.json()
+  return response.json();
 }
 
 export default function ApoioSaudePage() {

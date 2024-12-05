@@ -79,9 +79,16 @@ export default function ProfilePage() {
             ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${userData.idUsuario}`
             : `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
 
-        const response = await axios.get(userEndpoint, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        })
+        const token = localStorage.getItem('token')
+        const response = await axios.get(
+          userEndpoint, 
+          {
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        )
         
         // Fetch goals and format them correctly
         const goals = await getGoals(response.data.idAcademico)

@@ -16,7 +16,13 @@ import { Pagination } from '@/components/pagination'; // Supondo que você tenha
 import { Tournament, PaginatedResponse } from '@/interface/types';
 
 async function getTournaments(pageIndex: number): Promise<PaginatedResponse> {
-  const response = await fetch(`http://localhost:8081/campeonatos/11/inscritos?page=${pageIndex}&size=10&sort=dataCriacao,desc`);
+  const token = localStorage.getItem('token');
+  const response = await fetch(`http://localhost:8081/campeonatos/11/inscritos?page=${pageIndex}&size=10&sort=dataCriacao,desc`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
   if (!response.ok) {
     throw new Error('Erro ao buscar campeonatos');
   }

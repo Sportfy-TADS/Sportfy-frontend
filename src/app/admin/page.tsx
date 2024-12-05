@@ -28,54 +28,70 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 
 async function fetchAdmins() {
+  const token = localStorage.getItem('token');
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
-  )
-  if (!res.ok) throw new Error('Erro ao buscar administradores.')
-  const data = await res.json()
-  return data.content || [] // Retorna o conteúdo ou um array vazio
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  if (!res.ok) throw new Error('Erro ao buscar administradores.');
+  const data = await res.json();
+  return data.content || []; // Retorna o conteúdo ou um array vazio
 }
 
 async function createAdmin(newAdmin) {
+  const token = localStorage.getItem('token');
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(newAdmin),
     },
-  )
-  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
-  return await res.json()
+  );
+  if (!res.ok) throw new Error('Erro ao cadastrar administrador.');
+  return await res.json();
 }
 
 async function updateAdmin(idAdministrador, updatedAdmin) {
+  const token = localStorage.getItem('token');
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/atualizar/${idAdministrador}`,
     {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(updatedAdmin),
     },
-  )
-  if (!res.ok) throw new Error('Erro ao atualizar administrador.')
-  return await res.json()
+  );
+  if (!res.ok) throw new Error('Erro ao atualizar administrador.');
+  return await res.json();
 }
 
 async function inactivateAdmin(idAdministrador) {
+  const token = localStorage.getItem('token');
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${idAdministrador}`,
     {
       method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       mode: 'no-cors', // Adiciona o modo no-cors
     },
-  )
-  if (!res.ok) throw new Error('Erro ao inativar administrador.')
-  return await res.json()
+  );
+  if (!res.ok) throw new Error('Erro ao inativar administrador.');
+  return await res.json();
 }
 
 function formatPhoneNumber(phoneNumber) {

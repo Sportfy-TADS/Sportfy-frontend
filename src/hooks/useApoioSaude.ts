@@ -2,16 +2,18 @@ import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 async function fetchApoioSaude() {
+  const token = localStorage.getItem('token');
   const response = await fetch('http://localhost:8081/apoioSaude', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
     },
-  })
+  });
   if (!response.ok) {
-    throw new Error('Erro ao buscar apoios à saúde')
+    throw new Error('Erro ao buscar apoios à saúde');
   }
-  return response.json()
+  return response.json();
 }
 
 export function useApoioSaude() {
