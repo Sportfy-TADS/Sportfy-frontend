@@ -36,7 +36,7 @@ export const fetchPosts = async (page: number = 0, size: number = 10) => {
   const token = localStorage.getItem('token')
   try {
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`,
+      `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,asc`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -168,15 +168,12 @@ export const fetchComments = async (postId: number) => {
   const token = localStorage.getItem('token')
   try {
     const url = `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=10&sort=dataComentario,desc`
-    const response = await axios.get(
-      url,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await axios.get(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-    )
+    })
     return response.data.content || []
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {

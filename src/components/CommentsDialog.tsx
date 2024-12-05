@@ -5,11 +5,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Heart } from 'lucide-react'
-import { Comentario } from '@/interface/types'
+import { Star } from 'lucide-react'
+import { Comentario, Usuario } from '@/interface/types'
 import { useFeed } from '@/hooks/useFeed' // Importar o hook
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner' // Importar toast
+import axios from 'axios' // Import axios
 
 interface CommentsDialogProps {
   isOpen: boolean
@@ -19,13 +20,51 @@ interface CommentsDialogProps {
   postId: number | null // Adicionado
 }
 
+const likeComment = async (userId: number, commentId: number) => {
+  const token = localStorage.getItem('token')
+  try {
+    const url = `http://localhost:8081/comentario/curtirComentario/${userId}/${commentId}`
+    const response = await axios.post(url, null, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error liking comment:', error)
+    throw error
+  }
+}
+
+const unlikeComment = async (userId: number, commentId: number) => {
+  const token = localStorage.getItem('token')
+  try {
+    const url = `http://localhost:8081/comentario/removerCurtidaComentario/${userId}/${commentId}`
+    const response = await axios.delete(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error unliking comment:', error)
+    throw error
+  }
+}
 
 // Componente Recursivo para Exibir e Editar Comentários Aninhados
 const CommentItem: React.FC<{
-  comment: Comentario;
-  addReply: (parentId: number, descricao: string) => void;
-  updateComment: (commentId: number, descricao: string, idPublicacao: number, dataComentario: Date) => void; // Atualizado
-  loggedUser: Usuario | null; // Adicionado
+  comment: Comentario
+  addReply: (parentId: number, descricao: string) => void
+  updateComment: (
+    commentId: number,
+    descricao: string,
+    idPublicacao: number,
+    dataComentario: Date,
+  ) => void // Atualizado
+  loggedUser: Usuario | null // Adicionado
 }> = ({ comment, addReply, updateComment, loggedUser }) => {
   const [showReply, setShowReply] = useState(false)
   const [replyContent, setReplyContent] = useState('')
@@ -44,12 +83,68 @@ const CommentItem: React.FC<{
 
   const handleEdit = async () => {
     if (editedContent.trim()) {
-      const date = new Date();
-      const dateString = date.toISOString();
-      await updateComment(comment.idComentario, editedContent, comment.idPublicacao, new Date(comment.dataComentario)) // Passar idPublicacao
+      const date = new Date()
+      const dateString = date.toISOString()
+      await updateComment(
+        comment.idComentario,
+        editedContent,
+        comment.idPublicacao,
+        new Date(comment.dataComentario),
+      ) // Passar idPublicacao
       setIsEditing(false)
     } else {
       toast.error('Digite um conteúdo válido.')
+    }
+  }
+
+  const handleLikeComment = async () => {
+    if (!loggedUser?.idUsuario) {
+      toast.error('Usuário não autenticado')
+      return
+    }
+    try {
+      await likeComment(loggedUser.idUsuario, comment.idComentario)
+      // Update local comment state
+      setLocalComments((prev) =>
+        prev.map((c) =>
+          c.idComentario === comment.idComentario
+            ? {
+                ...c,
+                listaUsuarioCurtida: [
+                  ...c.listaUsuarioCurtida,
+                  { idUsuario: loggedUser.idUsuario },
+                ],
+              }
+            : c,
+        ),
+      )
+    } catch {
+      toast.error('Erro ao curtir comentário')
+    }
+  }
+
+  const handleUnlikeComment = async () => {
+    if (!loggedUser?.idUsuario) {
+      toast.error('Usuário não autenticado')
+      return
+    }
+    try {
+      await unlikeComment(loggedUser.idUsuario, comment.idComentario)
+      // Update local comment state
+      setLocalComments((prev) =>
+        prev.map((c) =>
+          c.idComentario === comment.idComentario
+            ? {
+                ...c,
+                listaUsuarioCurtida: c.listaUsuarioCurtida.filter(
+                  (user) => user.idUsuario !== loggedUser.idUsuario,
+                ),
+              }
+            : c,
+        ),
+      )
+    } catch {
+      toast.error('Erro ao remover curtida do comentário')
     }
   }
 
@@ -63,7 +158,9 @@ const CommentItem: React.FC<{
               alt="Avatar"
               className="w-8 h-8 rounded-full"
             />
-            <span className="font-semibold text-sm dark:text-white">{comment.Usuario?.nome}</span>
+            <span className="font-semibold text-sm dark:text-white">
+              {comment.Usuario?.nome}
+            </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {new Date(comment.dataComentario).toLocaleDateString('pt-BR', {
                 day: '2-digit',
@@ -75,15 +172,15 @@ const CommentItem: React.FC<{
             </span>
           </div>
           <div className="flex space-x-2">
-            {(loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && 
-              loggedUser?.idUsuario === comment.Usuario.idUsuario) && ( // Verifica permissão e idUsuario de forma case-insensitive
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="text-xs text-yellow-500 hover:underline"
-              >
-                {isEditing ? 'Cancelar' : 'Editar'}
-              </button>
-            )}
+            {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' &&
+              loggedUser?.idUsuario === comment.Usuario.idUsuario && ( // Verifica permissão e idUsuario de forma case-insensitive
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="text-xs text-yellow-500 hover:underline"
+                >
+                  {isEditing ? 'Cancelar' : 'Editar'}
+                </button>
+              )}
           </div>
         </div>
         {isEditing ? (
@@ -102,32 +199,58 @@ const CommentItem: React.FC<{
             </button>
           </div>
         ) : (
-          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{comment.descricao}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+            {comment.descricao}
+          </p>
         )}
         {/* Botão de Curtida no Comentário */}
         <div className="flex items-center space-x-2 mt-1">
-          <button className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
-            <Heart className="w-3 h-3" />
+          <button
+            onClick={() =>
+              comment.listaUsuarioCurtida.some(
+                (user) => user.idUsuario === loggedUser?.idUsuario,
+              )
+                ? handleUnlikeComment()
+                : handleLikeComment()
+            }
+            className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            <Star
+              className={`w-3 h-3 ${
+                comment.listaUsuarioCurtida.some(
+                  (user) => user.idUsuario === loggedUser?.idUsuario,
+                )
+                  ? 'text-amber-300 fill-amber-300'
+                  : 'text-gray-300'
+              }`}
+            />
             <span>{comment.listaUsuarioCurtida.length}</span>
           </button>
         </div>
       </div>
 
       {/* Renderizar Comentários Filhos */}
-      {comment.listaComentarios && comment.listaComentarios.map((reply) => (
-        <CommentItem 
-          key={reply.idComentario} 
-          comment={reply} 
-          addReply={addReply} 
-          updateComment={updateComment} 
-          loggedUser={loggedUser} // Passar loggedUser
-        />
-      ))}
+      {comment.listaComentarios &&
+        comment.listaComentarios.map((reply) => (
+          <CommentItem
+            key={reply.idComentario}
+            comment={reply}
+            addReply={addReply}
+            updateComment={updateComment}
+            loggedUser={loggedUser} // Passar loggedUser
+          />
+        ))}
     </div>
   )
 }
 
-const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, comments, loading, postId }) => {
+const CommentsDialog: React.FC<CommentsDialogProps> = ({
+  isOpen,
+  onClose,
+  comments,
+  loading,
+  postId,
+}) => {
   const { handleCreateComment, handleUpdateComment, loggedUser } = useFeed() // Usar o hook
   const [newComment, setNewComment] = useState('')
   const [localComments, setLocalComments] = useState<Comentario[]>(comments)
@@ -153,25 +276,38 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, commen
                   ? [createdReply, ...comment.listaComentarios]
                   : [createdReply],
               }
-            : comment
-        )
+            : comment,
+        ),
       )
     } catch {
       // Erros já são tratados no hook
     }
   }
 
-  const updateCommentHandler = async (commentId: number, descricao: string, dataComentario: Date) => {
+  const updateCommentHandler = async (
+    commentId: number,
+    descricao: string,
+    dataComentario: Date,
+  ) => {
     if (postId !== null) {
       try {
-        const updatedComment = await handleUpdateComment(commentId, descricao, postId, dataComentario)
+        const updatedComment = await handleUpdateComment(
+          commentId,
+          descricao,
+          postId,
+          dataComentario,
+        )
         // Atualizar localComments com o comentário atualizado
         setLocalComments((prev) =>
           prev.map((comment) =>
             comment.idComentario === commentId
-              ? { ...comment, descricao: updatedComment.descricao, dataComentario: updatedComment.dataComentario }
-              : comment
-          )
+              ? {
+                  ...comment,
+                  descricao: updatedComment.descricao,
+                  dataComentario: updatedComment.dataComentario,
+                }
+              : comment,
+          ),
         )
       } catch {
         // Erros já são tratados no hook
@@ -205,22 +341,27 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({ isOpen, onClose, commen
           {loading ? (
             Array.from({ length: 3 }).map((_, idx) => (
               // ...existing Skeleton components...
-              <Skeleton key={idx} className="h-20 w-full mb-2 rounded-lg dark:bg-gray-700" />
+              <Skeleton
+                key={idx}
+                className="h-20 w-full mb-2 rounded-lg dark:bg-gray-700"
+              />
             ))
           ) : (
             <>
               {localComments.length ? (
                 localComments.map((comment) => (
-                  <CommentItem 
-                    key={comment.idComentario} 
-                    comment={comment} 
-                    addReply={addReply} 
-                    updateComment={updateCommentHandler} 
+                  <CommentItem
+                    key={comment.idComentario}
+                    comment={comment}
+                    addReply={addReply}
+                    updateComment={updateCommentHandler}
                     loggedUser={loggedUser} // Passar loggedUser
                   />
                 ))
               ) : (
-                <p className="text-gray-600 dark:text-gray-400 p-4">Sem comentários até o momento.</p>
+                <p className="text-gray-600 dark:text-gray-400 p-4">
+                  Sem comentários até o momento.
+                </p>
               )}
             </>
           )}
