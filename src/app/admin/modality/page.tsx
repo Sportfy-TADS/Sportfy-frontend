@@ -59,6 +59,14 @@ export default function ModalidadeInscricaoPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
+
   const { data: modalidades = [], isLoading, isError, error } = useModalidades()
 
   useEffect(() => {
@@ -140,19 +148,22 @@ export default function ModalidadeInscricaoPage() {
         idModalidadeEsportiva: modalidadeId,
         nome: modalidadeNome,
         descricao: modalidadeDescricao,
+        foto: null, // Foto está escondida por enquanto
       })
       if (modalidadeId !== null) {
         await updateModalidade({
           id: modalidadeId!.toString(),
           idModalidadeEsportiva: modalidadeId!,
-          name: modalidadeNome,
-          description: modalidadeDescricao,
+          nome: modalidadeNome,
+          descricao: modalidadeDescricao,
+          foto: null, // Foto está escondida por enquanto
         })
         console.log('Dados enviados para o back-end:', {
           id: modalidadeId!.toString(),
           idModalidadeEsportiva: modalidadeId!,
-          name: modalidadeNome,
-          description: modalidadeDescricao,
+          nome: modalidadeNome,
+          descricao: modalidadeDescricao,
+          foto: null, // Foto está escondida por enquanto
         })
       } else {
         toast.error('ID da modalidade é inválido')
@@ -184,6 +195,32 @@ export default function ModalidadeInscricaoPage() {
     setModalidadeNome('')
     setModalidadeDescricao('')
     setIsSheetOpen(true)
+  }
+
+  async function deactivateModalidade(idModalidadeEsportiva) {
+    const token = localStorage.getItem('token')
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/desativar/${idModalidadeEsportiva}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    if (!res.ok) throw new Error('Erro ao desativar modalidade.')
+    return await res.json()
+  }
+
+  const handleDeactivateModalidade = async (idModalidadeEsportiva) => {
+    try {
+      await deactivateModalidade(idModalidadeEsportiva)
+      toast.success('Modalidade desativada com sucesso.')
+      queryClient.invalidateQueries(['modalidades'])
+    } catch (error) {
+      toast.error('Erro ao desativar modalidade.')
+    }
   }
 
   return (
@@ -249,6 +286,8 @@ export default function ModalidadeInscricaoPage() {
                   onChange={(e) => setModalidadeDescricao(e.target.value)}
                   required
                 />
+                {/* Campo de foto escondido por enquanto */}
+                <input type="hidden" value={null} />
                 <Button type="submit" className="w-full">
                   Salvar
                 </Button>
@@ -268,12 +307,24 @@ export default function ModalidadeInscricaoPage() {
                   <CardContent>
                     <p>{modalidade.descricao}</p>
                     {isAdmin && (
-                      <Button
-                        className="mt-4"
-                        onClick={() => handleEditClick(modalidade)}
-                      >
-                        Editar
-                      </Button>
+                      <>
+                        <Button
+                          className="mt-4"
+                          onClick={() => handleEditClick(modalidade)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          className="mt-4 ml-2 bg-red-500 hover:bg-red-600"
+                          onClick={() =>
+                            handleDeactivateModalidade(
+                              modalidade.idModalidadeEsportiva,
+                            )
+                          }
+                        >
+                          Desativar
+                        </Button>
+                      </>
                     )}
                   </CardContent>
                 </Card>

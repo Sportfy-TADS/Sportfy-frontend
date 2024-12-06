@@ -30,18 +30,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 // Funções de API
 async function fetchApoioSaude() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const response = await fetch('http://localhost:8081/apoioSaude/listar', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-  });
+  })
   if (!response.ok) {
-    throw new Error('Erro ao buscar apoios à saúde');
+    throw new Error('Erro ao buscar apoios à saúde')
   }
-  return response.json();
+  return response.json()
 }
 
 async function createApoioSaude(data: {
@@ -53,19 +53,19 @@ async function createApoioSaude(data: {
   idAdministrador: number
   ativo: boolean
 }): Promise<any> {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const response = await fetch('http://localhost:8081/apoioSaude', {
     method: 'POST',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
-  });
+  })
   if (!response.ok) {
-    throw new Error('Erro ao cadastrar apoio à saúde');
+    throw new Error('Erro ao cadastrar apoio à saúde')
   }
-  return response.json();
+  return response.json()
 }
 
 async function updateApoioSaude(
@@ -77,19 +77,52 @@ async function updateApoioSaude(
     descricao: string
   },
 ): Promise<any> {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
     method: 'PUT',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
-  });
+  })
   if (!response.ok) {
-    throw new Error('Erro ao atualizar apoio à saúde');
+    throw new Error('Erro ao atualizar apoio à saúde')
   }
-  return response.json();
+  return response.json()
+}
+
+async function deleteApoioSaude(id: number): Promise<any> {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  if (!response.ok) {
+    throw new Error('Erro ao deletar apoio à saúde')
+  }
+  return response.json()
+}
+
+async function deactivateApoioSaude(id: number): Promise<any> {
+  const token = localStorage.getItem('token')
+  const response = await fetch(
+    `http://localhost:8081/apoioSaude/desativar/${id}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+  if (!response.ok) {
+    throw new Error('Erro ao desativar apoio à saúde')
+  }
+  return response.json()
 }
 
 export default function ApoioSaudePage() {
@@ -151,11 +184,49 @@ export default function ApoioSaudePage() {
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteApoioSaude,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
+      toast.success('Apoio à saúde deletado com sucesso!')
+    },
+    onError: () => {
+      toast.error('Erro ao deletar apoio à saúde')
+    },
+  })
+
+  const deactivateMutation = useMutation({
+    mutationFn: deactivateApoioSaude,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
+      toast.success('Apoio à saúde desativado com sucesso!')
+    },
+    onError: () => {
+      toast.error('Erro ao desativar apoio à saúde')
+    },
+  })
+
   useEffect(() => {
     if (isError) {
       console.error('Erro ao carregar apoios à saúde:', error)
     }
   }, [isError, error])
+
+  // Ensure that the data is being fetched correctly
+  useEffect(() => {
+    if (!isLoading && apoiosSaude.length === 0) {
+      console.warn('Nenhum apoio à saúde encontrado')
+    }
+    console.log('Dados dos apoios à saúde:', apoiosSaude)
+  }, [isLoading, apoiosSaude])
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
 
   interface ApoioSaude {
     idApoioSaude: number
@@ -193,25 +264,16 @@ export default function ApoioSaudePage() {
     }
   }
 
-  interface ApoioSaude {
-    idApoioSaude: number
-    nome: string
-    email: string
-    telefone: string
-    descricao: string
-    dataPublicacao: string
-    idAdministrador: number
-    ativo: boolean
+  const handleDeleteClick = (id: number) => {
+    if (confirm('Tem certeza que deseja deletar este apoio à saúde?')) {
+      deleteMutation.mutate(id)
+    }
   }
 
-  interface NewApoioSaude {
-    nome: string
-    email: string
-    telefone: string
-    descricao: string
-    dataPublicacao: string
-    idAdministrador: number
-    ativo: boolean
+  const handleDeactivateClick = (id: number) => {
+    if (confirm('Tem certeza que deseja desativar este apoio à saúde?')) {
+      deactivateMutation.mutate(id)
+    }
   }
 
   const handleEditClick = (apoio: ApoioSaude) => {
@@ -346,6 +408,18 @@ export default function ApoioSaudePage() {
                       onClick={() => handleEditClick(apoio)}
                     >
                       Editar
+                    </Button>
+                    <Button
+                      className="mt-4 w-full bg-red-500 hover:bg-red-600"
+                      onClick={() => handleDeleteClick(apoio.idApoioSaude)}
+                    >
+                      Deletar
+                    </Button>
+                    <Button
+                      className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600"
+                      onClick={() => handleDeactivateClick(apoio.idApoioSaude)}
+                    >
+                      Desativar
                     </Button>
                   </CardContent>
                 </Card>
