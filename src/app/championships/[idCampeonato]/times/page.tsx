@@ -68,6 +68,14 @@ export default function TimesPage({
     loadTimes()
   }, [params.idCampeonato])
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
+
   if (loading) {
     return (
       <>

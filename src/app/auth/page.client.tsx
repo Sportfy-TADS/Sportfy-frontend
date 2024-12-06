@@ -6,7 +6,7 @@ import { Medal, User, Lock, Eye, EyeOff } from 'lucide-react' // Add Eye and Eye
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { useState } from 'react' // Import useState
+import { useState, useEffect } from 'react' // Import useState and useEffect
 
 import { z } from 'zod'
 
@@ -21,6 +21,14 @@ type SignInSchema = z.infer<typeof signInSchema>
 export default function SignInPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false) // Add state for password visibility
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
 
   const {
     register,
@@ -117,7 +125,12 @@ export default function SignInPage() {
                     className="absolute right-3 top-7 text-gray-400" // Changed top from top-1/2 to top-7 to align with Lock icon
                     onClick={() => setShowPassword(!showPassword)} // Toggle visibility
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />} {/* Toggle icon */}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}{' '}
+                    {/* Toggle icon */}
                   </button>
                 </div>
 

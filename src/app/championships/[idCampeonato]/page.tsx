@@ -21,22 +21,22 @@ import Sidebar from '@/components/Sidebar'
 import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 async function fetchCampeonato(idCampeonato: string) {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const res = await fetch(
     `http://localhost:8081/campeonatos/filtrar?idCampeonato=${idCampeonato}`,
     {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     },
-  );
-  if (!res.ok) throw new Error('Falha ao carregar o campeonato.');
-  const campeonatos = await res.json();
+  )
+  if (!res.ok) throw new Error('Falha ao carregar o campeonato.')
+  const campeonatos = await res.json()
   return campeonatos.find(
     (campeonato: any) => campeonato.idCampeonato === parseInt(idCampeonato),
-  );
+  )
 }
 
 export default function CampeonatoDetailsPage(props: {
@@ -60,6 +60,14 @@ export default function CampeonatoDetailsPage(props: {
     }
     loadCampeonato()
   }, [params.idCampeonato, router])
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
 
   const handleCreateTeam = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()

@@ -71,6 +71,14 @@ export default function CampeonatoPage() {
     }
   }, [router])
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
+
   const filteredCampeonatos = useMemo(() => {
     if (!searchTerm) return campeonatos
     return campeonatos.filter((campeonato) =>

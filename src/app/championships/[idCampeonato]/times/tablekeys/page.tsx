@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation' // Added to access route params
 import { Card, CardContent } from '@/components/ui/card'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+// import TeamName from '@/components/TeamName' // Remove this import
 // import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 type Team = {
@@ -19,26 +20,28 @@ type Match = {
   team1: Team
   team2: Team
   winner?: Team
+  pointsTeam1?: number // New property for team1 points
+  pointsTeam2?: number // New property for team2 points
 }
 
 async function getTimes(idCampeonato: string): Promise<Team[]> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     const res = await fetch(
       `http://localhost:8081/campeonatos/${idCampeonato}/times`,
       {
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       },
-    );
-    if (!res.ok) throw new Error('Falha ao carregar os times.');
-    const times: Team[] = await res.json();
-    return times;
+    )
+    if (!res.ok) throw new Error('Falha ao carregar os times.')
+    const times: Team[] = await res.json()
+    return times
   } catch (error) {
-    throw new Error('Erro desconhecido ao carregar os times.');
+    throw new Error('Erro desconhecido ao carregar os times.')
   }
 }
 
@@ -60,17 +63,21 @@ export default function Page() {
           )
         }
 
-        // Initialize matches without winners
+        // Initialize matches with points
         const semiFinals: Match[] = [
           {
             id: 'SF1',
             team1: times[0],
             team2: times[1],
+            pointsTeam1: 0,
+            pointsTeam2: 0,
           },
           {
             id: 'SF2',
             team1: times[2],
             team2: times[3],
+            pointsTeam1: 0,
+            pointsTeam2: 0,
           },
         ]
 
@@ -84,9 +91,62 @@ export default function Page() {
     fetchMatches()
   }, [idCampeonato])
 
-  const handleAdvance = () => {
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
+
+  const handleAdvance = async () => {
+    // Check if all matches have points
+    const allMatchesHavePoints = matches.every(
+      (match) =>
+        match.pointsTeam1 !== undefined && match.pointsTeam2 !== undefined,
+    )
+
+    if (!allMatchesHavePoints) {
+      alert('Por favor, marque os pontos de todas as equipes antes de avançar.')
+      return
+    }
+
+    // Determine winners based on points
+    const updatedMatches = matches.map((match) => {
+      if (match.pointsTeam1! > match.pointsTeam2!) {
+        return { ...match, winner: match.team1 }
+      } else if (match.pointsTeam2! > match.pointsTeam1!) {
+        return { ...match, winner: match.team2 }
+      }
+      return match
+    })
+    setMatches(updatedMatches)
+
+    // Update points in the backend
+    try {
+      const token = localStorage.getItem('token')
+      for (const match of updatedMatches) {
+        await fetch(
+          `http://localhost:8081/campeonatos/partidas/${match.id}/pontuacao?pontuacaoTime1=${match.pointsTeam1}&pontuacaoTime2=${match.pointsTeam2}&team1=${match.team1.nome}&team2=${match.team2.nome}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar a pontuação:', error)
+      alert('Erro ao atualizar a pontuação. Por favor, tente novamente.')
+      return
+    }
+
     // Check if all semifinal matches have winners
-    const semiFinals = matches.filter((match) => match.id.startsWith('SF'))
+    const semiFinals = updatedMatches.filter((match) =>
+      match.id.startsWith('SF'),
+    )
     const allSemiFinalsDecided = semiFinals.every((match) => match.winner)
 
     if (!allSemiFinalsDecided) {
@@ -106,7 +166,7 @@ export default function Page() {
     }
 
     // Check if final match exists and has a winner
-    const finalMatch = matches.find((match) => match.id === 'F')
+    const finalMatch = updatedMatches.find((match) => match.id === 'F')
     if (finalMatch) {
       if (finalMatch.winner) {
         alert(`Campeão: ${finalMatch.winner.nome}`)
@@ -143,6 +203,12 @@ export default function Page() {
       <div className="flex h-screen">
         <Sidebar />
         <div className="flex-1 p-4 overflow-y-auto">
+          <button
+            onClick={handleAdvance}
+            className="mb-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Avançar
+          </button>
           {/* 
           <Breadcrumb>
             <BreadcrumbItem href="/championships">Campeonatos</BreadcrumbItem>
@@ -157,12 +223,6 @@ export default function Page() {
             setMatches={setMatches}
             hasAdvanced={hasAdvanced}
           />
-          <button
-            onClick={handleAdvance}
-            className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Avançar
-          </button>
         </div>
       </div>
     </>
@@ -206,6 +266,22 @@ function TournamentBracket({
     setMatches(updatedMatches)
   }
 
+  const handlePointsChange = (
+    matchId: string,
+    team: 'team1' | 'team2',
+    points: number,
+  ) => {
+    const updatedMatches = matches.map((match) =>
+      match.id === matchId
+        ? {
+            ...match,
+            [team === 'team1' ? 'pointsTeam1' : 'pointsTeam2']: points,
+          }
+        : match,
+    )
+    setMatches(updatedMatches)
+  }
+
   return (
     <div className="flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 md:space-x-4">
       <div className="space-y-4">
@@ -217,6 +293,7 @@ function TournamentBracket({
               key={match.id}
               match={match}
               onSelectWinner={handleWinnerSelect}
+              onPointsChange={handlePointsChange} // New prop
               disableSelect={hasAdvanced} // Disable if hasAdvanced
             />
           ))}
@@ -227,6 +304,7 @@ function TournamentBracket({
           <MatchCard
             match={matches.find((match) => match.id === 'F')!}
             onSelectWinner={handleWinnerSelect}
+            onPointsChange={handlePointsChange} // New prop
             disableSelect={
               !matches
                 .filter((m) => m.id.startsWith('SF'))
@@ -246,10 +324,16 @@ function TournamentBracket({
 function MatchCard({
   match,
   onSelectWinner,
+  onPointsChange, // New prop
   disableSelect = false,
 }: {
   match: Match
   onSelectWinner: (matchId: string, winner: Team) => void
+  onPointsChange: (
+    matchId: string,
+    team: 'team1' | 'team2',
+    points: number,
+  ) => void
   disableSelect?: boolean
 }) {
   return (
@@ -257,49 +341,61 @@ function MatchCard({
       <CardContent className="p-4">
         <div className="space-y-2">
           {match.team1 && (
-            <TeamName
-              team={match.team1}
-              isWinner={match.winner?.idTime === match.team1.idTime}
-              onSelect={() =>
+            <div
+              className={`p-2 cursor-pointer ${
+                match.winner?.idTime === match.team1.idTime
+                  ? 'bg-green-100 dark:bg-green-700 font-semibold text-black dark:text-white'
+                  : 'text-gray-800 dark:text-gray-200'
+              }`}
+              onClick={() =>
                 !disableSelect && onSelectWinner(match.id, match.team1)
               }
-            />
+            >
+              {match.team1.nome}
+              {match.winner?.idTime === match.team1.idTime && (
+                <span className="ml-2 text-green-600">✓</span>
+              )}
+            </div>
           )}
+          <input
+            type="number"
+            value={match.pointsTeam1 ?? ''}
+            onChange={(e) =>
+              onPointsChange(match.id, 'team1', Number(e.target.value))
+            }
+            disabled={disableSelect}
+            className="w-full mt-2 p-2 border rounded"
+            placeholder="Pontos Time 1"
+          />
           {match.team2 && (
-            <TeamName
-              team={match.team2}
-              isWinner={match.winner?.idTime === match.team2.idTime}
-              onSelect={() =>
+            <div
+              className={`p-2 cursor-pointer ${
+                match.winner?.idTime === match.team2.idTime
+                  ? 'bg-green-100 dark:bg-green-700 font-semibold text-black dark:text-white'
+                  : 'text-gray-800 dark:text-gray-200'
+              }`}
+              onClick={() =>
                 !disableSelect && onSelectWinner(match.id, match.team2)
               }
-            />
+            >
+              {match.team2.nome}
+              {match.winner?.idTime === match.team2.idTime && (
+                <span className="ml-2 text-green-600">✓</span>
+              )}
+            </div>
           )}
+          <input
+            type="number"
+            value={match.pointsTeam2 ?? ''}
+            onChange={(e) =>
+              onPointsChange(match.id, 'team2', Number(e.target.value))
+            }
+            disabled={disableSelect}
+            className="w-full mt-2 p-2 border rounded"
+            placeholder="Pontos Time 2"
+          />
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function TeamName({
-  team,
-  isWinner,
-  onSelect,
-}: {
-  team: Team
-  isWinner?: boolean
-  onSelect: () => void
-}) {
-  return (
-    <div
-      className={`p-2 cursor-pointer ${
-        isWinner
-          ? 'bg-green-100 dark:bg-green-700 font-semibold text-black dark:text-white'
-          : 'text-gray-800 dark:text-gray-200'
-      }`}
-      onClick={onSelect}
-    >
-      {team.nome}
-      {isWinner && <span className="ml-2 text-green-600">✓</span>}
-    </div>
   )
 }

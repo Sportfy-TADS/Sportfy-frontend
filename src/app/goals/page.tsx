@@ -335,7 +335,7 @@ export default function GoalsPage() {
 
             {/* Adicione Skeleton para o formulário se necessário */}
             {isLoadingMetasEsportivas && (
-              <Sheet open={true}>
+              <Sheet open={false}>
                 <SheetContent>
                   <SheetHeader>
                     <SheetTitle>Editar Meta</SheetTitle>
