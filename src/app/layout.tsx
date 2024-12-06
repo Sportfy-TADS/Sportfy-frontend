@@ -24,7 +24,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body
+        className={
+          process.env.HIDE_NEXT_ERROR_OVERLAY === 'true'
+            ? 'hide-nextjs-portal'
+            : undefined
+        }
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

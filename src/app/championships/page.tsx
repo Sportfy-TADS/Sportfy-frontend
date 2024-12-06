@@ -82,26 +82,35 @@ export default function CampeonatoPage() {
     event: React.FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
-    const idAcademico = getUserIdFromToken()
+    const formData = new FormData(event.currentTarget)
+    const data = Object.fromEntries(formData.entries())
 
-    if (!idAcademico) {
-      toast.error('Usuário não identificado. Por favor, faça login novamente.')
-      router.push('/auth')
-      return
-    }
+    console.log('Form data received:', data)
 
     try {
-      const formData = new FormData(event.currentTarget)
-      const data = Object.fromEntries(formData.entries())
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('No token found')
+        toast.error('Usuário não autenticado')
+        router.push('/auth')
+        return
+      }
 
-      const newCampeonato = {
+      console.log('Current user ID:', currentUserId)
+      if (!currentUserId) {
+        console.error('No user ID found')
+        toast.error('ID do usuário não encontrado')
+        return
+      }
+
+      const newCampeonato: any = {
         titulo: String(data.titulo).trim(),
         descricao: String(data.descricao).trim(),
         aposta: String(data.aposta).trim(),
         dataInicio: `${data.dataInicio}T09:00:00Z`,
         dataFim: `${data.dataFim}T18:00:00Z`,
-        limiteTimes: Math.max(1, Number(data.limiteTimes)),
-        limiteParticipantes: Math.max(1, Number(data.limiteParticipantes)),
+        limiteTimes: Number(data.limiteTimes),
+        limiteParticipantes: Number(data.limiteParticipantes),
         ativo: true,
         endereco: {
           cep: String(data.cep).replace(/\D/g, ''),
@@ -110,26 +119,58 @@ export default function CampeonatoPage() {
           bairro: String(data.bairro),
           rua: String(data.logradouro),
           numero: String(data.numero),
-          complemento: data.complemento ? String(data.complemento) : '',
         },
-        privacidadeCampeonato: data.privacidadeCampeonato || 'PUBLICO',
-        idAcademico,
+        privacidadeCampeonato: privacidade,
+        idAcademico: Number(currentUserId),
         idModalidadeEsportiva: 1,
         situacaoCampeonato: 'EM_ABERTO',
       }
 
-      if (data.privacidadeCampeonato === 'PRIVADO' && data.senha) {
+      // Conditionally add 'senha' if provided
+      if (data.senha) {
         newCampeonato.senha = String(data.senha)
       }
 
-      console.log(
-        'Creating championship with data:',
-        JSON.stringify(newCampeonato, null, 2),
+      // Conditionally add 'complemento' if provided
+      if (data.complemento) {
+        newCampeonato.endereco.complemento = String(data.complemento)
+      }
+
+      console.log('Prepared championship data:', newCampeonato)
+      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_URL}/campeonatos`)
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/campeonatos`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newCampeonato),
+        },
       )
-      await createMutation.mutateAsync(newCampeonato)
+
+      console.log('Response status:', response.status)
+
+      const responseText = await response.text()
+      console.log('Raw response:', responseText)
+
+      if (!response.ok) {
+        console.error('Server error details:', responseText)
+        throw new Error(`Error creating championship: ${responseText}`)
+      }
+
+      const result = JSON.parse(responseText)
+      console.log('Championship created successfully:', result)
+
+      toast.success('Campeonato criado com sucesso!')
+      // Optionally refresh the page or update the list
+      window.location.reload()
     } catch (error) {
-      console.error('Error preparing championship data:', error)
-      toast.error('Erro ao preparar dados do campeonato')
+      console.error('Detailed error:', error)
+      console.error('Error stack:', (error as Error).stack)
+      toast.error('Erro ao criar campeonato')
     }
   }
 
@@ -542,15 +583,15 @@ export default function CampeonatoPage() {
                             <Trash className="mr-2" /> Excluir
                           </Button>
                           <Button
-                          onClick={() =>
-                            router.push(
-                              `/championships/${campeonato.idCampeonato}`,
-                            )
-                          }
-                          className="flex items-center justify-center bg-green-500 hover:bg-green-600"
-                        >
-                          Acessar
-                        </Button>
+                            onClick={() =>
+                              router.push(
+                                `/championships/${campeonato.idCampeonato}`,
+                              )
+                            }
+                            className="flex items-center justify-center bg-green-500 hover:bg-green-600"
+                          >
+                            Acessar
+                          </Button>
                         </>
                       ) : (
                         <Button

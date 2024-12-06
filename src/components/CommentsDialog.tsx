@@ -11,13 +11,12 @@ import { useFeed } from '@/hooks/useFeed' // Importar o hook
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner' // Importar toast
 import axios from 'axios' // Import axios
+import { fetchComments } from '@/http/feed'
 
 interface CommentsDialogProps {
   isOpen: boolean
   onClose: () => void
-  comments: Comentario[] // Alterar para Comentario[]
-  loading: boolean
-  postId: number | null // Adicionado
+  postId: number
 }
 
 const likeComment = async (userId: number, commentId: number) => {
@@ -57,15 +56,15 @@ const unlikeComment = async (userId: number, commentId: number) => {
 // Componente Recursivo para Exibir e Editar Comentários Aninhados
 const CommentItem: React.FC<{
   comment: Comentario
-  addReply: (parentId: number, descricao: string) => void
-  updateComment: (
+  handleLikeComment: (commentId: number) => void
+  handleUpdateComment: (
     commentId: number,
     descricao: string,
     idPublicacao: number,
     dataComentario: Date,
   ) => void // Atualizado
   loggedUser: Usuario | null // Adicionado
-}> = ({ comment, addReply, updateComment, loggedUser }) => {
+}> = ({ comment, handleLikeComment, handleUpdateComment, loggedUser }) => {
   const [showReply, setShowReply] = useState(false)
   const [replyContent, setReplyContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -85,7 +84,7 @@ const CommentItem: React.FC<{
     if (editedContent.trim()) {
       const date = new Date()
       const dateString = date.toISOString()
-      await updateComment(
+      await handleUpdateComment(
         comment.idComentario,
         editedContent,
         comment.idPublicacao,
@@ -97,55 +96,12 @@ const CommentItem: React.FC<{
     }
   }
 
-  const handleLikeComment = async () => {
-    if (!loggedUser?.idUsuario) {
-      toast.error('Usuário não autenticado')
-      return
-    }
-    try {
-      await likeComment(loggedUser.idUsuario, comment.idComentario)
-      // Update local comment state
-      setLocalComments((prev) =>
-        prev.map((c) =>
-          c.idComentario === comment.idComentario
-            ? {
-                ...c,
-                listaUsuarioCurtida: [
-                  ...c.listaUsuarioCurtida,
-                  { idUsuario: loggedUser.idUsuario },
-                ],
-              }
-            : c,
-        ),
-      )
-    } catch {
-      toast.error('Erro ao curtir comentário')
-    }
-  }
+  const hasLiked = comment.listaUsuarioCurtida.some(
+    (user) => user.idUsuario === loggedUser?.idUsuario,
+  )
 
-  const handleUnlikeComment = async () => {
-    if (!loggedUser?.idUsuario) {
-      toast.error('Usuário não autenticado')
-      return
-    }
-    try {
-      await unlikeComment(loggedUser.idUsuario, comment.idComentario)
-      // Update local comment state
-      setLocalComments((prev) =>
-        prev.map((c) =>
-          c.idComentario === comment.idComentario
-            ? {
-                ...c,
-                listaUsuarioCurtida: c.listaUsuarioCurtida.filter(
-                  (user) => user.idUsuario !== loggedUser.idUsuario,
-                ),
-              }
-            : c,
-        ),
-      )
-    } catch {
-      toast.error('Erro ao remover curtida do comentário')
-    }
+  const toggleLike = () => {
+    handleLikeComment(comment.idComentario)
   }
 
   return (
@@ -206,22 +162,12 @@ const CommentItem: React.FC<{
         {/* Botão de Curtida no Comentário */}
         <div className="flex items-center space-x-2 mt-1">
           <button
-            onClick={() =>
-              comment.listaUsuarioCurtida.some(
-                (user) => user.idUsuario === loggedUser?.idUsuario,
-              )
-                ? handleUnlikeComment()
-                : handleLikeComment()
-            }
+            onClick={toggleLike}
             className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           >
             <Star
               className={`w-3 h-3 ${
-                comment.listaUsuarioCurtida.some(
-                  (user) => user.idUsuario === loggedUser?.idUsuario,
-                )
-                  ? 'text-amber-300 fill-amber-300'
-                  : 'text-gray-300'
+                hasLiked ? 'text-amber-300 fill-amber-300' : 'text-gray-300'
               }`}
             />
             <span>{comment.listaUsuarioCurtida.length}</span>
@@ -235,8 +181,8 @@ const CommentItem: React.FC<{
           <CommentItem
             key={reply.idComentario}
             comment={reply}
-            addReply={addReply}
-            updateComment={updateComment}
+            handleLikeComment={handleLikeComment}
+            handleUpdateComment={handleUpdateComment}
             loggedUser={loggedUser} // Passar loggedUser
           />
         ))}
@@ -247,87 +193,90 @@ const CommentItem: React.FC<{
 const CommentsDialog: React.FC<CommentsDialogProps> = ({
   isOpen,
   onClose,
-  comments,
-  loading,
   postId,
 }) => {
   const { handleCreateComment, handleUpdateComment, loggedUser } = useFeed() // Usar o hook
   const [newComment, setNewComment] = useState('')
-  const [localComments, setLocalComments] = useState<Comentario[]>(comments)
+  const [comments, setComments] = useState<Comentario[]>([])
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setLocalComments(comments)
-  }, [comments])
-
-  const addReply = async (parentId: number, descricao: string) => {
-    if (postId === null) {
-      toast.error('ID da publicação não encontrado.')
-      return
+    if (isOpen) {
+      setComments([])
+      setPage(0)
+      setHasMore(true)
+      loadComments(0)
     }
+  }, [isOpen])
+
+  const loadComments = async (pageToLoad: number) => {
+    setLoading(true)
     try {
-      const createdReply = await handleCreateComment(postId, descricao)
-      // Atualizar localComments com a resposta criada
-      setLocalComments((prev) =>
-        prev.map((comment) =>
-          comment.idComentario === parentId
-            ? {
-                ...comment,
-                listaComentarios: comment.listaComentarios
-                  ? [createdReply, ...comment.listaComentarios]
-                  : [createdReply],
-              }
-            : comment,
-        ),
-      )
-    } catch {
-      // Erros já são tratados no hook
+      const response = await fetchComments(postId, pageToLoad)
+      if (response.length < 10) {
+        setHasMore(false)
+      } else {
+        setPage((prev) => prev + 1)
+      }
+      setComments((prev) => [...prev, ...response])
+    } catch (error) {
+      console.error('Erro ao carregar comentários:', error)
+      toast.error('Erro ao carregar comentários.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const updateCommentHandler = async (
-    commentId: number,
-    descricao: string,
-    dataComentario: Date,
-  ) => {
-    if (postId !== null) {
-      try {
-        const updatedComment = await handleUpdateComment(
-          commentId,
-          descricao,
-          postId,
-          dataComentario,
+  const handleLikeComment = async (commentId: number) => {
+    if (!loggedUser?.idUsuario) {
+      toast.error('Usuário não autenticado')
+      return
+    }
+
+    const commentIndex = comments.findIndex(
+      (comment) => comment.idComentario === commentId,
+    )
+    if (commentIndex === -1) return
+
+    const hasLiked = comments[commentIndex].listaUsuarioCurtida.some(
+      (user) => user.idUsuario === loggedUser.idUsuario,
+    )
+
+    try {
+      if (hasLiked) {
+        await unlikeComment(loggedUser.idUsuario, commentId)
+        comments[commentIndex].listaUsuarioCurtida = comments[
+          commentIndex
+        ].listaUsuarioCurtida.filter(
+          (user) => user.idUsuario !== loggedUser.idUsuario,
         )
-        // Atualizar localComments com o comentário atualizado
-        setLocalComments((prev) =>
-          prev.map((comment) =>
-            comment.idComentario === commentId
-              ? {
-                  ...comment,
-                  descricao: updatedComment.descricao,
-                  dataComentario: updatedComment.dataComentario,
-                }
-              : comment,
-          ),
-        )
-      } catch {
-        // Erros já são tratados no hook
+      } else {
+        await likeComment(loggedUser.idUsuario, commentId)
+        comments[commentIndex].listaUsuarioCurtida.push({
+          idUsuario: loggedUser.idUsuario,
+        })
       }
-    } else {
-      toast.error('ID da publicação não encontrado.')
+      setComments([...comments])
+    } catch (error) {
+      console.error('Erro ao atualizar curtida do comentário:', error)
+      toast.error('Erro ao atualizar curtida do comentário.')
     }
   }
 
   const submitComment = async () => {
-    if (postId && newComment.trim()) {
-      try {
-        const createdComment = await handleCreateComment(postId, newComment)
-        setLocalComments((prev) => [createdComment, ...prev])
-        setNewComment('')
-      } catch {
-        // Erros já são tratados no hook
-      }
-    } else {
+    if (!newComment.trim()) {
       toast.error('Digite um comentário válido.')
+      return
+    }
+    try {
+      const createdComment = await handleCreateComment(postId, newComment)
+      setComments([createdComment, ...comments])
+      setNewComment('')
+    } catch (error) {
+      console.error('Erro ao criar comentário:', error)
+      toast.error('Erro ao criar comentário.')
     }
   }
 
@@ -348,13 +297,13 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
             ))
           ) : (
             <>
-              {localComments.length ? (
-                localComments.map((comment) => (
+              {comments.length ? (
+                comments.map((comment) => (
                   <CommentItem
                     key={comment.idComentario}
                     comment={comment}
-                    addReply={addReply}
-                    updateComment={updateCommentHandler}
+                    handleLikeComment={handleLikeComment}
+                    handleUpdateComment={handleUpdateComment}
                     loggedUser={loggedUser} // Passar loggedUser
                   />
                 ))
@@ -364,6 +313,21 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
                 </p>
               )}
             </>
+          )}
+          {loading && (
+            <div className="flex justify-center my-4">
+              <p>Carregando...</p>
+            </div>
+          )}
+          {hasMore && !loading && (
+            <div className="flex justify-center my-4">
+              <button
+                onClick={() => loadComments(page)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded"
+              >
+                Carregar Mais Comentários
+              </button>
+            </div>
           )}
         </div>
         {/* Formulário de Novo Comentário Sempre Visível */}

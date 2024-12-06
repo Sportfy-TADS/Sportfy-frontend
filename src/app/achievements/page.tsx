@@ -162,7 +162,10 @@ export default function AchievementsPage() {
 
           {Object.entries(achievementsByModalidade).map(
             ([modalidade, modalidadeAchievements], modalidadeIndex) => (
-              <div key={`modalidade-${modalidadeIndex}`} className="mb-12">
+              <div
+                key={`modalidade-${modalidadeIndex}-${modalidade}`}
+                className="mb-12"
+              >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold">{modalidade}</h2>
                   <button className="text-sm text-gray-400 hover:text-white transition-colors">
@@ -173,7 +176,7 @@ export default function AchievementsPage() {
                 <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
                   {modalidadeAchievements.map((achievement) => (
                     <div
-                      key={`achievement-icon-${achievement.id}`}
+                      key={`achievement-icon-${modalidade}-${achievement.id || achievement.metaEsportiva.idModalidadeEsportiva}`}
                       className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/6"
                     >
                       <div
@@ -209,7 +212,7 @@ export default function AchievementsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {modalidadeAchievements.map((achievement) => (
                     <Card
-                      key={`achievement-card-${achievement.id}`}
+                      key={`achievement-card-${modalidade}-${achievement.id || achievement.metaEsportiva.idModalidadeEsportiva}`}
                       className={`border border-gray-800 ${
                         achievement.conquistado ? 'bg-gray-800' : 'bg-gray-900'
                       }`}
