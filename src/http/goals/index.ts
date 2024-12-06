@@ -147,19 +147,26 @@ export async function updateGoal(data: {
   situacaoMetaDiaria: number
 }) {
   const token = localStorage.getItem('token')
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/metaDiaria`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
+  if (!token) {
+    throw new Error('Usuário não autenticado')
+  }
+
+  const response = await fetch(`http://localhost:8081/metaDiaria`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-  )
-  if (!response.ok) throw new Error('Erro ao atualizar meta')
-  return await response.json()
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    const errorDetails = await response.text()
+    console.error('Resposta de erro da API:', errorDetails)
+    throw new Error(`Erro ao atualizar Meta Diária: ${errorDetails}`)
+  }
+
+  return response.json()
 }
 
 export async function getMetaEsportiva(idAcademico: number) {
@@ -200,29 +207,71 @@ export async function getMetaEsportiva(idAcademico: number) {
 }
 
 export async function updateMetaEsportiva(meta: MetaEsportiva) {
-  const userData = useUserData()
-  const token = userData?.token // Ensure you have access to the user's token
+  const token = localStorage.getItem('token') // Use localStorage to get the token
   if (!token) {
     throw new Error('Usuário não autenticado')
   }
 
-  const response = await fetch(
-    `http://localhost:8081/modalidadeEsportiva/metaEsportiva/${meta.idMetaEsportiva}`,
+  // Fetch the list of available conquistas for the idAcademico
+  const conquistasResponse = await axios.get(
+    `http://localhost:8081/conquista/listarConquistas/${meta.idAcademico}`, // Use the correct idAcademico
     {
-      method: 'PUT', // Use PUT or PATCH based on API specification
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Include Authorization header
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(meta),
     },
   )
 
-  if (!response.ok) {
-    const errorDetails = await response.text() // Get detailed error message
-    console.error('Resposta de erro da API:', errorDetails)
-    throw new Error(`Erro ao atualizar Meta Esportiva: ${errorDetails}`)
+  if (conquistasResponse.status !== 200) {
+    console.error('Erro ao buscar conquistas:', conquistasResponse.data)
+    throw new Error(`Erro ao buscar conquistas: ${conquistasResponse.data}`)
   }
 
-  return response.json()
+  const conquistas = conquistasResponse.data
+
+  // Find the conquista that matches the metaEsportiva
+  const conquista = conquistas.find(
+    (c: any) => c.metaEsportiva.idMetaEsportiva === meta.idMetaEsportiva,
+  )
+
+  if (!conquista) {
+    throw new Error('Conquista não existe!')
+  }
+
+  const payload = {
+    idConquista: conquista.idConquista, // Use the correct idConquista
+    progressoAtual: meta.progressoMaximo, // Update only the progressoAtual field
+    dataConquista: null,
+    conquistado: false,
+    idAcademico: meta.idAcademico, // Ensure this is the correct idAcademico
+    metaEsportiva: {
+      idMetaEsportiva: meta.idMetaEsportiva,
+      titulo: meta.titulo,
+      descricao: meta.descricao,
+      progressoMaximo: meta.progressoMaximo,
+      progressoItem: meta.progressoItem,
+      foto: meta.foto,
+      ativo: meta.ativo,
+      idModalidadeEsportiva: meta.idModalidadeEsportiva,
+    },
+  }
+
+  const response = await axios.put(
+    `http://localhost:8081/conquista/atualizarConquista`,
+    payload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (response.status !== 200) {
+    console.error('Erro ao atualizar Meta Esportiva:', response.data)
+    throw new Error(`Erro ao atualizar Meta Esportiva: ${response.data}`)
+  }
+
+  return response.data
 }

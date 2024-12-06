@@ -29,7 +29,14 @@ import GoalForm from '@/components/goals/GoalForm'
 import GoalList from '@/components/goals/GoalList'
 import { useUserData } from '@/hooks/useUserData'
 import { useGoals } from '@/hooks/useGoals'
-import { createGoal, getMetaEsportiva, updateMetaEsportiva } from '@/http/goals'
+import {
+  createGoal,
+  getMetaEsportiva,
+  updateMetaEsportiva,
+  updateGoal,
+  deleteGoal, // Import the deleteGoal function
+} from '@/http/goals'
+import { Alert } from '@/components/ui/alert' // Import the Alert component
 
 interface MetaEsportiva {
   idMetaEsportiva: number
@@ -89,15 +96,46 @@ export default function GoalsPage() {
     },
   })
 
-  // Modify handleUpdateGoal to catch and log detailed errors
+  // Modify handleUpdateGoal to delete the goal if progressoAtual reaches progressoMaximo
   const handleUpdateGoal = async (goal: any) => {
     try {
       if (goal.isSports) {
-        await updateMetaEsportivaMutation.mutateAsync(goal)
+        await updateMetaEsportivaMutation.mutateAsync({
+          ...goal,
+          progressoAtual: goal.progressoAtual, // Update only the progressoAtual field
+        })
       } else {
-        await updateMutation.mutateAsync(goal)
+        await updateGoal(goal) // Call updateGoal for daily goals
       }
-      toast.success('Meta atualizada com sucesso!')
+
+      if (goal.progressoAtual >= goal.progressoMaximo) {
+        // Show confirmation alert before deletion
+        Alert.confirm({
+          title: 'Conclusão de Meta',
+          message: `
+            <strong>Título:</strong> ${goal.titulo} <br>
+            <strong>Objetivo:</strong> ${goal.objetivo || 'Não definido'} <br>
+            <strong>Progresso:</strong> ${goal.progressoAtual} / ${goal.progressoMaximo} ${goal.progressoItem} <br>
+            <strong>Situação:</strong> ${goal.situacaoMetaDiaria === 0 ? 'Pendente' : 'Concluída'}
+          `,
+          onConfirm: async () => {
+            await deleteGoal(goal.idMetaDiaria) // Delete the goal if progressoAtual reaches progressoMaximo
+            toast.success('Meta atingida e excluída com sucesso!')
+            queryClient.invalidateQueries([
+              'metasEsportivas',
+              userData?.idAcademico,
+            ]) // Invalidate queries to refresh data
+            queryClient.invalidateQueries(['goals', userData?.idAcademico]) // Invalidate queries to refresh data
+          },
+        })
+      } else {
+        toast.success('Meta atualizada com sucesso!')
+        queryClient.invalidateQueries([
+          'metasEsportivas',
+          userData?.idAcademico,
+        ]) // Invalidate queries to refresh data
+        queryClient.invalidateQueries(['goals', userData?.idAcademico]) // Invalidate queries to refresh data
+      }
     } catch (error: any) {
       console.error(
         'Erro detalhado ao atualizar meta esportiva:',
@@ -146,6 +184,14 @@ export default function GoalsPage() {
       toast.error(`Erro ao criar meta: ${error.message}`)
     }
   }
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
 
   return (
     <>
@@ -232,7 +278,9 @@ export default function GoalsPage() {
                     goals={filteredGoals}
                     isLoading={isLoadingGoals}
                     onEdit={setEditingGoal}
-                    onDelete={handleDeleteGoal} // Pass handleDeleteGoal for daily goals
+                    onDelete={
+                      goalType === 'daily' ? handleDeleteGoal : undefined
+                    } // Allow deletion only for daily goals
                   />
                 )}
               </>
@@ -250,7 +298,7 @@ export default function GoalsPage() {
                 }))}
                 isLoading={isLoadingMetasEsportivas}
                 onEdit={setEditingGoal}
-                onDelete={handleDeleteGoal} // Pass handleDeleteGoal for sports goals
+                onDelete={undefined} // Do not allow deletion for sports goals
                 userRole={userData?.role} // Pass user role
               />
             )}
@@ -272,7 +320,13 @@ export default function GoalsPage() {
                       handleUpdateGoal({ ...editingGoal, ...data })
                       setEditingGoal(null)
                     }}
-                    defaultValues={editingGoal}
+                    defaultValues={{
+                      titulo: editingGoal.titulo,
+                      descricao: editingGoal.objetivo, // Map 'objetivo' to 'descricao'
+                      progressoItem: editingGoal.progressoItem,
+                      progressoMaximo: editingGoal.progressoMaximo,
+                      // Add other fields as necessary
+                    }}
                     isEditMode={true} // Pass isEditMode prop
                   />
                 </SheetContent>

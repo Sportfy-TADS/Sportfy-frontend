@@ -64,6 +64,14 @@ export default function RegisterPage() {
     }
   }, [query, courses])
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
+
   return (
     <div className="container relative min-h-screen flex flex-col items-center justify-center antialiased lg:grid lg:grid-cols-2 lg:px-0">
       {/* Barra lateral esquerda para telas maiores */}

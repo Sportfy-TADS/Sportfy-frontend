@@ -115,6 +115,29 @@ function formatDate(date) {
   return date
 }
 
+function maskPhoneNumber(value) {
+  return value
+    .replace(/\D/g, '')
+    .replace(/^(\d{2})(\d)/g, '($1) $2')
+    .replace(/(\d{4,5})(\d{4})$/, '$1-$2')
+}
+
+function maskDate(value) {
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '$1/$2')
+    .replace(/(\d{2})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d)/, '$1')
+}
+
+function formatDateForInput(dateString) {
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function AdminCrudPage() {
   const [currentAdmin, setCurrentAdmin] = useState(null)
   const [newAdmin, setNewAdmin] = useState({
@@ -166,6 +189,14 @@ export default function AdminCrudPage() {
     }
     checkAdminStatus()
   }, [router])
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
 
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ['admins'],
@@ -241,17 +272,29 @@ export default function AdminCrudPage() {
     e: React.ChangeEvent<HTMLInputElement>,
     isEditMode = false,
   ) => {
-    const formattedPhone = formatPhoneNumber(e.target.value)
+    const maskedPhone = maskPhoneNumber(e.target.value)
     if (isEditMode) {
-      setEditAdmin({ ...editAdmin, telefone: formattedPhone })
+      setEditAdmin({ ...editAdmin, telefone: maskedPhone })
     } else {
-      setNewAdmin({ ...newAdmin, telefone: formattedPhone })
+      setNewAdmin({ ...newAdmin, telefone: maskedPhone })
     }
   }
 
-  const handleDateChange = (e) => {
-    const formattedDate = formatDate(e.target.value)
-    setNewAdmin({ ...newAdmin, dataNascimento: formattedDate })
+  const handleDateChange = (e, isEditMode = false) => {
+    const maskedDate = maskDate(e.target.value)
+    if (isEditMode) {
+      setEditAdmin({ ...editAdmin, dataNascimento: maskedDate })
+    } else {
+      setNewAdmin({ ...newAdmin, dataNascimento: maskedDate })
+    }
+  }
+
+  const handleEditAdmin = (admin) => {
+    setEditAdmin({
+      ...admin,
+      telefone: formatPhoneNumber(admin.telefone),
+      dataNascimento: formatDateForInput(admin.dataNascimento),
+    })
   }
 
   return (
@@ -318,8 +361,7 @@ export default function AdminCrudPage() {
                     <Input
                       placeholder="Data de Nascimento"
                       value={newAdmin.dataNascimento}
-                      onChange={handleDateChange}
-                      type="date"
+                      onChange={(e) => handleDateChange(e, false)}
                     />
                     <Button
                       onClick={handleCreateAdmin}
@@ -373,13 +415,8 @@ export default function AdminCrudPage() {
                   <Input
                     placeholder="Data de Nascimento"
                     value={editAdmin.dataNascimento}
+                    onChange={(e) => handleDateChange(e, true)}
                     type="date"
-                    onChange={(e) =>
-                      setEditAdmin({
-                        ...editAdmin,
-                        dataNascimento: e.target.value,
-                      })
-                    }
                   />
                   <Button
                     onClick={handleUpdateAdmin}
@@ -415,7 +452,7 @@ export default function AdminCrudPage() {
                       </span>
                       <div className="flex items-center justify-between">
                         <Button
-                          onClick={() => setEditAdmin(admin)}
+                          onClick={() => handleEditAdmin(admin)}
                           variant="outline"
                           className="mt-4 bg-white text-black"
                         >

@@ -13,7 +13,7 @@ export const registerAcademico = async ({
   const payload = {
     curso,
     nome,
-    username,
+    username: username.toLowerCase(),
     telefone,
     dataNascimento: format(
       new Date(dataNascimento),

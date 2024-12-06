@@ -36,6 +36,7 @@ export default function FeedPage() {
     setNewPostTitle,
     loadMore, // Use loadMore
     hasMore, // Use hasMore
+    handleDeleteComment, // Add handleDeleteComment
   } = useFeed()
   const [editingPost, setEditingPost] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -323,6 +324,7 @@ export default function FeedPage() {
         loading={commentsLoading}
         postId={selectedPostId} // Adicionado
         loggedUser={loggedUser} // Certificar-se de passar loggedUser
+        handleDeleteComment={handleDeleteComment} // Pass handleDeleteComment
       />
     </>
   )

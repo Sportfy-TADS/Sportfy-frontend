@@ -383,6 +383,48 @@ export const useFeed = () => {
     }
   }
 
+  const handleDeleteComment = async (commentId: number, postId: number) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Token não encontrado')
+      }
+
+      console.log('Deleting comment with ID:', commentId) // Log the comment ID
+
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/comentario/removerComentario/${commentId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      console.log('Comment delete response:', response) // Log the response
+
+      toast.success('Comentário removido com sucesso!')
+
+      // Remove the comment from the post's comments list
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.idPublicacao === postId
+            ? {
+                ...post,
+                listaComentario: post.listaComentario.filter(
+                  (comment) => comment.idComentario !== commentId,
+                ),
+              }
+            : post,
+        ),
+      )
+    } catch (error) {
+      console.error('Error deleting comment:', error) // Log the error
+      toast.error('Erro ao remover o comentário.')
+    }
+  }
+
   const appendPosts = (newPosts: Post[]) => {
     setPosts((prevPosts) => [...prevPosts, ...newPosts])
   }
@@ -422,6 +464,7 @@ export const useFeed = () => {
     fetchCommentsForPost,
     handleCreateComment, // Adicionado
     handleUpdateComment, // Adicionado
+    handleDeleteComment, // Expose handleDeleteComment
     loggedUser, // Adicionado
     appendPosts, // Add this
     loadMore, // Expose loadMore
