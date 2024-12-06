@@ -45,6 +45,8 @@ export default function CampeonatoDetailsPage(props: {
   const params = use(props.params)
   const [campeonato, setCampeonato] = useState<any>(null)
   const [teamName, setTeamName] = useState('')
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [password, setPassword] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -71,7 +73,31 @@ export default function CampeonatoDetailsPage(props: {
 
   const handleCreateTeam = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    // Add logic to create a team
+    const token = localStorage.getItem('token')
+    const teamData = {
+      name: teamName,
+      isPrivate,
+      password: isPrivate ? password : undefined,
+    }
+    try {
+      const res = await fetch('http://localhost:8081/times', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(teamData),
+      })
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.message || 'Falha ao criar o time.')
+      }
+      toast.success('Time criado com sucesso!')
+      // Optionally, redirect or update the UI
+    } catch (error) {
+      console.error('Erro ao criar o time:', error)
+      toast.error('Erro ao criar o time.')
+    }
   }
 
   if (!campeonato) {
@@ -114,6 +140,33 @@ export default function CampeonatoDetailsPage(props: {
                         required
                       />
                     </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="isPrivate"
+                        name="isPrivate"
+                        checked={isPrivate}
+                        onChange={(e) => setIsPrivate(e.target.checked)}
+                      />
+                      <Label htmlFor="isPrivate" className="ml-2">
+                        Time Privado
+                      </Label>
+                    </div>
+                    {isPrivate && (
+                      <div>
+                        <Label htmlFor="password">
+                          Senha <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="password"
+                          name="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    )}
                     <Button
                       type="submit"
                       className="bg-blue-500 hover:bg-blue-600"
