@@ -84,7 +84,7 @@ const GoalList = ({
               <Button onClick={() => onEdit(goal)} className="rounded-md">
                 Editar
               </Button>
-              {userRole === 'ADMIN' && !goal.isSports && onDelete && (
+              {onDelete && (
                 <Button
                   onClick={() => onDelete(goal.idMetaDiaria)}
                   className="bg-red-500 text-white rounded-md"

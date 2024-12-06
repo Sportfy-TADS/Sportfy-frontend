@@ -64,11 +64,11 @@ export async function searchGoalByName(idAcademico: number, titulo: string) {
 // Função API para criar uma nova meta
 export async function createGoal(data: {
   titulo: string
-  descricao: string // Change objetivo to descricao
+  descricao: string // Use 'descricao' instead of 'objetivo'
   progressoAtual: number
   progressoMaximo: number
   progressoItem: string
-  idAcademico: number // Ensure idAcademico is required
+  idAcademico: number
   situacaoMetaDiaria?: number
 }) {
   const token = localStorage.getItem('token')
@@ -80,12 +80,12 @@ export async function createGoal(data: {
 
   const payload = {
     titulo: data.titulo,
-    objetivo: data.descricao, // Map descricao to objetivo
-    progressoAtual: data.progressoAtual, // Ensure this is set to zero by default
+    objetivo: data.descricao, // Map 'descricao' to 'objetivo' as required by the backend
+    progressoAtual: data.progressoAtual,
     progressoMaximo: data.progressoMaximo,
     progressoItem: data.progressoItem,
     idAcademico: data.idAcademico,
-    situacaoMetaDiaria: data.situacaoMetaDiaria || 0, // Handle default if needed
+    situacaoMetaDiaria: data.situacaoMetaDiaria || 0,
   }
 
   console.log('Creating goal with payload:', payload)
@@ -103,18 +103,10 @@ export async function createGoal(data: {
       },
     )
 
-    let result = null
-    try {
-      // Attempt to parse the response body
-      result = await response.json()
-    } catch (err) {
-      // If response is empty or not JSON, result remains null
-      console.error('Failed to parse response JSON:', err)
-    }
+    const result = await response.json()
 
     if (!response.ok) {
-      let errorMessage = `Error ${response.status}`
-      errorMessage += `: ${result?.message || JSON.stringify(result) || 'Unknown error'}`
+      const errorMessage = `Error ${response.status}: ${result?.message || 'Unknown error'}`
       console.error('Server error details:', errorMessage)
       throw new Error(errorMessage)
     }
@@ -123,11 +115,7 @@ export async function createGoal(data: {
     return result
   } catch (error: any) {
     console.error('Failed to create goal:', error)
-    if (error instanceof Error) {
-      throw error
-    } else {
-      throw new Error('Erro ao criar meta')
-    }
+    throw new Error(error.message || 'Erro ao criar meta')
   }
 }
 

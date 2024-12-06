@@ -4,7 +4,7 @@ import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 
 interface GoalFormProps {
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void
+  onSubmit: (data: any) => void // Update the type to match the expected data structure
   defaultValues?: any
 }
 
@@ -27,6 +27,7 @@ export default function GoalForm({ onSubmit, defaultValues }: GoalFormProps) {
       progressoMaximo,
       progressoItem:
         progressoItem === 'outro' ? customProgressoItem : progressoItem,
+      situacaoMetaDiaria: 0, // Set default value if needed
     }
 
     try {

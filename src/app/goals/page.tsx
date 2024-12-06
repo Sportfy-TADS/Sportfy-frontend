@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -45,7 +45,7 @@ interface MetaEsportiva {
 export default function GoalsPage() {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [editingGoal, setEditingGoal] = useState<any>(null)
+  const [editingGoal, setEditingGoal] = useState<any>(null) // Certifique-se de que editingGoal é inicializado como null
   const [goalType, setGoalType] = useState('daily')
   const userData = useUserData()
   const isAdmin = userData?.role === 'ADMIN' // Assuming userData contains a role field
@@ -89,31 +89,6 @@ export default function GoalsPage() {
     }
   }
 
-  const handleCreateGoal = async (data: any) => {
-    try {
-      const newGoal = {
-        titulo: String(data.titulo).trim(),
-        descricao: String(data.descricao).trim(), // Ensure descricao is passed correctly
-        tipoMeta: String(data.tipoMeta),
-        idModalidadeEsportiva: Number(data.idModalidadeEsportiva),
-        progressoMaximo: Number(data.progressoMaximo),
-        idAcademico, // Ensure idAcademico is included
-        // Include any additional required fields
-      }
-
-      console.log('Creating goal with data:', newGoal)
-
-      const createdGoal = await createGoal(newGoal)
-
-      toast.success('Meta criada com sucesso!')
-      // Update state dynamically without reloading the page
-      setGoals((prevGoals) => [...prevGoals, createdGoal])
-    } catch (error: any) {
-      console.error('Erro ao criar meta:', error)
-      toast.error('Erro ao criar meta.')
-    }
-  }
-
   const {
     goals,
     isLoading: isLoadingGoals,
@@ -140,146 +115,167 @@ export default function GoalsPage() {
     return goal.situacaoMetaDiaria === (filter === 'completed' ? 1 : 0)
   })
 
+  const handleCreateGoal = async (data: any) => {
+    try {
+      console.log('Creating goal with data:', data)
+
+      // Call `originalHandleCreateGoal` with `data`
+      const createdGoal = await originalHandleCreateGoal(data)
+
+      toast.success('Meta criada com sucesso!')
+    } catch (error: any) {
+      console.error('Erro ao criar meta:', error)
+      toast.error(`Erro ao criar meta: ${error.message}`)
+    }
+  }
+
   return (
     <>
       <Header />
-      <div className="flex min-h-screen">
+      <div className="flex h-screen">
         <Sidebar className="flex-none" />
-        <div className="container mx-auto p-4 flex-1">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Metas</h1>{' '}
-            {/* Add the page title */}
-            <div className="flex space-x-4">
-              {/* Filter for metas completas e em andamento */}
-              <Select onValueChange={setFilter} defaultValue="all">
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar Situação" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="completed">Completas</SelectItem>
-                  <SelectItem value="in_progress">Em andamento</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="flex-1 overflow-y-auto">
+          <div className="container mx-auto p-4">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold">Metas</h1>{' '}
+              {/* Add the page title */}
+              <div className="flex space-x-4">
+                {/* Filter for metas completas e em andamento */}
+                <Select onValueChange={setFilter} defaultValue="all">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar Situação" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="completed">Completas</SelectItem>
+                    <SelectItem value="in_progress">Em andamento</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              {/* Filter for metas diarias e esportivas */}
-              <Select onValueChange={setGoalType} defaultValue="daily">
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo de Meta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Metas Diárias</SelectItem>
-                  <SelectItem value="sports">Metas Esportivas</SelectItem>
-                </SelectContent>
-              </Select>
+                {/* Filter for metas diarias e esportivas */}
+                <Select onValueChange={setGoalType} defaultValue="daily">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo de Meta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Metas Diárias</SelectItem>
+                    <SelectItem value="sports">Metas Esportivas</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              {/* Search Input */}
-              <Input
-                placeholder="Buscar meta..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64"
-              />
+                {/* Search Input */}
+                <Input
+                  placeholder="Buscar meta..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-64"
+                />
+              </div>
+              {/* Cadastrar Meta Button */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button className="bg-blue-500 hover:bg-blue-600">
+                    Cadastrar Meta
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Cadastrar Meta</SheetTitle>
+                  </SheetHeader>
+                  <GoalForm onSubmit={handleCreateGoal} />
+                </SheetContent>
+              </Sheet>
             </div>
-            {/* Cadastrar Meta Button */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button className="bg-blue-500 hover:bg-blue-600">
-                  Cadastrar Meta
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Cadastrar Meta</SheetTitle>
-                </SheetHeader>
-                <GoalForm onSubmit={handleCreateGoal} />
-              </SheetContent>
-            </Sheet>
+
+            {goalType === 'daily' ? (
+              <>
+                {isLoadingGoals ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <Card
+                        key={index}
+                        className="p-4 border border-amber-300 rounded-md shadow-sm"
+                      >
+                        <CardHeader>
+                          <Skeleton variant="text" className="w-1/2 h-6 mb-2" />
+                        </CardHeader>
+                        <CardContent>
+                          <Skeleton
+                            variant="text"
+                            className="w-full h-4 mb-2"
+                          />
+                          <Skeleton variant="text" className="w-3/4 h-4" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <GoalList
+                    goals={filteredGoals}
+                    isLoading={isLoadingGoals}
+                    onEdit={setEditingGoal}
+                    onDelete={handleDeleteGoal} // Pass handleDeleteGoal for daily goals
+                  />
+                )}
+              </>
+            ) : (
+              <GoalList
+                goals={metasEsportivas.map((meta) => ({
+                  idMetaDiaria: meta.idMetaEsportiva,
+                  titulo: meta.titulo,
+                  objetivo: meta.descricao,
+                  progressoItem: meta.progressoItem,
+                  progressoAtual: 0, // Initialize progress
+                  progressoMaximo: meta.progressoMaximo,
+                  situacaoMetaDiaria: meta.ativo ? 1 : 0,
+                  isSports: true, // Flag to identify sports goals
+                }))}
+                isLoading={isLoadingMetasEsportivas}
+                onEdit={setEditingGoal}
+                onDelete={handleDeleteGoal} // Pass handleDeleteGoal for sports goals
+                userRole={userData?.role} // Pass user role
+              />
+            )}
+
+            {/* Move the edit Sheet outside the goalType conditional */}
+            {editingGoal && (
+              <Sheet
+                open={Boolean(editingGoal)}
+                onOpenChange={(open) => {
+                  if (!open) setEditingGoal(null)
+                }}
+              >
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Editar Meta</SheetTitle>
+                  </SheetHeader>
+                  <GoalForm
+                    onSubmit={(data: any) => {
+                      handleUpdateGoal({ ...editingGoal, ...data })
+                      setEditingGoal(null)
+                    }}
+                    defaultValues={editingGoal}
+                  />
+                </SheetContent>
+              </Sheet>
+            )}
+
+            {/* Adicione Skeleton para o formulário se necessário */}
+            {isLoadingMetasEsportivas && (
+              <Sheet open={true}>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Editar Meta</SheetTitle>
+                  </SheetHeader>
+                  <div className="space-y-4">
+                    <Skeleton className="w-full h-6" />
+                    <Skeleton className="w-full h-4" />
+                    <Skeleton className="w-full h-4" />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
-
-          {goalType === 'daily' ? (
-            <>
-              {isLoadingGoals ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <Card
-                      key={index}
-                      className="p-4 border border-amber-300 rounded-md shadow-sm"
-                    >
-                      <CardHeader>
-                        <Skeleton variant="text" className="w-1/2 h-6 mb-2" />
-                      </CardHeader>
-                      <CardContent>
-                        <Skeleton variant="text" className="w-full h-4 mb-2" />
-                        <Skeleton variant="text" className="w-3/4 h-4" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <GoalList
-                  goals={filteredGoals}
-                  isLoading={isLoadingGoals}
-                  onEdit={setEditingGoal}
-                  onDelete={handleDeleteGoal}
-                />
-              )}
-            </>
-          ) : (
-            <GoalList
-              goals={metasEsportivas.map((meta) => ({
-                idMetaDiaria: meta.idMetaEsportiva,
-                titulo: meta.titulo,
-                objetivo: meta.descricao,
-                progressoItem: meta.progressoItem,
-                progressoAtual: 0, // Initialize progress
-                progressoMaximo: meta.progressoMaximo,
-                situacaoMetaDiaria: meta.ativo ? 1 : 0,
-                isSports: true, // Flag to identify sports goals
-              }))}
-              isLoading={isLoadingMetasEsportivas}
-              onEdit={setEditingGoal}
-              onDelete={isAdmin ? handleDeleteGoal : null} // Allow delete only for admins
-              userRole={userData?.role} // Pass user role to GoalList
-            />
-          )}
-
-          {/* Move the edit Sheet outside the goalType conditional */}
-          {editingGoal && (
-            <Sheet
-              open={Boolean(editingGoal)}
-              onOpenChange={() => setEditingGoal(null)}
-            >
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Editar Meta</SheetTitle>
-                </SheetHeader>
-                <GoalForm
-                  onSubmit={(data: any) => {
-                    handleUpdateGoal({ ...editingGoal, ...data })
-                    setEditingGoal(null)
-                  }}
-                  defaultValues={editingGoal}
-                />
-              </SheetContent>
-            </Sheet>
-          )}
-
-          {/* Adicione Skeleton para o formulário se necessário */}
-          {isLoadingMetasEsportivas && (
-            <Sheet open={true}>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Editar Meta</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-4">
-                  <Skeleton className="w-full h-6" />
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-full h-4" />
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
         </div>
       </div>
     </>

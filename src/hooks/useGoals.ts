@@ -6,7 +6,7 @@ export const useGoals = (idAcademico: number) => {
   interface Goal {
     idMetaDiaria: number
     titulo: string
-    objetivo: string
+    descricao: string // Changed from objetivo to descricao
     quantidadeConcluida: number
     quantidadeObjetivo: number
     itemQuantificado: string
@@ -43,28 +43,27 @@ export const useGoals = (idAcademico: number) => {
       // Format the data according to the backend's expected structure
       const payload = {
         titulo: goalData.titulo,
-        objetivo: goalData.objetivo,
+        descricao: goalData.descricao, // Use 'descricao' instead of 'objetivo'
         progressoAtual: 0, // Set to zero by default
         progressoMaximo: goalData.progressoMaximo,
         progressoItem: goalData.progressoItem,
         idAcademico,
-        situacaoMetaDiaria: goalData.situacaoMetaDiaria,
+        situacaoMetaDiaria: goalData.situacaoMetaDiaria || 0,
       }
+
+      console.log('Creating goal with payload:', payload)
 
       const response = await createGoal(payload)
 
-      // Since we're creating a new goal, add it to the goals list
+      console.log('Goal created successfully:', response)
+
+      // Add the new goal to the goals list
       setGoals((prev) => [...prev, response])
+
       return response
     } catch (error: any) {
       console.error('Error creating goal:', error)
-
-      // Provide more detailed error messages
-      if (error instanceof Error) {
-        throw new Error(error.message || 'Erro ao criar meta')
-      } else {
-        throw new Error('Erro ao criar meta')
-      }
+      throw new Error(error.message || 'Erro ao criar meta')
     }
   }
 
@@ -74,7 +73,7 @@ export const useGoals = (idAcademico: number) => {
       const payload = {
         idMetaDiaria: goalData.idMetaDiaria,
         titulo: goalData.titulo,
-        objetivo: goalData.objetivo,
+        descricao: goalData.descricao, // Changed from objetivo to descricao
         quantidadeConcluida: Number(goalData.progressoAtual),
         quantidadeObjetivo: Number(goalData.progressoMaximo),
         itemQuantificado:
