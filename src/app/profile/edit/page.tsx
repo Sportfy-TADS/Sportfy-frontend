@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/hooks/useAuth'
 
 interface UserData {
   nome: string
@@ -31,6 +32,7 @@ interface UserData {
 }
 
 export default function EditProfilePage() {
+  const { isAuthenticated, isLoading, userId } = useAuth()
   const [userData, setUserData] = useState<UserData>({
     nome: '',
     email: '',
@@ -43,24 +45,29 @@ export default function EditProfilePage() {
     foto: null,
     ativo: true,
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { toast } = useToast()
 
   useEffect(() => {
     const loadUserData = async () => {
-      const authData = getUserData()
+      console.log('isAuthenticated:', isAuthenticated) // Log para depuração
+      console.log('userId:', userId) // Log para depuração
+
+      if (!isAuthenticated || !userId) return
+
       const token = localStorage.getItem('token')
-      if (!authData?.idAcademico || !token) {
-        toast({ title: 'Erro', description: 'Usuário não autenticado' })
+      console.log('Token:', token) // Log para depuração
+
+      if (!token) {
         router.push('/auth')
         return
       }
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${authData.idAcademico}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/academico/consultar/${userId}`,
           {
             headers: {
               'Content-Type': 'application/json',
@@ -68,21 +75,36 @@ export default function EditProfilePage() {
             },
           },
         )
-        if (!response.ok) throw new Error('Falha ao carregar dados')
+        console.log('Response:', response) // Log para depuração
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token')
+            router.push('/auth')
+            return
+          }
+          throw new Error('Falha ao carregar dados')
+        }
+
         const data = await response.json()
+        console.log('Dados do usuário:', data) // Log para depuração
+
         setUserData({
-          nome: data.nome,
-          email: data.email,
-          username: data.username,
-          password: '', // Do not pre-fill the password
-          genero: data.genero,
-          telefone: data.telefone,
-          curso: data.curso,
-          dataNascimento: data.dataNascimento.split('T')[0],
+          nome: data.nome || '',
+          email: data.email || '',
+          username: data.username || '',
+          password: '',
+          genero: data.genero || '',
+          telefone: data.telefone || '',
+          curso: data.curso || '',
+          dataNascimento: data.dataNascimento
+            ? data.dataNascimento.split('T')[0]
+            : '',
           foto: data.foto,
-          ativo: data.ativo,
+          ativo: data.ativo ?? true,
         })
       } catch (error) {
+        console.error('Erro ao carregar dados:', error)
         toast({
           title: 'Erro',
           description: 'Erro ao carregar dados do usuário',
@@ -91,16 +113,19 @@ export default function EditProfilePage() {
     }
 
     loadUserData()
-  }, [router, toast])
+  }, [isAuthenticated, userId, router, toast])
 
   const handleUpdate = async () => {
-    setIsLoading(true)
-    const authData = getUserData()
+    setIsUpdating(true)
+    const authData = await getUserData()
     const token = localStorage.getItem('token')
+
+    console.log('authData:', authData) // Log para depuração
+    console.log('Token:', token) // Log para depuração
 
     if (!authData?.idAcademico || !token) {
       toast({ title: 'Erro', description: 'Usuário não autenticado' })
-      setIsLoading(false)
+      setIsUpdating(false)
       return
     }
 
@@ -128,15 +153,30 @@ export default function EditProfilePage() {
         },
       )
 
+      console.log('Update Response:', response) // Log para depuração
+
       if (!response.ok) throw new Error('Falha ao atualizar')
 
       toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso' })
       router.push('/profile')
     } catch (error) {
+      console.error('Erro ao atualizar perfil:', error) // Log para depuração
       toast({ title: 'Erro', description: 'Erro ao atualizar perfil' })
     } finally {
-      setIsLoading(false)
+      setIsUpdating(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
@@ -267,10 +307,10 @@ export default function EditProfilePage() {
 
             <Button
               onClick={handleUpdate}
-              disabled={isLoading}
+              disabled={isUpdating}
               className="w-full mt-6"
             >
-              {isLoading ? (
+              {isUpdating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Atualizando...

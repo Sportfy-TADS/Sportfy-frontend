@@ -67,6 +67,7 @@ export const useGoals = (idAcademico: number) => {
     }
   }
 
+  // Ensure handleUpdateGoal is exported for daily goals
   const handleUpdateGoal = async (goalData: any) => {
     try {
       // Ensure all required fields are present and properly formatted
@@ -74,16 +75,14 @@ export const useGoals = (idAcademico: number) => {
         idMetaDiaria: goalData.idMetaDiaria,
         titulo: goalData.titulo,
         descricao: goalData.descricao, // Changed from objetivo to descricao
-        quantidadeConcluida: Number(goalData.progressoAtual),
-        quantidadeObjetivo: Number(goalData.progressoMaximo),
-        itemQuantificado:
+        progressoAtual: Number(goalData.progressoAtual), // Ensure it's a number
+        progressoMaximo: Number(goalData.progressoMaximo),
+        progressoItem:
           goalData.progressoItem === 'outro'
             ? goalData.customProgressoItem
             : goalData.progressoItem,
         situacaoMetaDiaria: Number(goalData.situacaoMetaDiaria),
-        academico: {
-          idAcademico,
-        },
+        idAcademico, // Ensure idAcademico is included
       }
 
       const response = await updateGoal(payload)
@@ -117,7 +116,7 @@ export const useGoals = (idAcademico: number) => {
     goals,
     isLoading,
     handleCreateGoal,
-    handleUpdateGoal,
+    handleUpdateGoal, // Export the update handler for daily goals
     handleDeleteGoal,
   }
 }

@@ -70,13 +70,16 @@ export default function FeedPage() {
   }
 
   const createNewPost = async () => {
+    console.log('Creating new post...') // Log start of function
     if (!newPostTitle.trim() || !newPostContent.trim()) {
       toast.error('Título e descrição são obrigatórios')
+      console.log('Failed: Title or content is empty') // Log validation failure
       return
     }
 
     if (!loggedUser?.idUsuario) {
       toast.error('Usuário não autenticado')
+      console.log('Failed: User not authenticated') // Log authentication failure
       return
     }
 
@@ -88,11 +91,12 @@ export default function FeedPage() {
       idUsuario: loggedUser.idUsuario,
     }
 
+    console.log('New post payload:', newPost) // Log post payload
+
     try {
       await handleNewPost(newPost)
-      // Only close dialog and show success after the post is created
+      console.log('Post created successfully') // Log success
       setIsDialogOpen(false)
-      // Delay the toast to prevent the setState during render issue
       setTimeout(() => {
         toast.success('Publicação criada com sucesso!')
       }, 100)

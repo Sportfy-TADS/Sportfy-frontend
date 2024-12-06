@@ -299,9 +299,9 @@ export const useFeed = () => {
 
         const updatedComment = {
           idComentario: commentId,
-          descricao: descricao,
-          dataComentario: dataComentario,
-          idPublicacao: idPublicacao,
+          descricao,
+          dataComentario,
+          idPublicacao,
           Usuario: {
             idUsuario: loggedUser.idUsuario,
             username: loggedUser.username,

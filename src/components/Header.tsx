@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react' // Removed useCallback and debounce imports
 import { useRouter } from 'next/navigation'
-import {jwtDecode} from 'jwt-decode' // Changed from named import to default import
+import { jwtDecode } from 'jwt-decode' // Changed from named import to default import
 import { LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -23,10 +23,10 @@ interface DecodedToken {
 }
 
 interface SearchResult {
-  id: number;
-  nome: string;
-  username: string;
-  tipo: 'ACADEMICO' | 'ADMINISTRADOR';
+  id: number
+  nome: string
+  username: string
+  tipo: 'ACADEMICO' | 'ADMINISTRADOR'
 }
 
 export default function Header() {
@@ -42,28 +42,29 @@ export default function Header() {
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token')
-      console.log('Token:', token) // Log do token
+      const storedUserData = localStorage.getItem('userData')
+      console.log('Token:', token, 'Stored User Data:', storedUserData) // Debug log
 
       if (!token) {
-        router.push('/auth')
+        setIsLoggedIn(false)
         return
       }
 
-      let decoded: DecodedToken
       try {
-        decoded = jwtDecode(token)
-        console.log('Decoded Token:', decoded) // Log do token decodificado
-      } catch (error) {
-        console.error('Erro ao decodificar o token:', error)
-        router.push('/auth')
-        return
-      }
+        const decoded: DecodedToken = jwtDecode(token)
+        console.log('Decoded Token:', decoded) // Debug log
 
-      setIsLoggedIn(true)
-      const username = decoded.sub
-      setUserName(username)
+        // Se já temos os dados do usuário no localStorage, use-os
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData)
+          setIsLoggedIn(true)
+          setUserName(userData.nome)
+          setUserImage(userData.foto || `https://via.placeholder.com/50`)
+          return
+        }
 
-      try {
+        // Se não temos os dados armazenados, busque-os da API
+        const username = decoded.sub
         let userResponse
 
         if (decoded.roles.includes('ADMINISTRADOR')) {
@@ -72,22 +73,15 @@ export default function Header() {
             {
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          );
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          )
           const adminData = await adminResponse.json()
-          console.log('Admin Data:', adminData) // Log dos dados do administrador
-
           const matchedAdmin = adminData.content.find(
             (admin: any) => admin.username === decoded.sub,
           )
-          console.log('Matched Admin:', matchedAdmin) // Log do administrador correspondente
-
-          if (!matchedAdmin) {
-            router.push('/auth')
-            return
-          }
+          if (!matchedAdmin) throw new Error('Admin não encontrado')
           userResponse = { nome: matchedAdmin.nome, foto: matchedAdmin.foto }
         } else {
           const response = await fetch(
@@ -101,85 +95,89 @@ export default function Header() {
           )
           if (!response.ok) throw new Error('Erro ao buscar dados do acadêmico')
           userResponse = await response.json()
-          console.log('User Data:', userResponse) // Log dos dados do usuário
         }
 
-        storeUserData(userResponse) // Store user data in localStorage
+        // Armazena os dados do usuário no localStorage
+        localStorage.setItem('userData', JSON.stringify(userResponse))
+        setIsLoggedIn(true)
         setUserName(userResponse.nome)
         setUserImage(userResponse.foto || `https://via.placeholder.com/50`)
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error)
-        router.push('/auth')
+        console.error('Erro ao carregar dados do usuário:', error)
+        // Não redireciona automaticamente em caso de erro
+        setIsLoggedIn(false)
       }
     }
 
     fetchUserData()
-  }, [router])
+  }, []) // Remove router dependency to prevent unnecessary redirects
 
   // Função para realizar a busca de usuários
   const performSearch = async (term: string) => {
     if (term.length > 2) {
       try {
         // Buscar acadêmicos e administradores em paralelo
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token')
         const [academicosResponse, adminsResponse] = await Promise.all([
           fetch(
             `http://localhost:8081/academico/listar?page=0&size=10&sort=curso,desc&nome_like=${term}`,
             {
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            }
+                Authorization: `Bearer ${token}`,
+              },
+            },
           ),
           fetch(
             `http://localhost:8081/administrador/listar?page=0&size=10&sort=idAdministrador,desc`,
             {
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          )
-        ]);
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          ),
+        ])
 
-        const academicosData = await academicosResponse.json();
-        const adminsData = await adminsResponse.json();
+        const academicosData = await academicosResponse.json()
+        const adminsData = await adminsResponse.json()
 
         // Formatar resultados de acadêmicos
         const academicos = academicosData.content.map((user: any) => ({
           id: user.idAcademico,
           nome: user.nome,
           username: user.username,
-          tipo: 'ACADEMICO' as const
-        }));
+          tipo: 'ACADEMICO' as const,
+        }))
 
         // Formatar resultados de administradores
         const admins = adminsData.content
-          .filter((admin: any) => 
-            admin.nome.toLowerCase().includes(term.toLowerCase()) ||
-            admin.username.toLowerCase().includes(term.toLowerCase())
+          .filter(
+            (admin: any) =>
+              admin.nome.toLowerCase().includes(term.toLowerCase()) ||
+              admin.username.toLowerCase().includes(term.toLowerCase()),
           )
           .map((admin: any) => ({
             id: admin.idAdministrador,
             nome: admin.nome,
             username: admin.username,
-            tipo: 'ADMINISTRADOR' as const
-          }));
+            tipo: 'ADMINISTRADOR' as const,
+          }))
 
         // Combinar e ordenar resultados
-        const combinedResults = [...academicos, ...admins]
-          .sort((a, b) => a.nome.localeCompare(b.nome));
+        const combinedResults = [...academicos, ...admins].sort((a, b) =>
+          a.nome.localeCompare(b.nome),
+        )
 
-        setSearchResults(combinedResults);
-        console.log('Combined Search Results:', combinedResults);
+        setSearchResults(combinedResults)
+        console.log('Combined Search Results:', combinedResults)
       } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
+        console.error('Erro ao buscar usuários:', error)
       }
     } else {
-      setSearchResults([]);
+      setSearchResults([])
     }
-  };
+  }
 
   // Função para realizar a busca de acadêmicos com debouncing
   const handleSearch = (term: string) => {
@@ -210,6 +208,7 @@ export default function Header() {
   const handleLogout = () => {
     setIsLoggedIn(false)
     localStorage.removeItem('token')
+    localStorage.removeItem('userData')
     localStorage.removeItem('academicoId')
     localStorage.removeItem('adminId') // Remover também o adminId ao fazer logout
     router.push('/auth')
@@ -261,12 +260,16 @@ export default function Header() {
                 onClick={() => handleUserSelect(user.username)}
                 className="px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 flex justify-between items-center"
               >
-                <span>{user.nome} (@{user.username})</span>
-                <span className={`text-xs px-2 py-1 rounded ${
-                  user.tipo === 'ADMINISTRADOR' 
-                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                }`}>
+                <span>
+                  {user.nome} (@{user.username})
+                </span>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${
+                    user.tipo === 'ADMINISTRADOR'
+                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                  }`}
+                >
                   {user.tipo}
                 </span>
               </div>

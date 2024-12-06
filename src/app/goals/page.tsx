@@ -76,10 +76,28 @@ export default function GoalsPage() {
     },
   })
 
+  // Add separate mutation for updating MetaEsportiva
+  const updateMetaEsportivaMutation = useMutation({
+    mutationFn: updateMetaEsportiva,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['metasEsportivas', userData?.idAcademico])
+      toast.success('Meta esportiva atualizada com sucesso!')
+    },
+    onError: (error: any) => {
+      console.error('Erro ao atualizar meta esportiva:', error)
+      toast.error('Erro ao atualizar meta esportiva.')
+    },
+  })
+
   // Modify handleUpdateGoal to catch and log detailed errors
-  const handleUpdateGoal = async (meta: MetaEsportiva) => {
+  const handleUpdateGoal = async (goal: any) => {
     try {
-      await updateMutation.mutateAsync(meta)
+      if (goal.isSports) {
+        await updateMetaEsportivaMutation.mutateAsync(goal)
+      } else {
+        await updateMutation.mutateAsync(goal)
+      }
+      toast.success('Meta atualizada com sucesso!')
     } catch (error: any) {
       console.error(
         'Erro detalhado ao atualizar meta esportiva:',
@@ -255,6 +273,7 @@ export default function GoalsPage() {
                       setEditingGoal(null)
                     }}
                     defaultValues={editingGoal}
+                    isEditMode={true} // Pass isEditMode prop
                   />
                 </SheetContent>
               </Sheet>
