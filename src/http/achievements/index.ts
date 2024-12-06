@@ -1,35 +1,36 @@
 // index.ts
-export const fetchAchievements = async (
-  idAcademico: number,
-  token: string | null,
-) => {
-  try {
-    console.log('Fetching achievements for idAcademico:', idAcademico)
-    console.log('Using token:', token)
-    
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/conquista/listarConquistas/${idAcademico}`
-    console.log('Request URL:', url)
+export async function fetchAchievements(idAcademico: number, token: string) {
+  if (!idAcademico) {
+    throw new Error('ID do acadêmico é obrigatório')
+  }
 
-    const response = await fetch(url, {
+  if (!token) {
+    throw new Error('Token é obrigatório')
+  }
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/conquista/listarConquistas/${idAcademico}`,
+    {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-    })
+    },
+  )
 
-    console.log('Response status:', response.status)
-    
-    if (!response.ok) {
-      console.error('Error response:', response)
-      throw new Error('Erro ao carregar conquistas')
+  console.log('Response status:', response.status)
+
+  if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('Acesso negado')
     }
-
-    const achievementsData = await response.json()
-    console.log('Achievement data received:', achievementsData)
-    return achievementsData
-  } catch (error) {
-    console.error('Error in fetchAchievements:', error)
-    throw error
+    if (response.status === 404) {
+      return [] // Return empty array if no achievements found
+    }
+    throw new Error('Erro ao carregar conquistas')
   }
+
+  const data = await response.json()
+  return data
 }

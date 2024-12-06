@@ -27,6 +27,23 @@ interface Achievement {
   conquistado: boolean
 }
 
+// Extract Loading component
+const LoadingState = () => (
+  <div className="min-h-screen bg-gray-900 text-white">
+    <Header />
+    <div className="flex">
+      <Sidebar />
+      <div className="container mx-auto p-4">
+        <Skeleton className="w-full h-48 bg-gray-800" />
+        <div className="mt-4 space-y-4">
+          <Skeleton className="h-8 w-48 bg-gray-800" />
+          <Skeleton className="w-full h-32 bg-gray-800" />
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,36 +51,54 @@ export default function AchievementsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const loadAchievements = async () => {
-      const userData = getUserData()
-      console.log('User Data:', userData)
-      if (!userData) {
-        console.error('Erro: Nenhum usuário logado encontrado no localStorage')
-        router.push('/auth')
-        return
-      }
+    let mounted = true
 
+    const loadAchievements = async () => {
       try {
+        const userData = await getUserData()
+        if (!mounted) return
+
+        if (!userData?.idAcademico) {
+          console.error('Erro: ID do acadêmico não encontrado')
+          router.push('/auth')
+          return
+        }
+
         const token = localStorage.getItem('token')
+        if (!token) {
+          console.error('Erro: Token não encontrado')
+          router.push('/auth')
+          return
+        }
+
         const achievementsData = await fetchAchievements(
           userData.idAcademico,
           token,
         )
-        setAchievements(achievementsData)
+        if (mounted) {
+          setAchievements(achievementsData)
+          setLoading(false)
+        }
       } catch (error: any) {
-        if (error.message.includes('403')) {
+        if (!mounted) return
+
+        if (error.response?.status === 403) {
           setIsBlocked(true)
         } else {
           console.error('Erro ao carregar conquistas:', error)
           toast.error('Erro ao carregar conquistas.')
         }
-      } finally {
         setLoading(false)
       }
     }
 
     loadAchievements()
+    return () => {
+      mounted = false
+    }
   }, [router])
+
+  if (loading) return <LoadingState />
 
   const getModalidadeName = (id: number) => {
     const modalidades: { [key: number]: string } = {
@@ -87,27 +122,9 @@ export default function AchievementsPage() {
     return icons[modalidadeId] || '🏅'
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <div className="container mx-auto p-4">
-            <Skeleton className="w-full h-48 bg-gray-300 dark:bg-gray-800" />
-            <div className="mt-4 space-y-4">
-              <Skeleton className="h-8 w-48 bg-gray-300 dark:bg-gray-800" />
-              <Skeleton className="w-full h-32 bg-gray-300 dark:bg-gray-800" />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   if (isBlocked) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
+      <div className="min-h-screen bg-gray-900 text-white">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -136,7 +153,7 @@ export default function AchievementsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
+    <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       <div className="flex flex-col lg:flex-row">
         <Sidebar />
@@ -144,11 +161,11 @@ export default function AchievementsPage() {
           <h1 className="text-4xl font-bold mb-8">Conquistas</h1>
 
           {Object.entries(achievementsByModalidade).map(
-            ([modalidade, modalidadeAchievements]) => (
-              <div key={modalidade} className="mb-12">
+            ([modalidade, modalidadeAchievements], modalidadeIndex) => (
+              <div key={`modalidade-${modalidadeIndex}`} className="mb-12">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold">{modalidade}</h2>
-                  <button className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                  <button className="text-sm text-gray-400 hover:text-white transition-colors">
                     Ver tudo
                   </button>
                 </div>
@@ -156,14 +173,14 @@ export default function AchievementsPage() {
                 <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
                   {modalidadeAchievements.map((achievement) => (
                     <div
-                      key={achievement.id}
+                      key={`achievement-icon-${achievement.id}`}
                       className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/6"
                     >
                       <div
                         className={`relative w-24 h-24 rounded-full mb-3 ${
                           achievement.conquistado
                             ? 'bg-gradient-to-br from-orange-500 to-yellow-500'
-                            : 'bg-gray-300 dark:bg-gray-800 opacity-50'
+                            : 'bg-gray-800 opacity-50'
                         } before:absolute before:inset-0 before:rounded-full before:border-2 before:border-yellow-500 before:transform before:scale-110`}
                       >
                         <div className="absolute inset-0 flex items-center justify-center text-3xl">
@@ -176,7 +193,7 @@ export default function AchievementsPage() {
                         <h3 className="font-medium text-sm mb-1">
                           {achievement.metaEsportiva.titulo}
                         </h3>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-gray-400">
                           {(
                             (achievement.progressoAtual /
                               achievement.metaEsportiva.progressoMaximo) *
@@ -192,11 +209,9 @@ export default function AchievementsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {modalidadeAchievements.map((achievement) => (
                     <Card
-                      key={achievement.id}
-                      className={`border border-gray-300 dark:border-gray-800 ${
-                        achievement.conquistado
-                          ? 'bg-gray-300 dark:bg-gray-800'
-                          : 'bg-gray-100 dark:bg-gray-900'
+                      key={`achievement-card-${achievement.id}`}
+                      className={`border border-gray-800 ${
+                        achievement.conquistado ? 'bg-gray-800' : 'bg-gray-900'
                       }`}
                     >
                       <CardHeader>
