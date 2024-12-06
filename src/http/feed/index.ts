@@ -128,6 +128,9 @@ export const createPost = async (newPost: Post) => {
       {
         ...newPost,
         dataPublicacao: new Date().toISOString(),
+        Usuario: {
+          idUsuario: newPost.idUsuario,
+        },
       },
       {
         headers: {
