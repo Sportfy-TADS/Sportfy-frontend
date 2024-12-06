@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import axios from 'axios'
-import { getUserData } from '@/utils/auth'
+import { getUserData, getDecodedToken } from '@/utils/auth'
 import { Trophy, Target, Medal } from 'lucide-react'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [bannerUrl, setBannerUrl] = useState<string | null>(
-    'https://your-fixed-image-url.com/default-banner.jpg',
+    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
   )
   const [recentGoals, setRecentGoals] = useState<any[]>([])
   const [campeonatos, setCampeonatos] = useState<
@@ -66,30 +66,26 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const loadUser = async () => {
-      const userData = getUserData()
-      console.log('User Data:', userData)
-      if (!userData) {
-        console.error('Erro: Nenhum usuário logado encontrado no localStorage')
+      const decodedToken = getDecodedToken()
+      if (!decodedToken?.sub) {
+        console.error('Erro: Token inválido ou username não encontrado')
         router.push('/auth')
         return
       }
 
+      const username = decodedToken.sub
+      const token = localStorage.getItem('token')
+
       try {
-        const username = userData.username
-        const userRole = userData.roles || userData.permissao || 'ACADEMICO'
-
-        const userEndpoint =
-          userRole === 'ADMINISTRADOR'
-            ? `${process.env.NEXT_PUBLIC_API_URL}/administrador/consultar/${userData.idUsuario}`
-            : `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`
-
-        const token = localStorage.getItem('token')
-        const response = await axios.get(userEndpoint, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${username}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           },
-        })
+        )
 
         // Fetch goals and format them correctly
         const goals = await getGoals(response.data.idAcademico)
@@ -104,8 +100,8 @@ export default function ProfilePage() {
         // Fetch achievements
         const achievements = await fetchAchievements(
           response.data.idAcademico,
-          localStorage.getItem('token'),
-        )
+          token,
+        ) // Ensure token is passed correctly
         const sortedAchievements = achievements
           .sort(
             (a: any, b: any) =>
@@ -151,18 +147,6 @@ export default function ProfilePage() {
       }
     }
 
-    const fetchBannerImage = async () => {
-      try {
-        const response = await fetch(
-          'https://source.unsplash.com/random/1600x400',
-        )
-        setBannerUrl(response.url)
-      } catch (error) {
-        console.error('Erro ao carregar imagem do banner:', error)
-      }
-    }
-
-    fetchBannerImage()
     loadUser()
   }, [router])
 

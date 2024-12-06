@@ -103,10 +103,11 @@ export default function GoalsPage() {
 
       console.log('Creating goal with data:', newGoal)
 
-      await createGoal(newGoal)
+      const createdGoal = await createGoal(newGoal)
 
       toast.success('Meta criada com sucesso!')
-      // Refresh goals or update state as needed
+      // Update state dynamically without reloading the page
+      setGoals((prevGoals) => [...prevGoals, createdGoal])
     } catch (error: any) {
       console.error('Erro ao criar meta:', error)
       toast.error('Erro ao criar meta.')
