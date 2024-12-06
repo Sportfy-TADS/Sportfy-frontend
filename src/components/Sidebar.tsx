@@ -18,6 +18,7 @@ import {
   Activity,
   Menu,
   X,
+  Star,
 } from 'lucide-react'
 
 interface DecodedToken {
@@ -170,7 +171,7 @@ export default function Sidebar() {
                 onClick={() => handleRouteClick('/playerRatings')}
                 onMouseEnter={() => prefetchRoute('/playerRatings')}
               >
-                <Layers
+                <Star
                   className={`w-6 h-6 ${visitedRoutes.includes('/playerRatings') ? 'text-blue-500' : 'text-gray-500'}`}
                 />
                 <span className="text-lg font-semibold">Avaliar</span>
