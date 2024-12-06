@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 // import { Breadcrumb, Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 async function fetchTimes(idCampeonato: string) {
@@ -52,6 +54,51 @@ export default function TimesPage({
   const [times, setTimes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTeam, setSelectedTeam] = useState<any>(null)
+  const [teamPassword, setTeamPassword] = useState<string>('')
+  const [joinedTeams, setJoinedTeams] = useState<Set<number>>(new Set())
+  const [currentTeam, setCurrentTeam] = useState<number | null>(null)
+
+  const handleJoinTeam = (team: any) => {
+    if (currentTeam) {
+      toast.error('Você já está em um time.')
+      return
+    }
+    if (team.senhaCampeonato) {
+      setSelectedTeam(team)
+    } else {
+      // Logic to join the team without password
+      console.log(`Joining team ${team.nome} without password`)
+      setJoinedTeams((prev) => new Set(prev).add(team.idTime))
+      setCurrentTeam(team.idTime)
+      toast.success(`Você entrou no time ${team.nome}`)
+    }
+  }
+
+  const handleSubmitPassword = () => {
+    if (selectedTeam && teamPassword === selectedTeam.senhaCampeonato) {
+      // Logic to join the team with password
+      console.log(`Joining team ${selectedTeam.nome} with password`)
+      setJoinedTeams((prev) => new Set(prev).add(selectedTeam.idTime))
+      setCurrentTeam(selectedTeam.idTime)
+      toast.success(`Você entrou no time ${selectedTeam.nome}`)
+      setSelectedTeam(null)
+      setTeamPassword('')
+    } else {
+      console.error('Incorrect password')
+      toast.error('Senha incorreta')
+    }
+  }
+
+  const handleLeaveTeam = (teamId: number) => {
+    setJoinedTeams((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(teamId)
+      return newSet
+    })
+    setCurrentTeam(null)
+    toast.info('Você saiu do time')
+  }
 
   useEffect(() => {
     const loadTimes = async () => {
@@ -131,6 +178,7 @@ export default function TimesPage({
                         <TableHead>ID do Time</TableHead>
                         <TableHead>ID do Campeonato</TableHead>
                         <TableHead>Senha do Campeonato</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -150,10 +198,39 @@ export default function TimesPage({
                               <Badge variant="outline">não precisa</Badge>
                             )}
                           </TableCell>
+                          <TableCell>
+                            {joinedTeams.has(time.idTime) ? (
+                              <Button
+                                onClick={() => handleLeaveTeam(time.idTime)}
+                              >
+                                Sair
+                              </Button>
+                            ) : (
+                              <Button onClick={() => handleJoinTeam(time)}>
+                                Entrar
+                              </Button>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                  {selectedTeam && (
+                    <div className="mt-4">
+                      <p>
+                        Digite a senha para entrar no time {selectedTeam.nome}:
+                      </p>
+                      <Input
+                        type="password"
+                        value={teamPassword}
+                        onChange={(e) => setTeamPassword(e.target.value)}
+                        placeholder="Senha do Campeonato"
+                      />
+                      <Button onClick={handleSubmitPassword} className="ml-2">
+                        Enviar
+                      </Button>
+                    </div>
+                  )}
                   <div className="mt-4 flex justify-end">
                     <Link
                       href={`/championships/${params.idCampeonato}/times/tablekeys`}
