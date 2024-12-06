@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useFeed } from '@/hooks/useFeed'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // Add import
 import { fetchComments } from '@/http/feed' // Removed fetchPosts import as it's handled in useFeed
 import CommentsDialog from '@/components/CommentsDialog'
 import { Comentario, Post } from '@/interface/types'
@@ -30,6 +30,7 @@ export default function FeedPage() {
     handleLikePost,
     handleNewPost,
     handleEditPost,
+    handleDeletePost, // Add handleDeletePost
     loggedUser,
     newPostTitle,
     setNewPostTitle,
@@ -44,6 +45,14 @@ export default function FeedPage() {
   >([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+    }
+  }, [])
 
   const startEditingPost = (post: Post) => {
     setEditingPost(post)
@@ -271,12 +280,22 @@ export default function FeedPage() {
                           {loggedUser?.permissao?.toUpperCase() ===
                             'ACADEMICO' &&
                             post.Usuario.idUsuario === loggedUser.idUsuario && ( // Adicionado '?' para permissao
-                              <button
-                                onClick={() => startEditingPost(post)}
-                                className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-                              >
-                                Editar
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => startEditingPost(post)}
+                                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDeletePost(post.idPublicacao)
+                                  }
+                                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                                >
+                                  Excluir
+                                </button>
+                              </>
                             )}
                         </div>
                       </CardContent>

@@ -199,6 +199,8 @@ export const useFeed = () => {
         listaComentario: post.listaComentario,
       }
 
+      console.log('Updating post:', updatedPost) // Log the updated post data
+
       const result = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/publicacao/atualizarPublicacao/${postId}`,
         updatedPost,
@@ -209,6 +211,8 @@ export const useFeed = () => {
           },
         },
       )
+
+      console.log('Post update response:', result) // Log the response
 
       toast.success('Publicação atualizada com sucesso!')
 
@@ -223,8 +227,41 @@ export const useFeed = () => {
       setNewPostTitle('')
       setNewPostContent('')
     } catch (error) {
-      console.error('Error updating post:', error)
+      console.error('Error updating post:', error) // Log the error
       toast.error('Erro ao atualizar a publicação.')
+    }
+  }
+
+  const handleDeletePost = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Token não encontrado')
+      }
+
+      console.log('Deleting post with ID:', postId) // Log the post ID
+
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerPublicacao/${postId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      console.log('Post delete response:', response) // Log the response
+
+      toast.success('Publicação removida com sucesso!')
+
+      // Remove the post from the posts list
+      setPosts((prevPosts) =>
+        prevPosts.filter((post) => post.idPublicacao !== postId),
+      )
+    } catch (error) {
+      console.error('Error deleting post:', error) // Log the error
+      toast.error('Erro ao remover a publicação.')
     }
   }
 
@@ -381,6 +418,7 @@ export const useFeed = () => {
     newPostModalidadeEsportiva,
     setNewPostModalidadeEsportiva,
     handleEditPost, // Updated
+    handleDeletePost, // Expose handleDeletePost
     fetchCommentsForPost,
     handleCreateComment, // Adicionado
     handleUpdateComment, // Adicionado

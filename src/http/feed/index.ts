@@ -36,7 +36,7 @@ export const fetchPosts = async (page: number = 0, size: number = 10) => {
   const token = localStorage.getItem('token')
   try {
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,asc`,
+      `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`,
       {
         headers: {
           'Content-Type': 'application/json',
