@@ -1,5 +1,21 @@
-export const fetchSettings = async (userId: number) => {
-  const token = localStorage.getItem('token')
+type Settings = {
+  // Defina as propriedades de Settings conforme necessário
+  theme: string
+  notifications: boolean
+  // ...outras propriedades...
+}
+
+const getToken = (): string | null => localStorage.getItem('token')
+
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    throw new Error('Erro ao processar a solicitação')
+  }
+  return response.json()
+}
+
+export const fetchSettings = async (userId: number): Promise<Settings> => {
+  const token = getToken()
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
     {
@@ -9,14 +25,14 @@ export const fetchSettings = async (userId: number) => {
       },
     },
   )
-  if (!response.ok) {
-    throw new Error('Erro ao buscar configurações')
-  }
-  return response.json()
+  return handleResponse(response)
 }
 
-export const saveSettings = async (userId: number, settings: any) => {
-  const token = localStorage.getItem('token')
+export const saveSettings = async (
+  userId: number,
+  settings: Settings,
+): Promise<void> => {
+  const token = getToken()
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
     {
@@ -28,13 +44,11 @@ export const saveSettings = async (userId: number, settings: any) => {
       body: JSON.stringify(settings),
     },
   )
-  if (!response.ok) {
-    throw new Error('Erro ao salvar configurações')
-  }
+  await handleResponse(response)
 }
 
-export const deleteSettings = async (userId: number) => {
-  const token = localStorage.getItem('token')
+export const deleteSettings = async (userId: number): Promise<void> => {
+  const token = getToken()
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/settings/${userId}`,
     {
@@ -45,7 +59,5 @@ export const deleteSettings = async (userId: number) => {
       },
     },
   )
-  if (!response.ok) {
-    throw new Error('Erro ao deletar configurações')
-  }
+  await handleResponse(response)
 }

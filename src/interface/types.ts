@@ -8,10 +8,10 @@ export interface Achievement {
 
 export interface Sport {
   id: number
-  name: string
-  description: string
-  location: string
-  schedule: string
+  nome: string
+  descricao: string
+  localizacao: string
+  horario: string
 }
 
 export interface DecodedToken {
@@ -65,9 +65,10 @@ export interface User {
 
 // Tipagem para Modalidade Esportiva
 export interface Modalidade {
-  id: string
-  name: string
-  description: string
+  idModalidadeEsportiva: number
+  nome: string
+  descricao: string
+  status: boolean
 }
 
 // Tipagem para Inscrição
@@ -114,13 +115,6 @@ export interface ApoioSaude {
   descricao: string
   dataPublicacao: string
   idAdministrador: number
-}
-
-export interface Modalidade {
-  idModalidadeEsportiva: number
-  nome: string
-  descricao: string
-  status: boolean
 }
 
 export interface UserData {
