@@ -2,17 +2,8 @@ import { QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
-import { getUserIdFromToken } from '@/utils/auth'
 
 // Interfaces
-interface TokenPayload {
-  sub: string
-  roles: string
-  idUsuario: number
-  iss: string
-  exp: number
-}
-
 export interface UserData {
   idAcademico: number
   curso: string
@@ -30,15 +21,6 @@ export interface Modalidade {
 }
 
 // Utility Functions
-export function decodeToken(token: string): TokenPayload {
-  const decoded = getUserIdFromToken()
-  if (!decoded) {
-    throw new Error('Token inválido')
-  }
-  console.log('Token decodificado:', decoded)
-  return decoded
-}
-
 export function getIdAcademico(): number {
   const userDataStr = localStorage.getItem('userData')
   console.log('Dados do usuário no localStorage:', userDataStr)
