@@ -1,4 +1,4 @@
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
@@ -46,7 +46,7 @@ export function getIdAcademico(): number {
 
   const userData: UserData = JSON.parse(userDataStr)
   console.log('Dados do usuário após parse:', userData)
-  console.log('ID Acad��mico:', userData.idAcademico)
+  console.log('ID Acadêmico:', userData.idAcademico)
   return userData.idAcademico
 }
 
@@ -196,12 +196,11 @@ export async function desinscreverUsuario(modalidadeId: number) {
 }
 
 export async function fetchModalidades() {
-  const token = getToken()
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
   return fetchWithAuth(url, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${getToken()}`,
     },
   })
 }
