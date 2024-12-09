@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
+import { jwtDecode, JwtPayload } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import {
@@ -15,6 +15,11 @@ import {
   inscreverModalidade,
   Modalidade,
 } from '@/http/modality'
+
+interface DecodedToken extends JwtPayload {
+  role: string
+  idUsuario: number
+}
 
 export function useAdminModalidades() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
@@ -38,7 +43,7 @@ export function useAdminModalidades() {
         return
       }
 
-      const decoded: any = jwtDecode(token)
+      const decoded = jwtDecode<DecodedToken>(token)
       if (decoded.role !== 'ADMINISTRADOR') {
         toast.error(
           'Acesso negado! Somente administradores podem acessar esta página.',

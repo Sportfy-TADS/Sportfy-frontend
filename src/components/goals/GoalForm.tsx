@@ -4,10 +4,19 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 
+interface GoalFormData {
+  titulo: string
+  descricao: string
+  progressoMaximo: number
+  progressoItem: string
+  situacaoMetaDiaria?: number
+  progressoAtual?: number
+}
+
 interface GoalFormProps {
-  onSubmit: (data: any) => void // Update the type to match the expected data structure
-  defaultValues?: any
-  isEditMode?: boolean // Add a prop to determine if the form is in edit mode
+  onSubmit: (data: GoalFormData) => void
+  defaultValues?: GoalFormData
+  isEditMode?: boolean
 }
 
 export default function GoalForm({
@@ -26,17 +35,15 @@ export default function GoalForm({
   const [progressoAtual, setProgressoAtual] = useState(
     defaultValues?.progressoAtual || 0,
   )
-  const [customProgressoItem, setCustomProgressoItem] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const formData: any = {
+    const formData: GoalFormData = {
       titulo,
       descricao,
       progressoMaximo,
-      progressoItem:
-        progressoItem === 'outro' ? customProgressoItem : progressoItem,
-      situacaoMetaDiaria: defaultValues?.situacaoMetaDiaria || 0, // Set default value if needed
+      progressoItem,
+      situacaoMetaDiaria: defaultValues?.situacaoMetaDiaria || 0,
     }
 
     if (isEditMode) {
@@ -60,7 +67,7 @@ export default function GoalForm({
           onChange={(e) => setTitulo(e.target.value)}
           placeholder="Exemplo: Hidrate-se"
           required
-          disabled={isEditMode} // Disable field if in edit mode
+          disabled={isEditMode}
         />
         {titulo === '' && (
           <p className="error-message">O título é obrigatório.</p>
@@ -74,7 +81,7 @@ export default function GoalForm({
           onChange={(e) => setDescricao(e.target.value)}
           placeholder="Exemplo: Beber 2 litros de água"
           required
-          disabled={isEditMode} // Disable field if in edit mode
+          disabled={isEditMode}
         />
         {descricao === '' && (
           <p className="error-message">A descrição é obrigatória.</p>
@@ -88,7 +95,7 @@ export default function GoalForm({
           onChange={(e) => setProgressoMaximo(Number(e.target.value))}
           placeholder="Exemplo: 2"
           required
-          disabled={isEditMode} // Disable field if in edit mode
+          disabled={isEditMode}
         />
         {progressoMaximo === 0 && (
           <p className="error-message">O objetivo é obrigatório.</p>
@@ -102,7 +109,7 @@ export default function GoalForm({
           onChange={(e) => setProgressoItem(e.target.value)}
           placeholder="Exemplo: Litros, Quilômetros, Páginas"
           required
-          disabled={isEditMode} // Disable field if in edit mode
+          disabled={isEditMode}
         />
         {progressoItem === '' && (
           <p className="error-message">A medida é obrigatória.</p>

@@ -1,7 +1,13 @@
 import { CheckCircle2 } from 'lucide-react'
 
+interface Goal {
+  id: string
+  title: string
+  status: 'completed' | 'in-progress'
+}
+
 interface WeeklySummaryProps {
-  summary: any[] // Adaptar conforme a estrutura de dados que você possui
+  summary: Goal[]
 }
 
 export function WeeklySummary({ summary }: WeeklySummaryProps) {

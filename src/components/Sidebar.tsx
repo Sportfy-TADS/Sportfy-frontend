@@ -13,7 +13,6 @@ import {
   HeartPulse,
   Settings,
   Trophy,
-  Flag,
   Shield,
   Layers,
   Hospital,

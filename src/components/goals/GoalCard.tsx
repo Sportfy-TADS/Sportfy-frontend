@@ -1,7 +1,23 @@
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function GoalCard({ goal, onEdit, onDelete }: any) {
+interface Goal {
+  idMetaDiaria: number
+  titulo: string
+  objetivo: string
+  quantidadeConcluida: number
+  progressoMaximo: number
+  progressoItem: string
+  situacaoMetaDiaria: number
+}
+
+interface GoalCardProps {
+  goal: Goal
+  onEdit: (goal: Goal) => void
+  onDelete: (id: number) => void
+}
+
+export default function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   return (
     <Card key={goal.idMetaDiaria}>
       <CardHeader>

@@ -5,7 +5,8 @@ import { CircleDashed, ClipboardPen, Target } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
-import GoalCard from './GoalCard'
+// Remover importação não utilizada
+// import GoalCard from './GoalCard'
 import { Button } from '../ui/button'
 
 interface GoalListProps {
@@ -20,18 +21,22 @@ interface GoalListProps {
     isSports?: boolean // Optional flag to identify sports goals
   }[]
   isLoading: boolean
-  onEdit: (goal: any) => void
+  onEdit: (goal: {
+    idMetaDiaria: number
+    titulo: string
+    objetivo: string
+    progressoItem: string
+    progressoAtual: number
+    progressoMaximo: number
+    situacaoMetaDiaria: number
+    isSports?: boolean
+  }) => void
   onDelete?: (goalId: number) => void // Make onDelete optional
-  userRole?: string // Receive user role
+  // Remover userRole não utilizado
+  // userRole?: string
 }
 
-const GoalList = ({
-  goals,
-  isLoading,
-  onEdit,
-  onDelete,
-  userRole,
-}: GoalListProps) => {
+const GoalList = ({ goals, isLoading, onEdit, onDelete }: GoalListProps) => {
   if (isLoading) {
     return (
       <>

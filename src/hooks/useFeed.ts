@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import {
   fetchPosts,
-  fetchLoggedUser,
+  // fetchLoggedUser, // Removido
   likePost,
   unlikePost,
   createPost,
@@ -28,7 +28,8 @@ export const useFeed = () => {
   const [page, setPage] = useState(0) // Moved page state here
   const [hasMore, setHasMore] = useState(true)
 
-  const fetchLoggedUser = (): Usuario | null => {
+  const getLoggedUser = (): Usuario | null => {
+    // Renomeado para evitar conflito
     const token = localStorage.getItem('token')
     if (token) {
       try {
@@ -71,7 +72,7 @@ export const useFeed = () => {
     }
 
     loadInitialPosts()
-    const user = fetchLoggedUser()
+    const user = getLoggedUser() // Usar a função renomeada
     setLoggedUser(user)
 
     // Remove the interval to prevent overwriting posts

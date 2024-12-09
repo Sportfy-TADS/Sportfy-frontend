@@ -101,9 +101,7 @@ export const useGoals = (idAcademico: number) => {
       return response
     } catch (error) {
       console.error('Error updating goal:', error)
-      throw new Error(
-        (error as Error)?.message || 'Erro ao atualizar meta',
-      )
+      throw new Error((error as Error)?.message || 'Erro ao atualizar meta')
     }
   }
 
