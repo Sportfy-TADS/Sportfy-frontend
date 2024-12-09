@@ -1,12 +1,12 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-    getChampionships, 
-    createChampionship, 
-    updateChampionship, 
-    deleteChampionship } 
-from '@/http/championship'
 import { toast } from 'sonner'
+
+import {
+  getChampionships,
+  createChampionship,
+  updateChampionship,
+  deleteChampionship,
+} from '@/http/championship'
 
 export const useChampionships = () => {
   const queryClient = useQueryClient()
@@ -38,7 +38,8 @@ export const useChampionships = () => {
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: Campeonato) => updateChampionship(data.idCampeonato, data),
+    mutationFn: (data: Campeonato) =>
+      updateChampionship(data.idCampeonato, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
       toast.success('Campeonato atualizado com sucesso!')

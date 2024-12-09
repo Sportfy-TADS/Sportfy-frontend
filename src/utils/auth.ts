@@ -1,5 +1,5 @@
-import { jwtDecode } from 'jwt-decode' // Corrected import statement
-import axios from 'axios' // Added import for axios
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode'
 
 interface TokenPayload {
   sub: string
@@ -9,42 +9,39 @@ interface TokenPayload {
   exp: number
 }
 
-export const getUserIdFromToken = (): number | null => {
-  const token = localStorage.getItem('token')
-  console.log('Token from localStorage:', token)
-  if (token) {
-    try {
-      const decodedToken: TokenPayload = jwtDecode(token)
-      console.log('Decoded Token:', decodedToken)
-      return decodedToken.idUsuario ?? null
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      return null
-    }
+const getToken = (): string | null => localStorage.getItem('token')
+
+const decodeToken = (token: string): TokenPayload | null => {
+  try {
+    return jwtDecode<TokenPayload>(token)
+  } catch (error) {
+    console.error('Error decoding token:', error)
+    return null
   }
-  return null
 }
 
-export const storeUserData = (userData: any) => {
-  console.log('Storing user data:', userData) // Debugging line
+export const getUserIdFromToken = (): number | null => {
+  const token = getToken()
+  if (!token) return null
+
+  const decodedToken = decodeToken(token)
+  return decodedToken?.idUsuario ?? null
+}
+
+export const storeUserData = (userData: Record<string, unknown>): void => {
+  console.log('Storing user data:', userData)
   localStorage.setItem('userData', JSON.stringify(userData))
 }
 
 export const getDecodedToken = (): TokenPayload | null => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    try {
-      const decodedToken: TokenPayload = jwtDecode(token)
-      return decodedToken
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      return null
-    }
-  }
-  return null
+  const token = getToken()
+  return token ? decodeToken(token) : null
 }
 
-export const getUserData = async () => {
+export const getUserData = async (): Promise<Record<
+  string,
+  unknown
+> | null> => {
   const decodedToken = getDecodedToken()
   if (!decodedToken?.sub) {
     console.error('Erro: Token inválido ou username não encontrado')
@@ -52,10 +49,8 @@ export const getUserData = async () => {
   }
 
   try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      throw new Error('Token não encontrado')
-    }
+    const token = getToken()
+    if (!token) throw new Error('Token não encontrado')
 
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/academico/buscar/${decodedToken.sub}`,
@@ -67,9 +62,8 @@ export const getUserData = async () => {
       },
     )
 
-    if (response.status !== 200) {
+    if (response.status !== 200)
       throw new Error('Erro ao obter dados do usuário')
-    }
 
     return response.data
   } catch (error) {

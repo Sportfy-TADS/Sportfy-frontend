@@ -1,3 +1,9 @@
+import { useState, useEffect } from 'react'
+
+import axios from 'axios' // Import axios
+import { Star } from 'lucide-react'
+import { toast } from 'sonner' // Importar toast
+
 import {
   Dialog,
   DialogContent,
@@ -5,13 +11,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Star } from 'lucide-react'
-import { Comentario, Usuario } from '@/interface/types'
 import { useFeed } from '@/hooks/useFeed' // Importar o hook
-import { useState, useEffect } from 'react'
-import { toast } from 'sonner' // Importar toast
-import axios from 'axios' // Import axios
 import { fetchComments } from '@/http/feed'
+import { Comentario, Usuario } from '@/interface/types'
 
 interface CommentsDialogProps {
   isOpen: boolean

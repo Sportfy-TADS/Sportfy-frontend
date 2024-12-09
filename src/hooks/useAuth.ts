@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+
 import { useRouter } from 'next/navigation'
+
 import { getUserData } from '@/utils/auth'
 
 export function useAuth() {

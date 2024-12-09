@@ -1,10 +1,10 @@
+import axios from 'axios'
+
 import {
   getToken,
   getUserIdFromToken,
   getHttpOptions,
 } from '@/services/championshipService'
-
-import axios from 'axios'
 
 export const getChampionships = async () => {
   const token = getToken()

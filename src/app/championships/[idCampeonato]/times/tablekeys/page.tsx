@@ -1,10 +1,12 @@
 'use client' // Added to enable client-side interactivity
 
 import { useState, useEffect } from 'react'
+
 import { useParams } from 'next/navigation' // Added to access route params
-import { Card, CardContent } from '@/components/ui/card'
+
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+import { Card, CardContent } from '@/components/ui/card'
 // import TeamName from '@/components/TeamName' // Remove this import
 // import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 

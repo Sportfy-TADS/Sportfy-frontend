@@ -1,5 +1,5 @@
-import axios from 'axios'
-import {jwtDecode} from 'jwt-decode'
+import axios, { AxiosResponse } from 'axios'
+import { jwtDecode } from 'jwt-decode'
 
 interface TokenPayload {
   sub: string
@@ -10,24 +10,32 @@ interface TokenPayload {
   exp: number
 }
 
-const getToken = (): string | null => {
-  return localStorage.getItem('jwt')
+interface MatchData {
+  // Defina as propriedades de acordo com a estrutura dos dados de uma partida
 }
+
+interface Match {
+  // Defina as propriedades de acordo com a estrutura dos dados de uma partida
+}
+
+interface Inscription {
+  // Defina as propriedades de acordo com a estrutura dos dados de uma inscrição
+}
+
+interface Sport {
+  // Defina as propriedades de acordo com a estrutura dos dados de um esporte
+}
+
+const getToken = (): string | null => localStorage.getItem('jwt')
 
 const getHttpOptions = () => {
   const token = getToken()
-  const headers = token
-    ? {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      }
-    : {
-        'Content-Type': 'application/json',
-      }
-
-  return {
-    headers: headers,
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
   }
+
+  return { headers }
 }
 
 export const getUserIdFromToken = (): number | null => {
@@ -44,16 +52,16 @@ export const getUserIdFromToken = (): number | null => {
   return null
 }
 
-export const getMatches = async (idCampeonato: number) => {
-  const response = await axios.get(
+export const getMatches = async (idCampeonato: number): Promise<Match[]> => {
+  const response: AxiosResponse<Match[]> = await axios.get(
     `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${idCampeonato}/partidas`,
     getHttpOptions(),
   )
   return response.data
 }
 
-export const createMatch = async (data: any) => {
-  const response = await axios.post(
+export const createMatch = async (data: MatchData): Promise<Match> => {
+  const response: AxiosResponse<Match> = await axios.post(
     `${process.env.NEXT_PUBLIC_API_URL}/matches`,
     data,
     getHttpOptions(),
@@ -61,16 +69,18 @@ export const createMatch = async (data: any) => {
   return response.data
 }
 
-export const getInscriptions = async (userId: number) => {
-  const response = await axios.get(
+export const getInscriptions = async (
+  userId: number,
+): Promise<Inscription[]> => {
+  const response: AxiosResponse<Inscription[]> = await axios.get(
     `${process.env.NEXT_PUBLIC_API_URL}/inscricoes?userId=${userId}`,
     getHttpOptions(),
   )
   return response.data
 }
 
-export const getSports = async () => {
-  const response = await axios.get(
+export const getSports = async (): Promise<Sport[]> => {
+  const response: AxiosResponse<Sport[]> = await axios.get(
     `${process.env.NEXT_PUBLIC_API_URL}/sports`,
     getHttpOptions(),
   )

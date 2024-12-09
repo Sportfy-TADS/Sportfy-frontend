@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+
+import { useRouter } from 'next/navigation'
+
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { ModeToggle } from '@/components/theme'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 
 export default function SettingsPage() {
   const [historyAccess, setHistoryAccess] = useState(false)

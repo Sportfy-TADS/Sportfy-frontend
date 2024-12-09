@@ -1,26 +1,32 @@
 // components/GoalList.tsx
-import { useQuery } from '@tanstack/react-query';
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { getGoals } from '@/http/get-goals';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from 'react';
+import { useState } from 'react'
 
+import { useQuery } from '@tanstack/react-query'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { getGoals } from '@/http/get-goals'
 
 export function GoalList() {
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('all')
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['goals'],
     queryFn: getGoals,
-  });
+  })
 
-  if (isLoading) return <p>Carregando...</p>;
+  if (isLoading) return <p>Carregando...</p>
 
   const filteredGoals = goals.filter((goal: any) => {
-    if (filter === 'all') return true;
-    return goal.status === filter;
-  });
+    if (filter === 'all') return true
+    return goal.status === filter
+  })
 
   return (
     <>
@@ -47,7 +53,10 @@ export function GoalList() {
               </CardHeader>
               <CardContent>
                 Frequência: {goal.frequency}x por semana
-                <p>Status: {goal.status === 'completed' ? 'Concluída' : 'Em andamento'}</p>
+                <p>
+                  Status:{' '}
+                  {goal.status === 'completed' ? 'Concluída' : 'Em andamento'}
+                </p>
               </CardContent>
             </Card>
           ))
@@ -56,5 +65,5 @@ export function GoalList() {
         )}
       </div>
     </>
-  );
+  )
 }

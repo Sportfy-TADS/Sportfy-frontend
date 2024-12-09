@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
-import { getChampionshipById } from '@/http/championship'
+
+import { Lock, MapPin } from 'lucide-react'
+
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Lock, MapPin } from 'lucide-react'
+import { getChampionshipById } from '@/http/championship'
 
 interface Campeonato {
   titulo: string

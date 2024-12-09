@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Label } from '../ui/label'
-import { Input } from '../ui/input'
+
 import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 
 interface GoalFormProps {
   onSubmit: (data: any) => void // Update the type to match the expected data structure

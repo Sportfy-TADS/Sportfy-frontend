@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useParams } from 'next/navigation'
+
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Estatisticas {
   modalidade: string
@@ -44,12 +46,12 @@ interface Campeonato {
 }
 
 function formatPhoneNumber(phoneNumber: string) {
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+  const cleaned = phoneNumber.replace(/\D/g, '')
+  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/)
   if (match) {
-    return `(${match[1]}) ${match[2]}-${match[3]}`;
+    return `(${match[1]}) ${match[2]}-${match[3]}`
   }
-  return phoneNumber;
+  return phoneNumber
 }
 
 export default function ProfilePage() {
@@ -83,14 +85,14 @@ export default function ProfilePage() {
               {
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                }
-              }
-            );
-            return statsResponse.json();
-          });
-          const stats = await Promise.all(statsPromises);
-          setEstatisticas(stats);
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            )
+            return statsResponse.json()
+          })
+          const stats = await Promise.all(statsPromises)
+          setEstatisticas(stats)
         }
 
         const champResponse = await fetch(
@@ -98,16 +100,18 @@ export default function ProfilePage() {
           {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
         if (champResponse.ok) {
           const champData = await champResponse.json()
           setCampeonatos(champData.content)
         }
 
-        const bannerResponse = await fetch('https://source.unsplash.com/random/1600x400')
+        const bannerResponse = await fetch(
+          'https://source.unsplash.com/random/1600x400',
+        )
         setBannerUrl(bannerResponse.url)
       } catch (error) {
         console.error('Error loading data:', error)
@@ -120,11 +124,27 @@ export default function ProfilePage() {
   }, [username])
 
   if (loading) {
-    return <div><Header /><div className="flex"><Sidebar /><div className="container mx-auto p-4">Loading...</div></div></div>
+    return (
+      <div>
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <div className="container mx-auto p-4">Loading...</div>
+        </div>
+      </div>
+    )
   }
 
   if (!user) {
-    return <div><Header /><div className="flex"><Sidebar /><div className="container mx-auto p-4">User not found</div></div></div>
+    return (
+      <div>
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <div className="container mx-auto p-4">User not found</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -165,11 +185,25 @@ export default function ProfilePage() {
                   <p className="text-gray-500">@{user?.username}</p>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p><strong>Email:</strong> {user?.email}</p>
-                  <p><strong>Curso:</strong> {user?.curso}</p>
-                  <p><strong>Telefone:</strong> {formatPhoneNumber(user?.telefone)}</p>
-                  <p><strong>Data de Nascimento:</strong> {new Date(user?.dataNascimento || '').toLocaleDateString('pt-BR')}</p>
-                  <p><strong>Gênero:</strong> {user?.genero}</p>
+                  <p>
+                    <strong>Email:</strong> {user?.email}
+                  </p>
+                  <p>
+                    <strong>Curso:</strong> {user?.curso}
+                  </p>
+                  <p>
+                    <strong>Telefone:</strong>{' '}
+                    {formatPhoneNumber(user?.telefone)}
+                  </p>
+                  <p>
+                    <strong>Data de Nascimento:</strong>{' '}
+                    {new Date(user?.dataNascimento || '').toLocaleDateString(
+                      'pt-BR',
+                    )}
+                  </p>
+                  <p>
+                    <strong>Gênero:</strong> {user?.genero}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -195,7 +229,9 @@ export default function ProfilePage() {
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Statistics Section */}
               <div>
-                <h2 className="text-xl font-bold mb-4">Estatísticas por Modalidade</h2>
+                <h2 className="text-xl font-bold mb-4">
+                  Estatísticas por Modalidade
+                </h2>
                 <div className="space-y-4">
                   {estatisticas.map((estatistica, index) => (
                     <Card key={index} className="shadow-md">
@@ -205,15 +241,21 @@ export default function ProfilePage() {
                       <CardContent className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
                           <span>Jogos:</span>
-                          <span className="font-semibold">{estatistica.jogos}</span>
+                          <span className="font-semibold">
+                            {estatistica.jogos}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Vitórias:</span>
-                          <span className="font-semibold text-green-600">{estatistica.vitorias}</span>
+                          <span className="font-semibold text-green-600">
+                            {estatistica.vitorias}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>Derrotas:</span>
-                          <span className="font-semibold text-red-600">{estatistica.derrotas}</span>
+                          <span className="font-semibold text-red-600">
+                            {estatistica.derrotas}
+                          </span>
                         </div>
                         <div className="pt-2 border-t">
                           <div className="flex justify-between items-center">
@@ -221,7 +263,12 @@ export default function ProfilePage() {
                             <span className="font-semibold">
                               {estatistica.avaliacao.media.toFixed(1)}
                               <span className="text-gray-500 text-xs ml-1">
-                                ({estatistica.avaliacao.quantidadeAvaliacoes} {estatistica.avaliacao.quantidadeAvaliacoes === 1 ? 'avaliação' : 'avaliações'})
+                                ({estatistica.avaliacao.quantidadeAvaliacoes}{' '}
+                                {estatistica.avaliacao.quantidadeAvaliacoes ===
+                                1
+                                  ? 'avaliação'
+                                  : 'avaliações'}
+                                )
                               </span>
                             </span>
                           </div>
@@ -234,7 +281,9 @@ export default function ProfilePage() {
 
               {/* Championships Section */}
               <div>
-                <h2 className="text-xl font-bold mb-4">Histórico de Campeonatos</h2>
+                <h2 className="text-xl font-bold mb-4">
+                  Histórico de Campeonatos
+                </h2>
                 <div className="space-y-4">
                   {campeonatos.map((campeonato) => (
                     <Card key={campeonato.idCampeonato} className="shadow-md">
@@ -245,25 +294,39 @@ export default function ProfilePage() {
                         <p className="text-gray-600">{campeonato.descricao}</p>
                         <div className="flex justify-between items-center pt-2">
                           <span>Situação:</span>
-                          <span className={`font-semibold ${
-                            campeonato.situacaoCampeonato === 'EM_ABERTO' 
-                              ? 'text-blue-600' 
-                              : campeonato.situacaoCampeonato === 'INICIADO'
-                              ? 'text-green-600'
-                              : 'text-gray-600'
-                          }`}>
+                          <span
+                            className={`font-semibold ${
+                              campeonato.situacaoCampeonato === 'EM_ABERTO'
+                                ? 'text-blue-600'
+                                : campeonato.situacaoCampeonato === 'INICIADO'
+                                  ? 'text-green-600'
+                                  : 'text-gray-600'
+                            }`}
+                          >
                             {campeonato.situacaoCampeonato.replace('_', ' ')}
                           </span>
                         </div>
                         {campeonato.aposta && (
                           <div className="flex justify-between items-center">
                             <span>Premiação:</span>
-                            <span className="font-semibold">{campeonato.aposta}</span>
+                            <span className="font-semibold">
+                              {campeonato.aposta}
+                            </span>
                           </div>
                         )}
                         <div className="pt-2 border-t text-xs text-gray-500">
-                          <p>Início: {new Date(campeonato.dataInicio).toLocaleDateString('pt-BR')}</p>
-                          <p>Fim: {new Date(campeonato.dataFim).toLocaleDateString('pt-BR')}</p>
+                          <p>
+                            Início:{' '}
+                            {new Date(campeonato.dataInicio).toLocaleDateString(
+                              'pt-BR',
+                            )}
+                          </p>
+                          <p>
+                            Fim:{' '}
+                            {new Date(campeonato.dataFim).toLocaleDateString(
+                              'pt-BR',
+                            )}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>

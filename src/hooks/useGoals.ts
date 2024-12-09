@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+
 import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
 
 export const useGoals = (idAcademico: number) => {

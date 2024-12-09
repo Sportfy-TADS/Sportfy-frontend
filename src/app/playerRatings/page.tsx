@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+
 import { motion } from 'framer-motion'
+import { Star, Search } from 'lucide-react'
+
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type Jogador = {
   id: number

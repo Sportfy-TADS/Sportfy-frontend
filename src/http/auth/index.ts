@@ -1,8 +1,9 @@
-import axios from 'axios';
-import { DecodedToken } from '@/interface/types';
-import { jwtDecode } from 'jwt-decode';
 import { useMutation } from '@tanstack/react-query'
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode'
 import { z } from 'zod'
+
+import { DecodedToken } from '@/interface/types'
 import { signInSchema } from '@/schemas'
 
 type SignInSchema = z.infer<typeof signInSchema>
@@ -14,38 +15,37 @@ export const authenticateUser = async (data: SignInSchema) => {
       data,
       {
         headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+          'Content-Type': 'application/json',
+        },
+      },
+    )
 
-    const { token } = response.data;
-    const decoded: DecodedToken = jwtDecode(token);
+    const { token } = response.data
+    const decoded: DecodedToken = jwtDecode(token)
 
-    console.log('Token recebido:', token);
-    console.log('Dados decodificados:', decoded);
+    console.log('Token recebido:', token)
+    console.log('Dados decodificados:', decoded)
 
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', token)
 
     if (decoded.role === 'ADMINISTRADOR') {
-      localStorage.setItem('adminId', decoded.idUsuario.toString());
+      localStorage.setItem('adminId', decoded.idUsuario.toString())
     } else {
-      localStorage.setItem('academicoId', decoded.idUsuario.toString());
+      localStorage.setItem('academicoId', decoded.idUsuario.toString())
     }
 
-    return decoded;
+    return decoded
   } catch (error: any) {
-    console.error('Erro na autenticação:', error);
+    console.error('Erro na autenticação:', error)
     throw new Error(
-      error.response?.data?.message || 
-      'Nome de usuário ou senha inválidos'
-    );
+      error.response?.data?.message || 'Nome de usuário ou senha inválidos',
+    )
   }
 }
 
 export const useAuthenticateUser = (options: {
-  onSuccess: () => void,
-  onError: (error: Error) => void,
+  onSuccess: () => void
+  onError: (error: Error) => void
 }) => {
   return useMutation({
     mutationFn: authenticateUser,

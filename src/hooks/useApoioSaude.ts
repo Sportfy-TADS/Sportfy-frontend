@@ -1,25 +1,31 @@
 import { useState, useEffect, useMemo } from 'react'
+
 import { useQuery } from '@tanstack/react-query'
 
 async function fetchApoioSaude() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   const response = await fetch('http://localhost:8081/apoioSaude', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
-  });
+  })
   if (!response.ok) {
-    throw new Error('Erro ao buscar apoios à saúde');
+    throw new Error('Erro ao buscar apoios à saúde')
   }
-  return response.json();
+  return response.json()
 }
 
 export function useApoioSaude() {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const { data: apoiosSaude = [], isLoading, isError, error } = useQuery({
+  const {
+    data: apoiosSaude = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['apoiosSaude'],
     queryFn: fetchApoioSaude,
   })
@@ -34,9 +40,13 @@ export function useApoioSaude() {
     let filteredApoios = [...apoiosSaude]
 
     if (filter === 'ufpr') {
-      filteredApoios = filteredApoios.filter((apoio) => apoio.idAdministrador === 1)
+      filteredApoios = filteredApoios.filter(
+        (apoio) => apoio.idAdministrador === 1,
+      )
     } else if (filter === 'externo') {
-      filteredApoios = filteredApoios.filter((apoio) => apoio.idAdministrador !== 1)
+      filteredApoios = filteredApoios.filter(
+        (apoio) => apoio.idAdministrador !== 1,
+      )
     }
 
     if (searchTerm) {

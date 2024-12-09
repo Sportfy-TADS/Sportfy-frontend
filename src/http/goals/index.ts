@@ -1,5 +1,6 @@
-import { useUserData } from '@/hooks/useUserData'
 import axios from 'axios'
+
+import { useUserData } from '@/hooks/useUserData'
 
 // Função para obter o dados do usuário
 export async function getUserData(username: string) {

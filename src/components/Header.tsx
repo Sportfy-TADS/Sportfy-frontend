@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react' // Removed useCallback and debounce imports
+
 import { useRouter } from 'next/navigation'
+
 import { jwtDecode } from 'jwt-decode' // Changed from named import to default import
 import { LogOut } from 'lucide-react'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,

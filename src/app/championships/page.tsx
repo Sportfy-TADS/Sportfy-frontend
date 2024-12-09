@@ -1,32 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { toast } from 'sonner'
-import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useChampionships } from './hooks/useChampionships'
 
-import { getUserIdFromToken } from '@/services/championshipService'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+import { format } from 'date-fns' // Import date-fns
 import {
   User,
   Lock,
@@ -37,9 +15,34 @@ import {
   Trash,
   Trophy,
 } from 'lucide-react'
+import { toast } from 'sonner'
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { format } from 'date-fns' // Import date-fns
+import { Textarea } from '@/components/ui/textarea'
 import { Campeonato } from '@/interface/types'
+import { getUserIdFromToken } from '@/services/championshipService'
+
+import { useChampionships } from './hooks/useChampionships'
 
 export default function CampeonatoPage() {
   const [selectedCampeonato, setSelectedCampeonato] =

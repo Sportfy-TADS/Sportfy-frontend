@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { motion } from 'framer-motion'
+import { Medal } from 'lucide-react'
+import { toast } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -25,8 +27,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Medal } from 'lucide-react'
-
 import {
   decodeToken,
   getIdAcademico,
@@ -117,8 +117,8 @@ export default function ModalidadeInscricaoPage() {
         oldData.map((modalidade) =>
           modalidade.idModalidadeEsportiva === variables
             ? { ...modalidade, inscrito: true }
-            : modalidade
-        )
+            : modalidade,
+        ),
       )
       toast.success('Inscrição realizada com sucesso!')
       console.log('Inscrição realizada com sucesso:', data)
@@ -136,8 +136,8 @@ export default function ModalidadeInscricaoPage() {
         oldData.map((modalidade) =>
           modalidade.idModalidadeEsportiva === variables
             ? { ...modalidade, inscrito: false }
-            : modalidade
-        )
+            : modalidade,
+        ),
       )
       toast.success('Desinscrição realizada com sucesso!')
       console.log('Desinscrição realizada com sucesso:', data)
@@ -221,10 +221,14 @@ export default function ModalidadeInscricaoPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <Card className={`border ${modalidade.inscrito ? 'border-blue-700' : 'border-red-700'}`}>
+                  <Card
+                    className={`border ${modalidade.inscrito ? 'border-blue-700' : 'border-red-700'}`}
+                  >
                     <CardHeader>
                       <CardTitle>
-                        <Medal className={`inline-block mr-2 ${modalidade.inscrito ? 'text-blue-700' : 'text-red-700'}`} />
+                        <Medal
+                          className={`inline-block mr-2 ${modalidade.inscrito ? 'text-blue-700' : 'text-red-700'}`}
+                        />
                         {modalidade.nome}
                       </CardTitle>
                     </CardHeader>
@@ -238,7 +242,9 @@ export default function ModalidadeInscricaoPage() {
                         }
                         className="w-full"
                       >
-                        {modalidade.inscrito ? 'Desinscrever-se' : 'Inscrever-se'}
+                        {modalidade.inscrito
+                          ? 'Desinscrever-se'
+                          : 'Inscrever-se'}
                       </Button>
                     </CardContent>
                   </Card>

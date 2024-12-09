@@ -13,7 +13,10 @@ interface CampeonatoTimesProps {
   times: Time[]
 }
 
-const CampeonatoTimes: React.FC<CampeonatoTimesProps> = ({ campeonatoId, times }) => {
+const CampeonatoTimes: React.FC<CampeonatoTimesProps> = ({
+  campeonatoId,
+  times,
+}) => {
   return (
     <div className="campeonato-times">
       <h2>Times Participantes</h2>

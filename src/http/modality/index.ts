@@ -1,8 +1,9 @@
+import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { toast } from 'sonner'
+
 import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import axios from 'axios'
 import { getUserIdFromToken } from '@/utils/auth'
 
 // Interfaces
@@ -80,13 +81,19 @@ export async function getModalidades(): Promise<Modalidade[]> {
 
     if (!allModalidadesResponse.ok) {
       const errorText = await allModalidadesResponse.text()
-      console.error('Erro na resposta da API para todas modalidades:', errorText)
+      console.error(
+        'Erro na resposta da API para todas modalidades:',
+        errorText,
+      )
       throw new Error(`Erro ao buscar todas modalidades: ${errorText}`)
     }
 
     if (!inscritasResponse.ok) {
       const errorText = await inscritasResponse.text()
-      console.error('Erro na resposta da API para modalidades inscritas:', errorText)
+      console.error(
+        'Erro na resposta da API para modalidades inscritas:',
+        errorText,
+      )
       throw new Error(`Erro ao buscar modalidades inscritas: ${errorText}`)
     }
 
@@ -94,13 +101,15 @@ export async function getModalidades(): Promise<Modalidade[]> {
     const inscritas = await inscritasResponse.json()
 
     // Mark modalidades as inscrito
-    const modalidadesWithInscrito = allModalidades.map((modalidade: Modalidade) => ({
-      ...modalidade,
-      inscrito: inscritas.some(
-        (inscrita: { idModalidadeEsportiva: number }) =>
-          inscrita.idModalidadeEsportiva === modalidade.idModalidadeEsportiva
-      ),
-    }))
+    const modalidadesWithInscrito = allModalidades.map(
+      (modalidade: Modalidade) => ({
+        ...modalidade,
+        inscrito: inscritas.some(
+          (inscrita: { idModalidadeEsportiva: number }) =>
+            inscrita.idModalidadeEsportiva === modalidade.idModalidadeEsportiva,
+        ),
+      }),
+    )
 
     return modalidadesWithInscrito
   } catch (error) {
@@ -135,7 +144,10 @@ export async function inscreverUsuario(modalidadeId: number) {
     }
 
     // Handle empty response body
-    const data = response.status === 204 || response.status === 200 ? null : await response.json()
+    const data =
+      response.status === 204 || response.status === 200
+        ? null
+        : await response.json()
     console.log('Dados recebidos da API após inscrição:', data)
     return data
   } catch (error) {
@@ -170,7 +182,10 @@ export async function desinscreverUsuario(modalidadeId: number) {
     }
 
     // Handle empty response body
-    const data = response.status === 204 || response.status === 200 ? null : await response.json()
+    const data =
+      response.status === 204 || response.status === 200
+        ? null
+        : await response.json()
     console.log('Dados recebidos da API após desinscrição:', data)
     return data
   } catch (error) {
@@ -237,9 +252,9 @@ export async function fetchAdmins() {
 }
 
 interface NewAdmin {
-  nome: string;
-  email: string;
-  senha: string;
+  nome: string
+  email: string
+  senha: string
 }
 
 export async function createAdmin(newAdmin: NewAdmin) {

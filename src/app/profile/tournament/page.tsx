@@ -1,8 +1,12 @@
-'use client';
+'use client'
 
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Loader2Icon } from 'lucide-react';
+import { useState } from 'react'
+
+import { useQuery } from '@tanstack/react-query'
+import { Loader2Icon } from 'lucide-react'
+
+import Header from '@/components/Header'
+import { Pagination } from '@/components/pagination' // Supondo que você tenha um componente de paginação
 import {
   Table,
   TableBody,
@@ -10,40 +14,45 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import Header from '@/components/Header';
-import { Pagination } from '@/components/pagination'; // Supondo que você tenha um componente de paginação
-import { Tournament, PaginatedResponse } from '@/interface/types';
+} from '@/components/ui/table'
+import { Tournament, PaginatedResponse } from '@/interface/types'
 
 async function getTournaments(pageIndex: number): Promise<PaginatedResponse> {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`http://localhost:8081/campeonatos/11/inscritos?page=${pageIndex}&size=10&sort=dataCriacao,desc`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    }
-  });
+  const token = localStorage.getItem('token')
+  const response = await fetch(
+    `http://localhost:8081/campeonatos/11/inscritos?page=${pageIndex}&size=10&sort=dataCriacao,desc`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
   if (!response.ok) {
-    throw new Error('Erro ao buscar campeonatos');
+    throw new Error('Erro ao buscar campeonatos')
   }
-  return response.json();
+  return response.json()
 }
 
 export default function TournamentHistory() {
-  const [pageIndex, setPageIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0)
 
-  const { data: paginatedData, isFetching, isLoading } = useQuery<PaginatedResponse, Error>({
+  const {
+    data: paginatedData,
+    isFetching,
+    isLoading,
+  } = useQuery<PaginatedResponse, Error>({
     queryKey: ['tournaments', pageIndex],
     queryFn: () => getTournaments(pageIndex),
-  });
+  })
 
-  const tournaments = paginatedData?.content || [];
-  const totalCount = paginatedData?.totalElements || 0;
-  const totalPages = paginatedData?.totalPages || 0;
+  const tournaments = paginatedData?.content || []
+  const totalCount = paginatedData?.totalElements || 0
+  const totalPages = paginatedData?.totalPages || 0
 
   const handlePaginate = (newPageIndex: number) => {
-    setPageIndex(newPageIndex);
-  };
+    setPageIndex(newPageIndex)
+  }
 
   return (
     <>
@@ -55,8 +64,10 @@ export default function TournamentHistory() {
             Total de {totalCount} item(s)
           </span>
         </h1>
-        {isFetching && <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />}
-        
+        {isFetching && (
+          <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />
+        )}
+
         <div className="space-y-2.5">
           <div className="rounded-md border">
             <Table>
@@ -73,7 +84,10 @@ export default function TournamentHistory() {
               <TableBody>
                 {isLoading && tournaments.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="py-10 text-center text-muted-foreground"
+                    >
                       Carregando...
                     </TableCell>
                   </TableRow>
@@ -84,8 +98,8 @@ export default function TournamentHistory() {
                       <TableCell>{tournament.codigo}</TableCell>
                       <TableCell>{tournament.titulo}</TableCell>
                       <TableCell>
-                        {new Date(tournament.dataInicio).toLocaleDateString()} até{' '}
-                        {new Date(tournament.dataFim).toLocaleDateString()}
+                        {new Date(tournament.dataInicio).toLocaleDateString()}{' '}
+                        até {new Date(tournament.dataFim).toLocaleDateString()}
                       </TableCell>
                       <TableCell>{tournament.situacaoCampeonato}</TableCell>
                       <TableCell>{tournament.aposta || 'Sem aposta'}</TableCell>
@@ -94,7 +108,10 @@ export default function TournamentHistory() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="py-10 text-center text-muted-foreground"
+                    >
                       Nenhum campeonato encontrado.
                     </TableCell>
                   </TableRow>
@@ -107,16 +124,16 @@ export default function TournamentHistory() {
               <span className="text-sm text-gray-500">
                 Página {pageIndex + 1} de {totalPages}
               </span>
-              <Pagination 
-                pageIndex={pageIndex} 
-                totalCount={totalCount} 
-                perPage={10} 
-                onPageChange={handlePaginate} 
+              <Pagination
+                pageIndex={pageIndex}
+                totalCount={totalCount}
+                perPage={10}
+                onPageChange={handlePaginate}
               />
             </div>
           )}
         </div>
       </div>
     </>
-  );
+  )
 }

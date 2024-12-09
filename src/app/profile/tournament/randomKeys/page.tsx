@@ -1,123 +1,149 @@
 'use client'
 
-import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { useState } from 'react'
+
+import Header from '@/components/Header'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Importando o Select do ShadCN UI
-import Header from "@/components/Header";
+} from '@/components/ui/select' // Importando o Select do ShadCN UI
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table'
 
 export default function Component() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [competitionName, setCompetitionName] = useState("");
-  const [teams, setTeams] = useState(0);
-  const [people, setPeople] = useState(0); // Para competição individual
-  const [competitionType, setCompetitionType] = useState("individual"); // Novo campo
-  const [confrontos, setConfrontos] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [competitionName, setCompetitionName] = useState('')
+  const [teams, setTeams] = useState(0)
+  const [people, setPeople] = useState(0) // Para competição individual
+  const [competitionType, setCompetitionType] = useState('individual') // Novo campo
+  const [confrontos, setConfrontos] = useState<any[]>([])
 
   const generateKeys = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Lógica para competição individual
-    if (competitionType === "individual" && people > 0) {
+    if (competitionType === 'individual' && people > 0) {
       const newConfrontos = [
-        { fase: "Rodada 1", time1: "Pessoa 1", time2: "Pessoa 2" },
-        { fase: "Rodada 1", time1: "Pessoa 3", time2: "Pessoa 4" },
+        { fase: 'Rodada 1', time1: 'Pessoa 1', time2: 'Pessoa 2' },
+        { fase: 'Rodada 1', time1: 'Pessoa 3', time2: 'Pessoa 4' },
         // Outros confrontos podem ser adicionados dinamicamente
-      ];
+      ]
 
-      setConfrontos(newConfrontos);
+      setConfrontos(newConfrontos)
 
       // Enviando os dados para o json-server
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/competitions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+        const token = localStorage.getItem('token')
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/competitions`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: competitionName,
+              date: selectedDate,
+              people,
+              competitionType,
+              confrontos: newConfrontos,
+            }),
           },
-          body: JSON.stringify({
-            name: competitionName,
-            date: selectedDate,
-            people,
-            competitionType,
-            confrontos: newConfrontos,
-          }),
-        });
+        )
 
         if (!res.ok) {
-          throw new Error("Erro ao salvar a competição");
+          throw new Error('Erro ao salvar a competição')
         }
 
-        alert("Competição criada com sucesso!");
+        alert('Competição criada com sucesso!')
       } catch (error) {
-        console.error("Erro ao criar competição:", error);
-        alert("Erro ao criar competição.");
+        console.error('Erro ao criar competição:', error)
+        alert('Erro ao criar competição.')
       }
     }
 
     // Lógica para competição em grupo
-    if (competitionType === "grupo" && teams >= 4 && teams <= 16) {
+    if (competitionType === 'grupo' && teams >= 4 && teams <= 16) {
       const newConfrontos = [
-        { fase: "Quartas de Final", time1: "Time A", time2: "Time B" },
-        { fase: "Quartas de Final", time1: "Time C", time2: "Time D" },
-        { fase: "Semifinal", time1: "Vencedor A x B", time2: "Vencedor C x D" },
-        { fase: "Final", time1: "Vencedor Semifinal 1", time2: "Vencedor Semifinal 2" },
-      ];
+        { fase: 'Quartas de Final', time1: 'Time A', time2: 'Time B' },
+        { fase: 'Quartas de Final', time1: 'Time C', time2: 'Time D' },
+        { fase: 'Semifinal', time1: 'Vencedor A x B', time2: 'Vencedor C x D' },
+        {
+          fase: 'Final',
+          time1: 'Vencedor Semifinal 1',
+          time2: 'Vencedor Semifinal 2',
+        },
+      ]
 
-      setConfrontos(newConfrontos);
+      setConfrontos(newConfrontos)
 
       // Enviando os dados para o json-server
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/competitions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+        const token = localStorage.getItem('token')
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/competitions`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: competitionName,
+              date: selectedDate,
+              teams,
+              competitionType,
+              confrontos: newConfrontos,
+            }),
           },
-          body: JSON.stringify({
-            name: competitionName,
-            date: selectedDate,
-            teams,
-            competitionType,
-            confrontos: newConfrontos,
-          }),
-        });
+        )
 
         if (!res.ok) {
-          throw new Error("Erro ao salvar a competição");
+          throw new Error('Erro ao salvar a competição')
         }
 
-        alert("Competição criada com sucesso!");
+        alert('Competição criada com sucesso!')
       } catch (error) {
-        console.error("Erro ao criar competição:", error);
-        alert("Erro ao criar competição.");
+        console.error('Erro ao criar competição:', error)
+        alert('Erro ao criar competição.')
       }
-    } else if (competitionType === "grupo" && (teams < 4 || teams > 16)) {
-      setConfrontos([]);
-      alert("A competição em grupo deve ter entre 4 e 16 times.");
+    } else if (competitionType === 'grupo' && (teams < 4 || teams > 16)) {
+      setConfrontos([])
+      alert('A competição em grupo deve ter entre 4 e 16 times.')
     }
-  };
+  }
 
   return (
     <>
-    <Header />
-    
+      <Header />
+
       <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto py-12 px-4 md:px-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Gerador de Chaves dos Campeonatos</h1>
-          <p className="text-muted-foreground">Crie facilmente as chaves de competições amistosas com este sistema.</p>
+          <h1 className="text-3xl font-bold">
+            Gerador de Chaves dos Campeonatos
+          </h1>
+          <p className="text-muted-foreground">
+            Crie facilmente as chaves de competições amistosas com este sistema.
+          </p>
         </div>
 
         <div className="w-full mt-8 bg-background rounded-lg border p-6 space-y-6">
@@ -136,13 +162,22 @@ export default function Component() {
               <Label htmlFor="date">Data da Competição</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start font-normal">
-                    {selectedDate ? selectedDate.toLocaleDateString() : "Selecione a data"}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start font-normal"
+                  >
+                    {selectedDate
+                      ? selectedDate.toLocaleDateString()
+                      : 'Selecione a data'}
                     <div className="ml-auto h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                  />
                 </PopoverContent>
               </Popover>
             </div>
@@ -150,7 +185,10 @@ export default function Component() {
             {/* Campo Dinâmico: Individual ou Grupo */}
             <div className="space-y-2">
               <Label htmlFor="type">Tipo de Competição</Label>
-              <Select onValueChange={setCompetitionType} value={competitionType}>
+              <Select
+                onValueChange={setCompetitionType}
+                value={competitionType}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Escolha o tipo de competição" />
                 </SelectTrigger>
@@ -162,7 +200,7 @@ export default function Component() {
             </div>
 
             {/* Campo para número de pessoas ou times */}
-            {competitionType === "individual" ? (
+            {competitionType === 'individual' ? (
               <div className="space-y-2">
                 <Label htmlFor="people">Número de Pessoas</Label>
                 <Input
@@ -207,7 +245,9 @@ export default function Component() {
                 <TableBody>
                   {confrontos.map((confronto, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{confronto.fase}</TableCell>
+                      <TableCell className="font-medium">
+                        {confronto.fase}
+                      </TableCell>
                       <TableCell>{confronto.time1}</TableCell>
                       <TableCell>{confronto.time2}</TableCell>
                     </TableRow>
@@ -219,6 +259,5 @@ export default function Component() {
         </div>
       </div>
     </>
-  );
+  )
 }
-

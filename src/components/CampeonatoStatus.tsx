@@ -1,13 +1,16 @@
- 'use client'
+'use client'
 
 import React from 'react'
+
 import { Calendar } from 'lucide-react'
 
 interface CampeonatoStatusProps {
   situacaoCampeonato: string
 }
 
-const CampeonatoStatus: React.FC<CampeonatoStatusProps> = ({ situacaoCampeonato }) => {
+const CampeonatoStatus: React.FC<CampeonatoStatusProps> = ({
+  situacaoCampeonato,
+}) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'EM_ABERTO':
@@ -28,7 +31,8 @@ const CampeonatoStatus: React.FC<CampeonatoStatusProps> = ({ situacaoCampeonato 
     <div className="campeonato-status">
       <h2>Status do Campeonato</h2>
       <p className={`font-semibold ${statusColor}`}>
-        <strong>Situacao:</strong> {formattedStatus} <Calendar className="inline ml-2" size={16} color="orange" />
+        <strong>Situacao:</strong> {formattedStatus}{' '}
+        <Calendar className="inline ml-2" size={16} color="orange" />
       </p>
       {/* Add more status details as needed */}
     </div>

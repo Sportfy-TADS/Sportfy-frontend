@@ -1,7 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
+import Link from 'next/link'
+
+import { UsersIcon, KeyIcon } from 'lucide-react'
+import { toast } from 'sonner'
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -10,14 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { UsersIcon, KeyIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar'
-import { Input } from '@/components/ui/input'
-import { toast } from 'sonner'
+
 // import { Breadcrumb, Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 async function fetchTimes(idCampeonato: string) {

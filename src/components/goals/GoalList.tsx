@@ -1,7 +1,9 @@
 import React from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+
 import { CircleDashed, ClipboardPen, Target } from 'lucide-react'
+
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 import GoalCard from './GoalCard'
 import { Button } from '../ui/button'

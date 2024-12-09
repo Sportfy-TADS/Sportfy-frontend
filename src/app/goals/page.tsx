@@ -1,11 +1,17 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { motion } from 'framer-motion'
+import { Medal } from 'lucide-react'
+import { toast } from 'sonner'
+
+import GoalForm from '@/components/goals/GoalForm'
+import GoalList from '@/components/goals/GoalList'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+import { Alert } from '@/components/ui/alert' // Import the Alert component
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -24,11 +30,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Medal } from 'lucide-react'
-import GoalForm from '@/components/goals/GoalForm'
-import GoalList from '@/components/goals/GoalList'
-import { useUserData } from '@/hooks/useUserData'
 import { useGoals } from '@/hooks/useGoals'
+import { useUserData } from '@/hooks/useUserData'
 import {
   createGoal,
   getMetaEsportiva,
@@ -36,7 +39,6 @@ import {
   updateGoal,
   deleteGoal, // Import the deleteGoal function
 } from '@/http/goals'
-import { Alert } from '@/components/ui/alert' // Import the Alert component
 
 interface MetaEsportiva {
   idMetaEsportiva: number

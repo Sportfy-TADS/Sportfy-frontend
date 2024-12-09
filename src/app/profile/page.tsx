@@ -1,19 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
 import axios from 'axios'
-import { getUserData, getDecodedToken } from '@/utils/auth'
 import { Trophy, Target, Medal } from 'lucide-react'
+
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
-import { getGoals } from '@/http/goals'
+import { Skeleton } from '@/components/ui/skeleton'
 import { fetchAchievements } from '@/http/achievements'
 import { getCampeonatos } from '@/http/championships'
+import { getGoals } from '@/http/goals'
+import { getUserData, getDecodedToken } from '@/utils/auth'
 
 interface User {
   idAcademico?: number

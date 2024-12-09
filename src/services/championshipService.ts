@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
 
 interface TokenPayload {
@@ -38,7 +37,9 @@ export const getUserIdFromToken = (): number | null => {
   }
 }
 
-export const createChampionship = async (championshipData: any) => {
+export const createChampionship = async (
+  championshipData: Record<string, unknown>,
+) => {
   console.log('Creating championship with data:', championshipData)
 
   const token = localStorage.getItem('token')

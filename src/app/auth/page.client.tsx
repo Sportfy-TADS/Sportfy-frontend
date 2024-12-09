@@ -1,20 +1,21 @@
 'use client'
 
+import { useState, useEffect } from 'react' // Import useState and useEffect
+
 import { useRouter } from 'next/navigation'
+
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Medal, User, Lock, Eye, EyeOff } from 'lucide-react' // Add Eye and EyeOff imports
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { useState, useEffect } from 'react' // Import useState and useEffect
-
 import { z } from 'zod'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signInSchema } from '@/schemas'
 import { authenticateUser, useAuthenticateUser } from '@/http/auth'
+import { signInSchema } from '@/schemas'
 
 type SignInSchema = z.infer<typeof signInSchema>
 

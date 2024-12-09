@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from 'react'
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Check, ChevronsUpDown } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -12,12 +12,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from '@/components/ui/command'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
 interface ComboboxProps {
   options: string[]
@@ -26,7 +27,12 @@ interface ComboboxProps {
   placeholder?: string
 }
 
-export function Combobox({ options, value, onChange, placeholder }: ComboboxProps) {
+export function Combobox({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: ComboboxProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -36,7 +42,7 @@ export function Combobox({ options, value, onChange, placeholder }: ComboboxProp
           aria-expanded={false}
           className="w-full justify-between"
         >
-          {value || placeholder || "Select an option..."}
+          {value || placeholder || 'Select an option...'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -51,7 +57,7 @@ export function Combobox({ options, value, onChange, placeholder }: ComboboxProp
                   key={option}
                   value={option}
                   onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
+                    onChange(currentValue === value ? '' : currentValue)
                   }}
                 >
                   {option}

@@ -1,11 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Toaster } from 'sonner'
 
-import Header from '@/components/Header'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useStatistics } from '@/hooks/useStatistics'
 import {
   BarChart,
   Bar,
@@ -14,20 +10,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { Toaster } from 'sonner'
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   ChartConfig,
 } from '@/components/ui/chart'
-import Sidebar from '@/components/Sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useStatistics } from '@/hooks/useStatistics'
 
 export default function Statistics() {
-  const {
-    usoAcademico,
-    isLoadingUsoAcademico,
-    errorUsoAcademico,
-  } = useStatistics()
+  const { usoAcademico, isLoadingUsoAcademico, errorUsoAcademico } =
+    useStatistics()
 
   // Prepare chart data based on usoAcademico
   const chartData = usoAcademico
@@ -56,13 +54,16 @@ export default function Statistics() {
     : []
 
   // Prepare chart data for each sport modality
-  const chartDataByModality = usoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map((modality: any) => ({
-    name: modality.nomeModalidadeEsportiva,
-    metas: modality.totalMetasEsportivasInscritas,
-    conquistas: modality.totalConquistasAlcancadas,
-    criados: modality.totalCampeonatosCriados,
-    participados: modality.totalCampeonatosParticipados,
-  })) || []
+  const chartDataByModality =
+    usoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map(
+      (modality: any) => ({
+        name: modality.nomeModalidadeEsportiva,
+        metas: modality.totalMetasEsportivasInscritas,
+        conquistas: modality.totalConquistasAlcancadas,
+        criados: modality.totalCampeonatosCriados,
+        participados: modality.totalCampeonatosParticipados,
+      }),
+    ) || []
 
   // Define chartConfig for the chart
   const chartConfig: ChartConfig = {
@@ -90,7 +91,10 @@ export default function Statistics() {
             </p>
           ) : usoAcademico ? (
             <>
-              <ChartContainer config={chartConfig} className="h-[200px] w-full mb-10">
+              <ChartContainer
+                config={chartConfig}
+                className="h-[200px] w-full mb-10"
+              >
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid vertical={false} />

@@ -1,8 +1,18 @@
-
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Pencil, Trash, Calendar, Info, Trophy, MapPin, User, Lock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+
+import {
+  Pencil,
+  Trash,
+  Calendar,
+  Info,
+  Trophy,
+  MapPin,
+  User,
+  Lock,
+} from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 interface ChampionshipCardProps {
   campeonato: Campeonato
@@ -12,13 +22,21 @@ interface ChampionshipCardProps {
   onCopyCode: (code: string) => void
 }
 
-const ChampionshipCard: React.FC<ChampionshipCardProps> = ({ campeonato, currentUserId, onUpdate, onDelete, onCopyCode }) => {
+const ChampionshipCard: React.FC<ChampionshipCardProps> = ({
+  campeonato,
+  currentUserId,
+  onUpdate,
+  onDelete,
+  onCopyCode,
+}) => {
   const router = useRouter()
 
   return (
     <Card className="border border-blue-700">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">{campeonato.titulo}</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          {campeonato.titulo}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -41,12 +59,16 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({ campeonato, current
             <div className="flex items-center mb-1">
               <Calendar className="mr-2 text-blue-700" />
               <p className="text-lg font-semibold">Início:</p>
-              <p className="text-lg ml-2">{new Date(campeonato.dataInicio).toLocaleDateString()}</p>
+              <p className="text-lg ml-2">
+                {new Date(campeonato.dataInicio).toLocaleDateString()}
+              </p>
             </div>
             <div className="flex items-center mb-1">
               <Calendar className="mr-2 text-blue-700" />
               <p className="text-lg font-semibold">Fim:</p>
-              <p className="text-lg ml-2">{new Date(campeonato.dataFim).toLocaleDateString()}</p>
+              <p className="text-lg ml-2">
+                {new Date(campeonato.dataFim).toLocaleDateString()}
+              </p>
             </div>
           </div>
 
@@ -70,7 +92,9 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({ campeonato, current
               <Lock className="mr-2 text-blue-700" />
               <p className="text-lg font-semibold">Privacidade:</p>
               <p className="text-lg ml-2">
-                {campeonato.privacidadeCampeonato === 'PUBLICO' ? 'Público' : 'Privado'}
+                {campeonato.privacidadeCampeonato === 'PUBLICO'
+                  ? 'Público'
+                  : 'Privado'}
               </p>
             </div>
             <div className="flex items-center mb-1">
@@ -88,7 +112,7 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({ campeonato, current
             </div>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`
+                `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`,
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -103,7 +127,10 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({ campeonato, current
             <div className="flex items-center mb-1">
               <Info className="mr-2 text-blue-700" />
               <p className="text-lg font-semibold">Código do Campeonato:</p>
-              <p className="text-lg ml-2 cursor-pointer" onClick={() => onCopyCode(campeonato.codigo)}>
+              <p
+                className="text-lg ml-2 cursor-pointer"
+                onClick={() => onCopyCode(campeonato.codigo)}
+              >
                 {campeonato.codigo}
               </p>
             </div>
@@ -129,7 +156,9 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({ campeonato, current
             </>
           ) : (
             <Button
-              onClick={() => router.push(`/championships/${campeonato.idCampeonato}`)}
+              onClick={() =>
+                router.push(`/championships/${campeonato.idCampeonato}`)
+              }
               className="flex items-center justify-center bg-green-500 hover:bg-green-600"
             >
               Acessar

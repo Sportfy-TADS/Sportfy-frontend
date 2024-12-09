@@ -1,9 +1,20 @@
 'use client'
 
+import { useState, useEffect, use } from 'react'
+
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+import { CalendarIcon, UsersIcon, LockIcon, UnlockIcon } from 'lucide-react'
+import { toast } from 'sonner'
+
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
+import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CalendarIcon, UsersIcon, LockIcon, UnlockIcon } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Sheet,
   SheetContent,
@@ -11,14 +22,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar'
-import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 async function fetchCampeonato(idCampeonato: string) {
   const token = localStorage.getItem('token')

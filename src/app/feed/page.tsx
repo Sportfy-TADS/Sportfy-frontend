@@ -1,7 +1,12 @@
 'use client'
 
+import { useState, useEffect } from 'react' // Add import
+
+import { motion } from 'framer-motion'
 import { MessageCircle, Star } from 'lucide-react'
 import { Toaster, toast } from 'sonner' // Adicionado 'toast'
+
+import CommentsDialog from '@/components/CommentsDialog'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
@@ -15,10 +20,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useFeed } from '@/hooks/useFeed'
-import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react' // Add import
 import { fetchComments } from '@/http/feed' // Removed fetchPosts import as it's handled in useFeed
-import CommentsDialog from '@/components/CommentsDialog'
 import { Comentario, Post } from '@/interface/types'
 
 export default function FeedPage() {

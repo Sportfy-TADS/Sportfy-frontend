@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+
 import { useRouter } from 'next/navigation'
+
 import { UploadCloud, Loader2 } from 'lucide-react'
-import { getUserData } from '@/utils/auth'
+
 import Header from '@/components/Header'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -17,6 +19,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { useAuth } from '@/hooks/useAuth'
+import { getUserData } from '@/utils/auth'
 
 interface UserData {
   nome: string

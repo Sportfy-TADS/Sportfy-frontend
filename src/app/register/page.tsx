@@ -1,19 +1,20 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Medal } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
+import InputMask from 'react-input-mask'
 import { twMerge } from 'tailwind-merge'
 import { z } from 'zod'
-import { useState, useEffect } from 'react'
-import InputMask from 'react-input-mask'
 
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Combobox } from '@/components/ui/combobox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRegister } from '@/hooks/useRegister'
 import { signUpSchema } from '@/schemas'
-import { Combobox } from '@/components/ui/combobox'
 
 type SignUpSchema = z.infer<typeof signUpSchema>
 

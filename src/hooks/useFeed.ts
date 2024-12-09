@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode' // Changed from named to default import
 import { toast } from 'sonner'
 
 import {
@@ -14,7 +15,6 @@ import {
   updateComment,
 } from '@/http/feed'
 import { Post, DecodedToken, Usuario } from '@/interface/types'
-import { jwtDecode } from 'jwt-decode' // Changed from named to default import
 
 export const useFeed = () => {
   const [posts, setPosts] = useState<Post[]>([])
