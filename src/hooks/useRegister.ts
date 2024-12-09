@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { registerAcademico } from '@/http/register'
-import { SignUpSchema } from '@/schemas'
+// ...existing code...
 
 export const useRegister = () => {
   const router = useRouter()

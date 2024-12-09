@@ -8,9 +8,14 @@ import { toast } from 'sonner'
 import { fetchUsoAcademico } from '@/http/statistics'
 import { getUserIdFromToken, getUserData } from '@/utils/auth'
 
+interface UserData {
+  idAcademico: number
+  // ... outras propriedades de UserData ...
+}
+
 export function useStatistics() {
   const [userId, setUserId] = useState<number | null>(null)
-  const [userData, setUserData] = useState<any>(null)
+  const [userData, setUserData] = useState<UserData | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -18,7 +23,7 @@ export function useStatistics() {
     console.log('User ID from token:', id)
     if (id !== null) {
       setUserId(id)
-      const data = getUserData()
+      const data = getUserData() as UserData
       console.log('User data from localStorage:', data)
       setUserData(data)
     } else {
@@ -38,7 +43,7 @@ export function useStatistics() {
     queryKey: ['usoAcademico', academicoId],
     queryFn: () => fetchUsoAcademico(academicoId!),
     enabled: academicoId !== null,
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Erro ao buscar uso acadêmico:', error)
       toast.error('Erro ao buscar uso acadêmico.')
     },

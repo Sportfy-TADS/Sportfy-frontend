@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react' // Removed useCallback and debounce imports
+import { useEffect, useState, useRef } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { jwtDecode } from 'jwt-decode' // Changed from named import to default import
+import { jwtDecode } from 'jwt-decode'
 import { LogOut } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { getUserIdFromToken, storeUserData } from '@/utils/auth' // Import storeUserData
 
 interface DecodedToken {
   idUsuario: number
@@ -25,7 +24,7 @@ interface DecodedToken {
   roles: string
 }
 
-interface SearchResult {
+interface User {
   id: number
   nome: string
   username: string
@@ -38,15 +37,15 @@ export default function Header() {
   const [userName, setUserName] = useState('')
   const [userImage, setUserImage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null) // Add debounce timeout ref
+  const [searchResults, setSearchResults] = useState<User[]>([])
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Carregar os dados do usuário logado
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token')
       const storedUserData = localStorage.getItem('userData')
-      console.log('Token:', token, 'Stored User Data:', storedUserData) // Debug log
+      console.log('Token:', token, 'Stored User Data:', storedUserData)
 
       if (!token) {
         setIsLoggedIn(false)
@@ -55,9 +54,8 @@ export default function Header() {
 
       try {
         const decoded: DecodedToken = jwtDecode(token)
-        console.log('Decoded Token:', decoded) // Debug log
+        console.log('Decoded Token:', decoded)
 
-        // Se já temos os dados do usuário no localStorage, use-os
         if (storedUserData) {
           const userData = JSON.parse(storedUserData)
           setIsLoggedIn(true)
@@ -66,7 +64,6 @@ export default function Header() {
           return
         }
 
-        // Se não temos os dados armazenados, busque-os da API
         const username = decoded.sub
         let userResponse
 
@@ -82,7 +79,7 @@ export default function Header() {
           )
           const adminData = await adminResponse.json()
           const matchedAdmin = adminData.content.find(
-            (admin: any) => admin.username === decoded.sub,
+            (admin: { username: string }) => admin.username === decoded.sub,
           )
           if (!matchedAdmin) throw new Error('Admin não encontrado')
           userResponse = { nome: matchedAdmin.nome, foto: matchedAdmin.foto }
@@ -100,26 +97,23 @@ export default function Header() {
           userResponse = await response.json()
         }
 
-        // Armazena os dados do usuário no localStorage
         localStorage.setItem('userData', JSON.stringify(userResponse))
         setIsLoggedIn(true)
         setUserName(userResponse.nome)
         setUserImage(userResponse.foto || `https://via.placeholder.com/50`)
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error)
-        // Não redireciona automaticamente em caso de erro
         setIsLoggedIn(false)
       }
     }
 
     fetchUserData()
-  }, []) // Remove router dependency to prevent unnecessary redirects
+  }, [])
 
   // Função para realizar a busca de usuários
   const performSearch = async (term: string) => {
     if (term.length > 2) {
       try {
-        // Buscar acadêmicos e administradores em paralelo
         const token = localStorage.getItem('token')
         const [academicosResponse, adminsResponse] = await Promise.all([
           fetch(
@@ -145,29 +139,34 @@ export default function Header() {
         const academicosData = await academicosResponse.json()
         const adminsData = await adminsResponse.json()
 
-        // Formatar resultados de acadêmicos
-        const academicos = academicosData.content.map((user: any) => ({
-          id: user.idAcademico,
-          nome: user.nome,
-          username: user.username,
-          tipo: 'ACADEMICO' as const,
-        }))
+        const academicos = academicosData.content.map(
+          (user: { idAcademico: number; nome: string; username: string }) => ({
+            id: user.idAcademico,
+            nome: user.nome,
+            username: user.username,
+            tipo: 'ACADEMICO' as const,
+          }),
+        )
 
-        // Formatar resultados de administradores
         const admins = adminsData.content
           .filter(
-            (admin: any) =>
+            (admin: { nome: string; username: string }) =>
               admin.nome.toLowerCase().includes(term.toLowerCase()) ||
               admin.username.toLowerCase().includes(term.toLowerCase()),
           )
-          .map((admin: any) => ({
-            id: admin.idAdministrador,
-            nome: admin.nome,
-            username: admin.username,
-            tipo: 'ADMINISTRADOR' as const,
-          }))
+          .map(
+            (admin: {
+              idAdministrador: number
+              nome: string
+              username: string
+            }) => ({
+              id: admin.idAdministrador,
+              nome: admin.nome,
+              username: admin.username,
+              tipo: 'ADMINISTRADOR' as const,
+            }),
+          )
 
-        // Combinar e ordenar resultados
         const combinedResults = [...academicos, ...admins].sort((a, b) =>
           a.nome.localeCompare(b.nome),
         )
@@ -213,7 +212,7 @@ export default function Header() {
     localStorage.removeItem('token')
     localStorage.removeItem('userData')
     localStorage.removeItem('academicoId')
-    localStorage.removeItem('adminId') // Remover também o adminId ao fazer logout
+    localStorage.removeItem('adminId')
     router.push('/auth')
   }
 
@@ -223,7 +222,7 @@ export default function Header() {
 
   // Função para pegar as iniciais do nome
   const getInitials = (name: string) => {
-    if (!name) return '' // Se o nome for undefined, retorna uma string vazia
+    if (!name) return ''
     return name
       .split(' ')
       .map((n) => n[0])
@@ -250,7 +249,7 @@ export default function Header() {
               if (debounceTimeout.current) {
                 clearTimeout(debounceTimeout.current)
               }
-              performSearch(searchTerm) // Immediately invoke the search
+              performSearch(searchTerm)
             }
           }}
           className="w-64"

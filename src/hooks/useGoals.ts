@@ -2,21 +2,31 @@ import { useState, useEffect } from 'react'
 
 import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
 
-export const useGoals = (idAcademico: number) => {
-  // Make idAcademico required
-  interface Goal {
-    idMetaDiaria: number
-    titulo: string
-    descricao: string // Changed from objetivo to descricao
-    quantidadeConcluida: number
-    quantidadeObjetivo: number
-    itemQuantificado: string
-    situacaoMetaDiaria: string
-    academico: {
-      idAcademico: number
-    }
+interface Goal {
+  idMetaDiaria: number
+  titulo: string
+  descricao: string
+  quantidadeConcluida: number
+  quantidadeObjetivo: number
+  itemQuantificado: string
+  situacaoMetaDiaria: string
+  academico: {
+    idAcademico: number
   }
+}
 
+interface GoalData {
+  idMetaDiaria?: number
+  titulo: string
+  descricao: string
+  progressoAtual?: number
+  progressoMaximo: number
+  progressoItem: string
+  customProgressoItem?: string
+  situacaoMetaDiaria?: number
+}
+
+export const useGoals = (idAcademico: number) => {
   const [goals, setGoals] = useState<Goal[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -35,17 +45,16 @@ export const useGoals = (idAcademico: number) => {
     fetchGoals()
   }, [idAcademico])
 
-  const handleCreateGoal = async (goalData: any) => {
+  const handleCreateGoal = async (goalData: GoalData) => {
     try {
       if (!idAcademico) {
         throw new Error('ID do acadêmico não fornecido')
       }
 
-      // Format the data according to the backend's expected structure
       const payload = {
         titulo: goalData.titulo,
-        descricao: goalData.descricao, // Use 'descricao' instead of 'objetivo'
-        progressoAtual: 0, // Set to zero by default
+        descricao: goalData.descricao,
+        progressoAtual: 0,
         progressoMaximo: goalData.progressoMaximo,
         progressoItem: goalData.progressoItem,
         idAcademico,
@@ -58,32 +67,29 @@ export const useGoals = (idAcademico: number) => {
 
       console.log('Goal created successfully:', response)
 
-      // Add the new goal to the goals list
       setGoals((prev) => [...prev, response])
 
       return response
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating goal:', error)
-      throw new Error(error.message || 'Erro ao criar meta')
+      throw new Error((error as Error).message || 'Erro ao criar meta')
     }
   }
 
-  // Ensure handleUpdateGoal is exported for daily goals
-  const handleUpdateGoal = async (goalData: any) => {
+  const handleUpdateGoal = async (goalData: GoalData) => {
     try {
-      // Ensure all required fields are present and properly formatted
       const payload = {
-        idMetaDiaria: goalData.idMetaDiaria,
+        idMetaDiaria: goalData.idMetaDiaria!,
         titulo: goalData.titulo,
-        descricao: goalData.descricao, // Changed from objetivo to descricao
-        progressoAtual: Number(goalData.progressoAtual), // Ensure it's a number
+        descricao: goalData.descricao,
+        progressoAtual: Number(goalData.progressoAtual),
         progressoMaximo: Number(goalData.progressoMaximo),
         progressoItem:
           goalData.progressoItem === 'outro'
             ? goalData.customProgressoItem
             : goalData.progressoItem,
         situacaoMetaDiaria: Number(goalData.situacaoMetaDiaria),
-        idAcademico, // Ensure idAcademico is included
+        idAcademico,
       }
 
       const response = await updateGoal(payload)
@@ -93,12 +99,10 @@ export const useGoals = (idAcademico: number) => {
         ),
       )
       return response
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating goal:', error)
       throw new Error(
-        error?.response?.data?.message ||
-          error.message ||
-          'Erro ao atualizar meta',
+        (error as Error)?.message || 'Erro ao atualizar meta',
       )
     }
   }
@@ -117,7 +121,7 @@ export const useGoals = (idAcademico: number) => {
     goals,
     isLoading,
     handleCreateGoal,
-    handleUpdateGoal, // Export the update handler for daily goals
+    handleUpdateGoal,
     handleDeleteGoal,
   }
 }
