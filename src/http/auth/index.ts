@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { z } from 'zod'
 
@@ -28,18 +28,19 @@ export const authenticateUser = async (data: SignInSchema) => {
 
     localStorage.setItem('token', token)
 
-    if (decoded.role === 'ADMINISTRADOR') {
-      localStorage.setItem('adminId', decoded.idUsuario.toString())
-    } else {
-      localStorage.setItem('academicoId', decoded.idUsuario.toString())
-    }
+    const userIdKey =
+      decoded.role === 'ADMINISTRADOR' ? 'adminId' : 'academicoId'
+    localStorage.setItem(userIdKey, decoded.idUsuario.toString())
 
     return decoded
-  } catch (error: any) {
-    console.error('Erro na autenticação:', error)
-    throw new Error(
-      error.response?.data?.message || 'Nome de usuário ou senha inválidos',
-    )
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      console.error('Erro na autenticação:', error)
+      throw new Error(
+        error.response?.data?.message || 'Nome de usuário ou senha inválidos',
+      )
+    }
+    throw error
   }
 }
 

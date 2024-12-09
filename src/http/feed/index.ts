@@ -32,8 +32,10 @@ axios.interceptors.response.use(
   },
 )
 
+const getToken = (): string | null => localStorage.getItem('token')
+
 export const fetchPosts = async (page: number = 0, size: number = 10) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   try {
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`,
@@ -52,20 +54,16 @@ export const fetchPosts = async (page: number = 0, size: number = 10) => {
 }
 
 export const fetchLoggedUser = () => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    return jwtDecode(token)
-  }
-  return null
+  const token = getToken()
+  return token ? jwtDecode(token) : null
 }
 
 export const likePost = async (userId: number, postId: number) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`
     console.log('Sending like request to URL:', url)
     const response = await axios.post(url, null, {
-      // Alterado para incluir headers como terceiro parâmetro
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -80,7 +78,7 @@ export const likePost = async (userId: number, postId: number) => {
 }
 
 export const unlikePost = async (userId: number, postId: number) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${userId}/${postId}`
     console.log('Sending unlike request to URL:', url)
@@ -107,7 +105,7 @@ interface Post {
 }
 
 export const createPost = async (newPost: Post) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   if (!token) {
     throw new Error('Token não encontrado')
   }
@@ -168,7 +166,7 @@ export const createPost = async (newPost: Post) => {
 }
 
 export const fetchComments = async (postId: number) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   try {
     const url = `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=10&sort=dataComentario,desc`
     const response = await axios.get(url, {
@@ -188,8 +186,14 @@ export const fetchComments = async (postId: number) => {
   }
 }
 
-export const createComment = async (comment: any) => {
-  const token = localStorage.getItem('token')
+interface Comment {
+  texto: string
+  idPublicacao: number
+  idUsuario: number
+}
+
+export const createComment = async (comment: Comment) => {
+  const token = getToken()
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/comentario/cadastrarComentario`
     const response = await axios.post(url, comment, {
@@ -205,8 +209,11 @@ export const createComment = async (comment: any) => {
   }
 }
 
-export const updateComment = async (commentId: number, updatedComment: any) => {
-  const token = localStorage.getItem('token')
+export const updateComment = async (
+  commentId: number,
+  updatedComment: Comment,
+) => {
+  const token = getToken()
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/comentario/atualizarComentario/${commentId}`
     const response = await axios.put(url, updatedComment, {
