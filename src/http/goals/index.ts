@@ -1,7 +1,5 @@
 import axios from 'axios'
 
-import { useUserData } from '@/hooks/useUserData'
-
 // Função para obter o dados do usuário
 export async function getUserData(username: string) {
   const token = localStorage.getItem('token')
@@ -114,9 +112,12 @@ export async function createGoal(data: {
 
     console.log('Goal created successfully:', result)
     return result
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to create goal:', error)
-    throw new Error(error.message || 'Erro ao criar meta')
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro ao criar meta')
+    }
+    throw new Error('Erro ao criar meta')
   }
 }
 
@@ -191,17 +192,18 @@ export async function getMetaEsportiva(idAcademico: number) {
     throw new Error('Erro ao buscar modalidades esportivas')
   }
   const modalidades = await response.json()
-  const metasPromises = modalidades.map((modalidade: any) =>
-    fetch(
-      `http://localhost:8081/modalidadeEsportiva/metaEsportiva/listar/${modalidade.idModalidadeEsportiva}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+  const metasPromises = modalidades.map(
+    (modalidade: { idModalidadeEsportiva: number }) =>
+      fetch(
+        `http://localhost:8081/modalidadeEsportiva/metaEsportiva/listar/${modalidade.idModalidadeEsportiva}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      },
-    ).then((res) => res.json()),
+      ).then((res) => res.json()),
   )
   const metasEsportivas = await Promise.all(metasPromises)
   return metasEsportivas.flat()
@@ -233,7 +235,8 @@ export async function updateMetaEsportiva(meta: MetaEsportiva) {
 
   // Find the conquista that matches the metaEsportiva
   const conquista = conquistas.find(
-    (c: any) => c.metaEsportiva.idMetaEsportiva === meta.idMetaEsportiva,
+    (c: { metaEsportiva: { idMetaEsportiva: number } }) =>
+      c.metaEsportiva.idMetaEsportiva === meta.idMetaEsportiva,
   )
 
   if (!conquista) {

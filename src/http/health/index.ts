@@ -1,24 +1,37 @@
+type ApoioSaudeData = {
+  nome: string
+  email: string
+  telefone: string
+  descricao: string
+}
+
+function getToken(): string | null {
+  return localStorage.getItem('token')
+}
+
+async function checkResponse(response: Response) {
+  if (!response.ok) {
+    const errorMessage = await response.text()
+    throw new Error(errorMessage || 'Erro ao processar a solicitação')
+  }
+  return response.json()
+}
+
 export async function fetchApoioSaude() {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   const response = await fetch('http://localhost:8081/apoio-saude/listar', {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   })
-  if (!response.ok) {
-    throw new Error('Erro ao buscar apoios à saúde')
-  }
-  return response.json()
+  return checkResponse(response)
 }
 
-export async function createApoioSaude(data: {
-  nome: string
-  email: string
-  telefone: string
-  descricao: string
-}): Promise<any> {
-  const token = localStorage.getItem('token')
+export async function createApoioSaude(
+  data: ApoioSaudeData,
+): Promise<ApoioSaudeData> {
+  const token = getToken()
   const response = await fetch('http://localhost:8081/apoio-saude/cadastrar', {
     method: 'POST',
     headers: {
@@ -27,17 +40,11 @@ export async function createApoioSaude(data: {
     },
     body: JSON.stringify(data),
   })
-  if (!response.ok) {
-    throw new Error('Erro ao cadastrar apoio à saúde')
-  }
-  return response.json()
+  return checkResponse(response)
 }
 
-export async function updateApoioSaude(
-  id: string,
-  data: { nome: string; email: string; telefone: string; descricao: string },
-) {
-  const token = localStorage.getItem('token')
+export async function updateApoioSaude(id: string, data: ApoioSaudeData) {
+  const token = getToken()
   const response = await fetch(
     `http://localhost:8081/apoio-saude/atualizar/${id}`,
     {
@@ -49,14 +56,11 @@ export async function updateApoioSaude(
       body: JSON.stringify(data),
     },
   )
-  if (!response.ok) {
-    throw new Error('Erro ao atualizar apoio à saúde')
-  }
-  return response.json()
+  return checkResponse(response)
 }
 
 export async function inactivateApoioSaude(id: string) {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   const response = await fetch(
     `http://localhost:8081/apoio-saude/inativar/${id}`,
     {
@@ -67,8 +71,5 @@ export async function inactivateApoioSaude(id: string) {
       },
     },
   )
-  if (!response.ok) {
-    throw new Error('Erro ao inativar apoio à saúde')
-  }
-  return response.json()
+  return checkResponse(response)
 }
