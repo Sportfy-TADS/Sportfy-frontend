@@ -1,8 +1,6 @@
 import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
-import axios from 'axios'
 import { toast } from 'sonner'
 
-import { Modalidade, UserData } from '@/interface/types'
 import { fetchWithAuth, getToken } from '@/utils/apiUtils'
 import { getUserIdFromToken } from '@/utils/auth'
 
@@ -34,6 +32,9 @@ export interface Modalidade {
 // Utility Functions
 export function decodeToken(token: string): TokenPayload {
   const decoded = getUserIdFromToken()
+  if (!decoded) {
+    throw new Error('Token inválido')
+  }
   console.log('Token decodificado:', decoded)
   return decoded
 }
@@ -45,7 +46,7 @@ export function getIdAcademico(): number {
 
   const userData: UserData = JSON.parse(userDataStr)
   console.log('Dados do usuário após parse:', userData)
-  console.log('ID Acadêmico:', userData.idAcademico)
+  console.log('ID Acad��mico:', userData.idAcademico)
   return userData.idAcademico
 }
 
@@ -196,7 +197,6 @@ export async function desinscreverUsuario(modalidadeId: number) {
 
 export async function fetchModalidades() {
   const token = getToken()
-  const idAcademico = getIdAcademico()
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/listar`
   return fetchWithAuth(url, {
     headers: {
