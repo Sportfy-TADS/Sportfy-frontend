@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Medal } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
-import InputMask from 'react-input-mask'
 import { twMerge } from 'tailwind-merge'
 import { z } from 'zod'
 
@@ -29,8 +28,6 @@ export default function RegisterPage() {
   })
 
   const [courses, setCourses] = useState<string[]>([])
-  const [filteredCourses, setFilteredCourses] = useState<string[]>([])
-  const [query, setQuery] = useState('')
   const [phone, setPhone] = useState('')
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,23 +44,9 @@ export default function RegisterPage() {
       .then((response) => response.json())
       .then((data) => {
         setCourses(data)
-        setFilteredCourses(data)
       })
       .catch((error) => console.error(error))
   }, [])
-
-  useEffect(() => {
-    // Add filtering logic
-    if (query === '') {
-      setFilteredCourses(courses)
-    } else {
-      setFilteredCourses(
-        courses.filter((course) =>
-          course.toLowerCase().includes(query.toLowerCase()),
-        ),
-      )
-    }
-  }, [query, courses])
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {

@@ -14,6 +14,13 @@ import {
 } from '@/components/ui/select'
 import { getGoals } from '@/http/get-goals'
 
+interface Goal {
+  id: string
+  title: string
+  frequency: number
+  status: 'completed' | 'in_progress'
+}
+
 export function GoalList() {
   const [filter, setFilter] = useState('all')
   const { data: goals = [], isLoading } = useQuery({
@@ -23,7 +30,7 @@ export function GoalList() {
 
   if (isLoading) return <p>Carregando...</p>
 
-  const filteredGoals = goals.filter((goal: any) => {
+  const filteredGoals = goals.filter((goal: Goal) => {
     if (filter === 'all') return true
     return goal.status === filter
   })
@@ -46,7 +53,7 @@ export function GoalList() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {filteredGoals.length ? (
-          filteredGoals.map((goal: any) => (
+          filteredGoals.map((goal: Goal) => (
             <Card key={goal.id}>
               <CardHeader>
                 <CardTitle>{goal.title}</CardTitle>

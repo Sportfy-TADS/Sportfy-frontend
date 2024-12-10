@@ -16,7 +16,6 @@ import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import {
   ChartContainer,
-  ChartTooltip,
   ChartTooltipContent,
   ChartConfig,
 } from '@/components/ui/chart'
@@ -56,7 +55,7 @@ export default function Statistics() {
   // Prepare chart data for each sport modality
   const chartDataByModality =
     usoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map(
-      (modality: any) => ({
+      (modality: SpecificType) => ({
         name: modality.nomeModalidadeEsportiva,
         metas: modality.totalMetasEsportivasInscritas,
         conquistas: modality.totalConquistasAlcancadas,

@@ -28,13 +28,19 @@ import {
   TableCell,
 } from '@/components/ui/table'
 
+interface Confronto {
+  fase: string
+  time1: string
+  time2: string
+}
+
 export default function Component() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [competitionName, setCompetitionName] = useState('')
   const [teams, setTeams] = useState(0)
   const [people, setPeople] = useState(0) // Para competição individual
   const [competitionType, setCompetitionType] = useState('individual') // Novo campo
-  const [confrontos, setConfrontos] = useState<any[]>([])
+  const [confrontos, setConfrontos] = useState<Confronto[]>([])
 
   const generateKeys = async (e: React.FormEvent) => {
     e.preventDefault()

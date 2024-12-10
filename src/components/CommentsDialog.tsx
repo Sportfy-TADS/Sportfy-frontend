@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+
+import Image from 'next/image' // Importar Image do next/image
 
 import axios from 'axios' // Import axios
 import { Star } from 'lucide-react'
@@ -67,25 +69,11 @@ const CommentItem: React.FC<{
   ) => void // Atualizado
   loggedUser: Usuario | null // Adicionado
 }> = ({ comment, handleLikeComment, handleUpdateComment, loggedUser }) => {
-  const [showReply, setShowReply] = useState(false)
-  const [replyContent, setReplyContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(comment.descricao)
 
-  const handleReply = async () => {
-    if (replyContent.trim()) {
-      await addReply(comment.idComentario, replyContent)
-      setReplyContent('')
-      setShowReply(false)
-    } else {
-      toast.error('Digite um comentário válido.')
-    }
-  }
-
   const handleEdit = async () => {
     if (editedContent.trim()) {
-      const date = new Date()
-      const dateString = date.toISOString()
       await handleUpdateComment(
         comment.idComentario,
         editedContent,
@@ -111,9 +99,11 @@ const CommentItem: React.FC<{
       <div className="p-2 border rounded bg-gray-50 dark:bg-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <img
+            <Image
               src={comment.Usuario?.foto || 'https://via.placeholder.com/40'}
               alt="Avatar"
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-full"
             />
             <span className="font-semibold text-sm dark:text-white">

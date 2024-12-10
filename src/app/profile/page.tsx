@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -16,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fetchAchievements } from '@/http/achievements'
 import { getCampeonatos } from '@/http/championships'
 import { getGoals } from '@/http/goals'
-import { getUserData, getDecodedToken } from '@/utils/auth'
+import { getDecodedToken } from '@/utils/auth'
 
 interface User {
   idAcademico?: number
@@ -43,7 +44,29 @@ interface User {
     posicao: string
     data: string
   }>
-  [key: string]: string | number | boolean | null | undefined | any[]
+}
+
+// Definições de tipos específicos
+interface Goal {
+  titulo: string
+  quantidadeConcluida: number
+  quantidadeObjetivo: number
+  itemQuantificado: string
+  dataCriacao: string
+}
+
+interface Achievement {
+  metaEsportiva: {
+    titulo: string
+  }
+  conquistado: boolean
+  dataCriacao: string
+}
+
+interface Campeonato {
+  titulo: string
+  posicao: string
+  dataFim: string
 }
 
 function formatPhoneNumber(phoneNumber: string) {
@@ -58,10 +81,6 @@ function formatPhoneNumber(phoneNumber: string) {
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [bannerUrl, setBannerUrl] = useState<string | null>(
-    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
-  )
-  const [recentGoals, setRecentGoals] = useState<any[]>([])
   const [campeonatos, setCampeonatos] = useState<
     Array<{ nome: string; posicao: string; data: string }>
   >([]) // Add state for campeonatos
@@ -94,7 +113,7 @@ export default function ProfilePage() {
         const goals = await getGoals(response.data.idAcademico)
         const sortedGoals = goals
           .sort(
-            (a: any, b: any) =>
+            (a: Goal, b: Goal) =>
               new Date(b.dataCriacao).getTime() -
               new Date(a.dataCriacao).getTime(),
           )
@@ -107,7 +126,7 @@ export default function ProfilePage() {
         ) // Ensure token is passed correctly
         const sortedAchievements = achievements
           .sort(
-            (a: any, b: any) =>
+            (a: Achievement, b: Achievement) =>
               new Date(b.dataCriacao).getTime() -
               new Date(a.dataCriacao).getTime(),
           )
@@ -118,7 +137,7 @@ export default function ProfilePage() {
 
         const userDataWithExtras = {
           ...response.data,
-          metas: sortedGoals.map((goal: any) => ({
+          metas: sortedGoals.map((goal: Goal) => ({
             titulo: goal.titulo || 'Sem Título',
             progresso: `${goal.quantidadeConcluida ?? 0}/${goal.quantidadeObjetivo ?? 0} ${goal.itemQuantificado || ''}`,
             status:
@@ -130,10 +149,10 @@ export default function ProfilePage() {
                 : 'Em andamento',
           })),
           conquistas: sortedAchievements.map(
-            (achievement: any) =>
+            (achievement: Achievement) =>
               `${achievement.metaEsportiva.titulo} - ${achievement.conquistado ? 'Conquistado' : 'Em andamento'}`,
           ),
-          campeonatos: fetchedCampeonatos.map((campeonato: any) => ({
+          campeonatos: fetchedCampeonatos.map((campeonato: Campeonato) => ({
             nome: campeonato.titulo,
             posicao: campeonato.posicao,
             data: campeonato.dataFim,
@@ -186,7 +205,6 @@ export default function ProfilePage() {
             <div
               className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg"
               style={{
-                backgroundImage: `url(${bannerUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -194,9 +212,11 @@ export default function ProfilePage() {
 
             {/* Foto e Botão Editar */}
             <div className="flex justify-between items-start px-4">
-              <img
+              <Image
                 src={user?.foto || `https://via.placeholder.com/50`}
                 alt={user?.nome}
+                width={128}
+                height={128}
                 className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 -mt-16"
               />
               <Button
