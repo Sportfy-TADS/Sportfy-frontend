@@ -116,8 +116,12 @@ export default function TimesPage({
       try {
         const fetchedTimes = await fetchTimes(params.idCampeonato)
         setTimes(fetchedTimes)
-      } catch (err: any) {
-        setError(err.message || 'Erro desconhecido ao carregar os times.')
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setError(error.message || 'Erro desconhecido ao carregar os times.')
+        } else {
+          setError('Erro desconhecido ao carregar os times.')
+        }
       } finally {
         setLoading(false)
       }
@@ -265,8 +269,8 @@ export default function TimesPage({
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </div>{' '}
+      </div>{' '}
     </>
   )
 }

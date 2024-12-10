@@ -108,14 +108,15 @@ function formatPhoneNumber(phoneNumber) {
   return phoneNumber
 }
 
-function formatDate(date) {
-  const cleaned = ('' + date).replace(/\D/g, '')
-  const match = cleaned.match(/^(\d{2})(\d{2})(\d{4})$/)
-  if (match) {
-    return `${match[1]}/${match[2]}/${match[3]}`
-  }
-  return date
-}
+// Remover a função 'formatDate'
+// function formatDate(date) {
+//   const cleaned = ('' + date).replace(/\D/g, '')
+//   const match = cleaned.match(/^(\d{2})(\d{2})(\d{4})$/)
+//   if (match) {
+//     return `${match[1]}/${match[2]}/${match[3]}`
+//   }
+//   return date
+// }
 
 function maskPhoneNumber(value) {
   return value
@@ -154,7 +155,8 @@ export default function AdminCrudPage() {
   })
   const [editAdmin, setEditAdmin] = useState(null)
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
-  const [phone, setPhone] = useState('')
+  // Remover as linhas 157:10 e 157:17
+  // const [phone, setPhone] = useState('')
 
   const router = useRouter()
   const queryClient = useQueryClient()

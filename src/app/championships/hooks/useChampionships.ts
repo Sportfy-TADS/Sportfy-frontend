@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { AxiosError } from 'axios' // Adicionado
 import { toast } from 'sonner'
 
 import {
@@ -22,7 +23,8 @@ export const useChampionships = () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
       toast.success('Campeonato criado com sucesso!')
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
+      // Alterado
       console.error('Erro ao criar campeonato:', error)
       if (error.response) {
         console.error('Response data:', error.response.data)
@@ -44,7 +46,8 @@ export const useChampionships = () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
       toast.success('Campeonato atualizado com sucesso!')
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
+      // Alterado
       console.error('Erro ao atualizar campeonato:', error)
       if (error.response) {
         console.error('Response data:', error.response.data)
@@ -65,7 +68,8 @@ export const useChampionships = () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
       toast.success('Campeonato excluído com sucesso!')
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
+      // Alterado
       console.error('Erro ao excluir campeonato:', error)
       if (error.response) {
         console.error('Response data:', error.response.data)

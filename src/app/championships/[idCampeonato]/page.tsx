@@ -5,12 +5,11 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { CalendarIcon, UsersIcon, LockIcon, UnlockIcon } from 'lucide-react'
+import { CalendarIcon, LockIcon, UnlockIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -23,7 +22,16 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 
-async function fetchCampeonato(idCampeonato: string) {
+interface Campeonato {
+  idCampeonato: number
+  titulo: string
+  descricao: string
+  privacidadeCampeonato: 'PUBLICO' | 'PRIVADO'
+  dataInicio: string
+  dataFim: string
+}
+
+async function fetchCampeonato(idCampeonato: string): Promise<Campeonato> {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `http://localhost:8081/campeonatos/filtrar?idCampeonato=${idCampeonato}`,
@@ -38,7 +46,8 @@ async function fetchCampeonato(idCampeonato: string) {
   if (!res.ok) throw new Error('Falha ao carregar o campeonato.')
   const campeonatos = await res.json()
   return campeonatos.find(
-    (campeonato: any) => campeonato.idCampeonato === parseInt(idCampeonato),
+    (campeonato: Campeonato) =>
+      campeonato.idCampeonato === parseInt(idCampeonato),
   )
 }
 
@@ -46,7 +55,7 @@ export default function CampeonatoDetailsPage(props: {
   params: Promise<{ idCampeonato: string }>
 }) {
   const params = use(props.params)
-  const [campeonato, setCampeonato] = useState<any>(null)
+  const [campeonato, setCampeonato] = useState<Campeonato | null>(null)
   const [teamName, setTeamName] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [password, setPassword] = useState('')

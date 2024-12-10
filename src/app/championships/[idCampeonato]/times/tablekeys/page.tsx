@@ -84,8 +84,12 @@ export default function Page() {
         ]
 
         setMatches([...semiFinals])
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError('Erro desconhecido ao carregar os times.')
+        }
         console.error(err)
       }
     }

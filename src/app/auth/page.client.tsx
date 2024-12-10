@@ -14,7 +14,7 @@ import { z } from 'zod'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { authenticateUser, useAuthenticateUser } from '@/http/auth'
+import { useAuthenticateUser } from '@/http/auth' // Remover 'authenticateUser'
 import { signInSchema } from '@/schemas'
 
 type SignInSchema = z.infer<typeof signInSchema>

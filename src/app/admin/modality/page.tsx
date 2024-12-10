@@ -26,7 +26,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   useModalidades,
-  useInscreverUsuario,
   createModalidade,
   updateModalidade,
 } from '@/http/modality'
@@ -53,10 +52,8 @@ export default function ModalidadeInscricaoPage() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      const { roles, sub } = decodeToken(token)
-      console.log('Roles:', roles)
+      const { roles } = decodeToken(token)
       setIsAdmin(roles.includes('ADMIN'))
-      console.log('isAdmin:', roles.includes('ADMIN'))
     }
   }, [])
 
@@ -99,8 +96,6 @@ export default function ModalidadeInscricaoPage() {
 
     return filteredModalidades
   }, [modalidades, filter, searchTerm])
-
-  const { mutate } = useInscreverUsuario(queryClient)
 
   interface CreateModalidadeData {
     nome: string
