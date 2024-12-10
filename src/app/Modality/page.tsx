@@ -67,16 +67,9 @@ export default function ModalidadeInscricaoPage() {
     isLoading,
     isError,
     error,
-  } = useQuery({
+  } = useQuery<Modalidade[], Error, Modalidade[]>({
     queryKey: ['modalidades'],
     queryFn: getModalidades,
-    onSuccess: (data) => {
-      console.log('Modalidades carregadas com sucesso:', data)
-    },
-    onError: (error) => {
-      console.error('Erro ao carregar modalidades:', error)
-      toast.error('Erro ao carregar modalidades.')
-    },
   })
 
   useEffect(() => {
@@ -152,7 +145,7 @@ export default function ModalidadeInscricaoPage() {
     <>
       <Header />
       <div className="flex min-h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar />
         <div className="container mx-auto p-4 flex-1">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Modalidades</h1>

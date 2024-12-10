@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 
 import Link from 'next/link'
@@ -59,9 +58,7 @@ async function fetchTimes(idCampeonato: string): Promise<Time[]> {
 
 export default function TimesPage({
   params,
-}: {
-  params: { idCampeonato: string }
-}) {
+}: PageProps<{ idCampeonato: string }>) {
   const [times, setTimes] = useState<Time[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

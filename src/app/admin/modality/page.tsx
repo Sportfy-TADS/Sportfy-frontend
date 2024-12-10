@@ -113,10 +113,6 @@ export default function ModalidadeInscricaoPage() {
   ) => {
     e.preventDefault()
     try {
-      console.log('Tentando criar modalidade com:', {
-        nome: modalidadeNome,
-        descricao: modalidadeDescricao,
-      })
       await createModalidade({
         nome: modalidadeNome,
         descricao: modalidadeDescricao,
@@ -131,7 +127,6 @@ export default function ModalidadeInscricaoPage() {
       } else {
         toast.error('Erro ao cadastrar modalidade')
       }
-      console.error('Erro ao cadastrar modalidade:', error)
     }
   }
 
@@ -140,26 +135,13 @@ export default function ModalidadeInscricaoPage() {
   ) => {
     e.preventDefault()
     try {
-      console.log('Tentando atualizar modalidade com:', {
-        idModalidadeEsportiva: modalidadeId,
-        nome: modalidadeNome,
-        descricao: modalidadeDescricao,
-        foto: null, // Foto está escondida por enquanto
-      })
       if (modalidadeId !== null) {
         await updateModalidade({
-          id: modalidadeId!.toString(),
           idModalidadeEsportiva: modalidadeId!,
           nome: modalidadeNome,
           descricao: modalidadeDescricao,
-          foto: null, // Foto está escondida por enquanto
-        })
-        console.log('Dados enviados para o back-end:', {
-          id: modalidadeId!.toString(),
-          idModalidadeEsportiva: modalidadeId!,
-          nome: modalidadeNome,
-          descricao: modalidadeDescricao,
-          foto: null, // Foto está escondida por enquanto
+          dataCriacao: new Date().toISOString(), // Add the dataCriacao property
+          inscrito: false,
         })
       } else {
         toast.error('ID da modalidade é inválido')
@@ -169,7 +151,6 @@ export default function ModalidadeInscricaoPage() {
       setIsSheetOpen(false)
     } catch (error) {
       toast.error('Erro ao atualizar modalidade')
-      console.error('Erro ao atualizar modalidade:', error)
     }
   }
 
@@ -193,7 +174,7 @@ export default function ModalidadeInscricaoPage() {
     setIsSheetOpen(true)
   }
 
-  async function deactivateModalidade(idModalidadeEsportiva) {
+  async function deactivateModalidade(idModalidadeEsportiva: number) {
     const token = localStorage.getItem('token')
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva/desativar/${idModalidadeEsportiva}`,
@@ -209,11 +190,11 @@ export default function ModalidadeInscricaoPage() {
     return await res.json()
   }
 
-  const handleDeactivateModalidade = async (idModalidadeEsportiva) => {
+  const handleDeactivateModalidade = async (idModalidadeEsportiva: number) => {
     try {
       await deactivateModalidade(idModalidadeEsportiva)
       toast.success('Modalidade desativada com sucesso.')
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
     } catch (error) {
       toast.error('Erro ao desativar modalidade.')
     }

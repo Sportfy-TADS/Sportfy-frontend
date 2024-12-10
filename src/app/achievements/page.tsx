@@ -59,8 +59,8 @@ export default function AchievementsPage() {
         const userData = await getUserData()
         if (!mounted) return
 
-        if (!userData?.idAcademico) {
-          console.error('Erro: ID do acadêmico não encontrado')
+        if (typeof userData?.idAcademico !== 'number') {
+          console.error('Erro: ID do acadêmico inválido')
           router.push('/auth')
           return
         }

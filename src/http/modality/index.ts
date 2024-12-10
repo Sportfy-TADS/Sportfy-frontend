@@ -251,6 +251,15 @@ export async function inactivateAdmin(id: number) {
   return fetchWithAuth(url, { method: 'PATCH' })
 }
 
+export function decodeToken(token: string) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]))
+  } catch (error) {
+    console.error('Erro ao decodificar o token:', error)
+    return null
+  }
+}
+
 export const useModalidades = () => {
   return useQuery<Modalidade[], Error>({
     queryKey: ['modalidades'],
