@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { format } from 'date-fns' // Import date-fns
+// Remover import não utilizado
+// import { format } from 'date-fns'
 import { Target, CircleDashed, SignalHigh } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -79,13 +80,20 @@ export default function AchievementsPage() {
           setAchievements(achievementsData)
           setLoading(false)
         }
-      } catch (error: any) {
-        if (!mounted) return
+      } catch (error: unknown) {
+        // Definir interface para erro com resposta
+        interface ResponseError extends Error {
+          response?: {
+            status: number
+          }
+        }
 
-        if (error.response?.status === 403) {
+        const err = error as ResponseError
+
+        if (err.response?.status === 403) {
           setIsBlocked(true)
         } else {
-          console.error('Erro ao carregar conquistas:', error)
+          console.error('Erro ao carregar conquistas:', err)
           toast.error('Erro ao carregar conquistas.')
         }
         setLoading(false)

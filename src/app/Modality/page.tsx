@@ -46,7 +46,7 @@ export default function ModalidadeInscricaoPage() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      const { roles, sub, idUsuario } = decodeToken(token)
+      const { roles, sub } = decodeToken(token) // Removido 'idUsuario'
       setIsAdmin(roles === 'ADMIN')
 
       // Retrieve idAcademico from userData instead of hard-coded value
