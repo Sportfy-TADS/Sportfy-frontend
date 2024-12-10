@@ -1,6 +1,6 @@
 'use client'
 
-import { AtSign, Phone, Stethoscope, User } from 'lucide-react'
+import { AtSign, Phone, Stethoscope } from 'lucide-react'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
@@ -17,14 +17,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useApoioSaude } from '@/hooks/useApoioSaude'
 export default function ApoioSaudePage() {
-  const {
-    filter,
-    setFilter,
-    searchTerm,
-    setSearchTerm,
-    displayedApoios,
-    isLoading,
-  } = useApoioSaude()
+  const { setFilter, searchTerm, setSearchTerm, displayedApoios, isLoading } =
+    useApoioSaude()
 
   function formatPhoneNumber(phoneNumber: string) {
     const cleaned = phoneNumber.replace(/\D/g, '')

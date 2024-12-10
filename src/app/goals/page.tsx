@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -37,21 +37,10 @@ import {
   deleteGoal,
 } from '@/http/goals'
 
-interface MetaEsportiva {
-  idMetaEsportiva: number
-  titulo: string
-  descricao: string
-  progressoMaximo: number
-  progressoItem: string
-  foto: string | null
-  ativo: boolean
-  idModalidadeEsportiva: number
-}
-
 export default function GoalsPage() {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [editingGoal, setEditingGoal] = useState<any>(null)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [goalType, setGoalType] = useState('daily')
   const userData = useUserData()
   const queryClient = useQueryClient()
@@ -80,7 +69,7 @@ export default function GoalsPage() {
     },
   })
 
-  const handleUpdateGoal = async (goal: any) => {
+  const handleUpdateGoal = async (goal: Goal) => {
     try {
       if (goal.isSports) {
         await updateMetaEsportivaMutation.mutateAsync({
@@ -93,7 +82,7 @@ export default function GoalsPage() {
 
       if (goal.progressoAtual >= goal.progressoMaximo) {
         Alert.confirm({
-          title: 'Conclusão de Meta',
+          title: 'Conclus��o de Meta',
           message: `
             <strong>Título:</strong> ${goal.titulo} <br>
             <strong>Objetivo:</strong> ${goal.objetivo || 'Não definido'} <br>
@@ -143,12 +132,12 @@ export default function GoalsPage() {
     }
   }, [isErrorMetasEsportivas, errorMetasEsportivas])
 
-  const filteredGoals = goals.filter((goal: any) => {
+  const filteredGoals = goals.filter((goal: Goal) => {
     if (filter === 'all') return true
     return goal.situacaoMetaDiaria === (filter === 'completed' ? 1 : 0)
   })
 
-  const handleCreateGoal = async (data: any) => {
+  const handleCreateGoal = async (data: CreateGoalData) => {
     try {
       console.log('Creating goal with data:', data)
       await originalHandleCreateGoal(data)

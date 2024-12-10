@@ -47,6 +47,13 @@ type Campeonato = {
   situacaoCampeonato: string
 }
 
+type ApiJogador = {
+  idAcademico: number
+  nome: string
+  username: string
+  // ...outros campos conforme necessário...
+}
+
 export default function Component() {
   const [busca, setBusca] = useState('')
   const [jogadores, setJogadores] = useState<Jogador[]>([])
@@ -66,7 +73,7 @@ export default function Component() {
       .then((response) => response.json())
       .then((data) => {
         console.log('Fetched players data:', data) // Log the API response
-        const formattedData = data.content.map((item: any) => {
+        const formattedData = data.content.map((item: ApiJogador) => {
           console.log('Item:', item) // Log each item to find the correct ID field
           return {
             id: item.idAcademico, // Use the correct ID property based on the API response

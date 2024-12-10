@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react'
 
+import Image from 'next/image'
 import { useParams } from 'next/navigation'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 
 interface Estatisticas {
   modalidade: string
@@ -165,10 +165,12 @@ export default function ProfilePage() {
             />
             <div className="absolute -bottom-12 left-4">
               <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-800 border-4 border-white dark:border-gray-800">
-                <img
+                <Image
                   src="https://via.placeholder.com/150"
                   alt={user?.nome}
                   className="w-full h-full rounded-full object-cover"
+                  width={150}
+                  height={150}
                 />
               </div>
             </div>

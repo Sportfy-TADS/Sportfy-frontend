@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { UploadCloud, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 import Header from '@/components/Header'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -49,7 +49,6 @@ export default function EditProfilePage() {
     ativo: true,
   })
   const [isUpdating, setIsUpdating] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { toast } = useToast()
 
