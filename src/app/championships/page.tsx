@@ -5,16 +5,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { format } from 'date-fns' // Import date-fns
-import {
-  User,
-  Lock,
-  Calendar,
-  Info,
-  MapPin,
-  Pencil,
-  Trash,
-  Trophy,
-} from 'lucide-react'
+import { User, Lock, Calendar, Info, MapPin, Trash, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -45,8 +36,8 @@ import { getUserIdFromToken } from '@/services/championshipService'
 import { useChampionships } from './hooks/useChampionships'
 
 export default function CampeonatoPage() {
-  const [selectedCampeonato, setSelectedCampeonato] =
-    useState<Campeonato | null>(null)
+  // Remover a declaração e uso de 'selectedCampeonato'
+  // const [selectedCampeonato, setSelectedCampeonato] = useState<Campeonato | null>(null)
   const [cep, setCep] = useState('')
   const [logradouro, setLogradouro] = useState('')
   const [bairro, setBairro] = useState('')
@@ -54,13 +45,9 @@ export default function CampeonatoPage() {
   const [uf, setUf] = useState('')
   const [privacidade, setPrivacidade] = useState('PUBLICO')
   const [searchTerm, setSearchTerm] = useState('')
-  const {
-    campeonatos,
-    isLoading,
-    createMutation,
-    updateMutation,
-    deleteMutation,
-  } = useChampionships()
+  // Remover 'createMutation' da desestruturação
+  const { campeonatos, isLoading, /* createMutation, */ deleteMutation } =
+    useChampionships()
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -114,7 +101,8 @@ export default function CampeonatoPage() {
         return
       }
 
-      const newCampeonato: any = {
+      // Corrigir o tipo 'any' para 'Campeonato'
+      const newCampeonato: Campeonato = {
         titulo: String(data.titulo).trim(),
         descricao: String(data.descricao).trim(),
         aposta: String(data.aposta).trim(),
@@ -185,9 +173,10 @@ export default function CampeonatoPage() {
     }
   }
 
-  const handleUpdateCampeonato = (data: Campeonato) => {
-    updateMutation.mutate(data)
-  }
+  // Remover a função 'handleUpdateCampeonato'
+  // const handleUpdateCampeonato = (data: Campeonato) => {
+  //   updateMutation.mutate(data)
+  // }
 
   const handleDeleteCampeonato = (id: number) => {
     deleteMutation.mutate(id)
@@ -579,12 +568,6 @@ export default function CampeonatoPage() {
                     <div className="mt-4 flex space-x-2">
                       {campeonato.idAcademico === currentUserId ? (
                         <>
-                          <Button
-                            onClick={() => setSelectedCampeonato(campeonato)}
-                            className="flex items-center justify-center bg-white hover:bg-zinc-300"
-                          >
-                            <Pencil className="mr-2" /> Atualizar
-                          </Button>
                           <Button
                             onClick={() =>
                               handleDeleteCampeonato(campeonato.idCampeonato)

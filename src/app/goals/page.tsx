@@ -271,7 +271,7 @@ export default function GoalsPage() {
                     <SheetTitle>Editar Meta</SheetTitle>
                   </SheetHeader>
                   <GoalForm
-                    onSubmit={(data: any) => {
+                    onSubmit={(data: CreateGoalData) => {
                       handleUpdateGoal({ ...editingGoal, ...data })
                       setEditingGoal(null)
                     }}

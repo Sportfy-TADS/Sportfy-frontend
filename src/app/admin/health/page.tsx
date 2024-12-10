@@ -30,7 +30,18 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Funções de API
-async function fetchApoioSaude() {
+interface ApoioSaude {
+  idApoioSaude: number
+  nome: string
+  email: string
+  telefone: string
+  descricao: string
+  dataPublicacao: string
+  idAdministrador: number
+  ativo: boolean
+}
+
+async function fetchApoioSaude(): Promise<ApoioSaude[]> {
   const token = localStorage.getItem('token')
   const response = await fetch('http://localhost:8081/apoioSaude/listar', {
     method: 'GET',
@@ -53,7 +64,7 @@ async function createApoioSaude(data: {
   dataPublicacao: string
   idAdministrador: number
   ativo: boolean
-}): Promise<any> {
+}): Promise<ApoioSaude> {
   const token = localStorage.getItem('token')
   const response = await fetch('http://localhost:8081/apoioSaude', {
     method: 'POST',
@@ -77,7 +88,7 @@ async function updateApoioSaude(
     telefone: string
     descricao: string
   },
-): Promise<any> {
+): Promise<ApoioSaude> {
   const token = localStorage.getItem('token')
   const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
     method: 'PUT',
@@ -93,7 +104,7 @@ async function updateApoioSaude(
   return response.json()
 }
 
-async function deleteApoioSaude(id: number): Promise<any> {
+async function deleteApoioSaude(id: number): Promise<{ success: boolean }> {
   const token = localStorage.getItem('token')
   const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
     method: 'DELETE',
@@ -108,7 +119,7 @@ async function deleteApoioSaude(id: number): Promise<any> {
   return response.json()
 }
 
-async function deactivateApoioSaude(id: number): Promise<any> {
+async function deactivateApoioSaude(id: number): Promise<{ success: boolean }> {
   const token = localStorage.getItem('token')
   const response = await fetch(
     `http://localhost:8081/apoioSaude/desativar/${id}`,
@@ -146,7 +157,6 @@ export default function ApoioSaudePage() {
     idAdministrador: number
     ativo: boolean
   } | null>(null)
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const {
@@ -163,7 +173,6 @@ export default function ApoioSaudePage() {
     mutationFn: createApoioSaude,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
-      setIsSheetOpen(false)
     },
     onError: () => {
       toast.error('Erro ao cadastrar apoio à saúde')
@@ -178,7 +187,6 @@ export default function ApoioSaudePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
       toast.success('Apoio à saúde atualizado com sucesso!')
-      setIsSheetOpen(false)
     },
     onError: () => {
       toast.error('Erro ao atualizar apoio à saúde')
@@ -229,27 +237,6 @@ export default function ApoioSaudePage() {
     }
   }, [])
 
-  interface ApoioSaude {
-    idApoioSaude: number
-    nome: string
-    email: string
-    telefone: string
-    descricao: string
-    dataPublicacao: string
-    idAdministrador: number
-    ativo: boolean
-  }
-
-  interface NewApoioSaude {
-    nome: string
-    email: string
-    telefone: string
-    descricao: string
-    dataPublicacao: string
-    idAdministrador: number
-    ativo: boolean
-  }
-
   const handleCreateApoioSaude = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     createMutation.mutate(newApoioSaude)
@@ -288,7 +275,6 @@ export default function ApoioSaudePage() {
       idAdministrador: apoio.idAdministrador,
       ativo: apoio.ativo,
     })
-    setIsSheetOpen(true)
   }
 
   return (
@@ -308,7 +294,7 @@ export default function ApoioSaudePage() {
                 <SheetTrigger asChild>
                   <Button
                     className="bg-blue-500 hover:bg-blue-600"
-                    onClick={() => setIsSheetOpen(true)}
+                    onClick={() => {}}
                   >
                     Cadastrar Apoio à Saúde
                   </Button>

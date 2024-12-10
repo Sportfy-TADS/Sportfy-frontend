@@ -24,7 +24,14 @@ import {
 
 // import { Breadcrumb, Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
-async function fetchTimes(idCampeonato: string) {
+interface Time {
+  idTime: number
+  nome: string
+  campeonato: string
+  senhaCampeonato?: string
+}
+
+async function fetchTimes(idCampeonato: string): Promise<Time[]> {
   try {
     const token = localStorage.getItem('token')
     console.log('Fetching teams with token:', token)
@@ -55,15 +62,15 @@ export default function TimesPage({
 }: {
   params: { idCampeonato: string }
 }) {
-  const [times, setTimes] = useState<any[]>([])
+  const [times, setTimes] = useState<Time[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedTeam, setSelectedTeam] = useState<any>(null)
+  const [selectedTeam, setSelectedTeam] = useState<Time | null>(null)
   const [teamPassword, setTeamPassword] = useState<string>('')
   const [joinedTeams, setJoinedTeams] = useState<Set<number>>(new Set())
   const [currentTeam, setCurrentTeam] = useState<number | null>(null)
 
-  const handleJoinTeam = (team: any) => {
+  const handleJoinTeam = (team: Time) => {
     if (currentTeam) {
       toast.error('Você já está em um time.')
       return
@@ -186,7 +193,7 @@ export default function TimesPage({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {times.map((time: any) => (
+                      {times.map((time: Time) => (
                         <TableRow key={time.idTime}>
                           <TableCell className="font-medium">
                             {time.nome}

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react' // Add import
 
+import Image from 'next/image' // Adicionado
+
 import { motion } from 'framer-motion'
 import { MessageCircle, Star } from 'lucide-react'
 import { Toaster, toast } from 'sonner' // Adicionado 'toast'
@@ -40,7 +42,7 @@ export default function FeedPage() {
     hasMore, // Use hasMore
     handleDeleteComment, // Add handleDeleteComment
   } = useFeed()
-  const [editingPost, setEditingPost] = useState<any>(null)
+  const [editingPost, setEditingPost] = useState<Post | null>(null) // Alterado tipo de 'any' para 'Post | null'
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false)
   const [selectedPostComments, setSelectedPostComments] = useState<
@@ -227,13 +229,15 @@ export default function FeedPage() {
                   >
                     <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
                       <CardHeader className="flex items-start space-x-3 pb-2">
-                        <img
+                        <Image
                           src={
                             post.Usuario.foto ||
                             `https://via.placeholder.com/50`
                           }
                           alt="Avatar"
-                          className="w-12 h-12 rounded-full"
+                          width={48}
+                          height={48}
+                          className="rounded-full"
                         />
                         <div className="flex flex-col justify-center">
                           <span className="font-semibold text-base text-gray-900 dark:text-white">
