@@ -45,7 +45,22 @@ async function fetchAdmins() {
   return data.content || [] // Retorna o conteúdo ou um array vazio
 }
 
-async function createAdmin(newAdmin) {
+interface NewAdmin {
+  username: string
+  password: string
+  nome: string
+  telefone: string
+  dataNascimento: string
+  foto: File | null
+  dataCriacao: Date | null
+  ativo: boolean | null
+}
+
+interface UpdatedAdmin extends NewAdmin {
+  idAdministrador: number
+}
+
+async function createAdmin(newAdmin: NewAdmin) {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
@@ -62,7 +77,7 @@ async function createAdmin(newAdmin) {
   return await res.json()
 }
 
-async function updateAdmin(idAdministrador, updatedAdmin) {
+async function updateAdmin(idAdministrador: number, updatedAdmin: UpdatedAdmin) {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/atualizar/${idAdministrador}`,

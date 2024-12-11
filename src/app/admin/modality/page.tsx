@@ -264,7 +264,7 @@ export default function ModalidadeInscricaoPage() {
                   required
                 />
                 {/* Campo de foto escondido por enquanto */}
-                <input type="hidden" value={null} />
+                <input type="hidden" value={''} />
                 <Button type="submit" className="w-full">
                   Salvar
                 </Button>
