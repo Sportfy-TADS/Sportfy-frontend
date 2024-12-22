@@ -56,9 +56,13 @@ async function fetchTimes(idCampeonato: string): Promise<Time[]> {
   }
 }
 
-export default function TimesPage({
-  params,
-}: PageProps<{ idCampeonato: string }>) {
+interface PageProps {
+  params: {
+    idCampeonato: string
+  }
+}
+
+export default function TimesPage({ params }: PageProps) {
   const [times, setTimes] = useState<Time[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
