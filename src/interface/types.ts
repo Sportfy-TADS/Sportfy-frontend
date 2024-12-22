@@ -104,7 +104,12 @@ export interface Campeonato {
     cidade: string
     estado: string
     cep: string
+    uf: string // Adicionado
   }
+  codigo: string // Adicionado
+  situacaoCampeonato: string // Adicionado
+  usernameCriador: string // Adicionado
+  idAcademico: number // Adicionado
 }
 
 export interface ApoioSaude {
@@ -135,7 +140,7 @@ export interface TokenPayload {
 
 export interface Endereco {
   cep: string
-  uf: string
+  uf: string // Adicionado
   cidade: string
   bairro: string
   rua: string

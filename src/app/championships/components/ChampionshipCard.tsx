@@ -13,6 +13,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Campeonato } from '@/interface/types'
 
 interface ChampionshipCardProps {
   campeonato: Campeonato
@@ -92,7 +93,7 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({
               <Lock className="mr-2 text-blue-700" />
               <p className="text-lg font-semibold">Privacidade:</p>
               <p className="text-lg ml-2">
-                {campeonato.privacidadeCampeonato === 'PUBLICO'
+                {campeonato.situacaoCampeonato === 'PUBLICO'
                   ? 'Público'
                   : 'Privado'}
               </p>
@@ -112,13 +113,13 @@ const ChampionshipCard: React.FC<ChampionshipCardProps> = ({
             </div>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`,
+                `${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.estado}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`,
               )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-lg ml-6 text-white underline"
             >
-              {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.bairro}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
+              {`${campeonato.endereco.rua}, ${campeonato.endereco.numero}, ${campeonato.endereco.estado}, ${campeonato.endereco.cidade} - ${campeonato.endereco.uf}, CEP: ${campeonato.endereco.cep}`}
             </a>
           </div>
 
