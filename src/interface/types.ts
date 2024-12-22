@@ -88,6 +88,13 @@ export interface MatchData {
   date: string
 }
 
+export interface ChampionshipData {
+  idCampeonato: number
+  name: string
+  date: Date
+  location: string
+}
+
 export interface Campeonato {
   idCampeonato: number
   titulo: string

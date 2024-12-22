@@ -8,7 +8,7 @@ import {
   updateChampionship,
   deleteChampionship,
 } from '@/http/championship'
-import { Campeonato } from '@/interface/types'
+import { ChampionshipData } from '@/interface/types' // Adicionado ChampionshipData
 
 export const useChampionships = () => {
   const queryClient = useQueryClient()
@@ -43,8 +43,10 @@ export const useChampionships = () => {
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: Campeonato) =>
-      updateChampionship(data.idCampeonato, data),
+    mutationFn: (data: ChampionshipData) => {
+      const updatedData = { ...data, date: data.date.toISOString() }
+      return updateChampionship(updatedData.idCampeonato, updatedData)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
       toast.success('Campeonato atualizado com sucesso!')
