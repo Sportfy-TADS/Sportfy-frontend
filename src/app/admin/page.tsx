@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode } from 'jwt-decode'
+import { jwtDecode, JwtPayload } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -77,7 +77,10 @@ async function createAdmin(newAdmin: NewAdmin) {
   return await res.json()
 }
 
-async function updateAdmin(idAdministrador: number, updatedAdmin: UpdatedAdmin) {
+async function updateAdmin(
+  idAdministrador: number,
+  updatedAdmin: UpdatedAdmin,
+) {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/atualizar/${idAdministrador}`,
@@ -94,7 +97,7 @@ async function updateAdmin(idAdministrador: number, updatedAdmin: UpdatedAdmin) 
   return await res.json()
 }
 
-async function inactivateAdmin(idAdministrador) {
+async function inactivateAdmin(idAdministrador: number) {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${idAdministrador}`,
@@ -111,7 +114,7 @@ async function inactivateAdmin(idAdministrador) {
   return await res.json()
 }
 
-function formatPhoneNumber(phoneNumber) {
+function formatPhoneNumber(phoneNumber: string) {
   const cleaned = ('' + phoneNumber).replace(/\D/g, '')
   const match = cleaned.match(/^(\d{0,11})$/)
   if (match) {
@@ -133,14 +136,14 @@ function formatPhoneNumber(phoneNumber) {
 //   return date
 // }
 
-function maskPhoneNumber(value) {
+function maskPhoneNumber(value: string) {
   return value
     .replace(/\D/g, '')
     .replace(/^(\d{2})(\d)/g, '($1) $2')
     .replace(/(\d{4,5})(\d{4})$/, '$1-$2')
 }
 
-function maskDate(value) {
+function maskDate(value: string) {
   return value
     .replace(/\D/g, '')
     .replace(/(\d{2})(\d)/, '$1/$2')
@@ -148,7 +151,7 @@ function maskDate(value) {
     .replace(/(\d{4})(\d)/, '$1')
 }
 
-function formatDateForInput(dateString) {
+function formatDateForInput(dateString: string) {
   const date = new Date(dateString)
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -156,8 +159,27 @@ function formatDateForInput(dateString) {
   return `${year}-${month}-${day}`
 }
 
+interface CustomJwtPayload extends JwtPayload {
+  roles: string[]
+  idUsuario: number
+  name: string
+  email: string
+  telefone: number
+  username: string
+}
+
+interface Admin {
+  id: number
+  name: string
+  email: string
+  username: string
+  nome: string
+}
+
+interface EditAdmin extends UpdatedAdmin {}
+
 export default function AdminCrudPage() {
-  const [currentAdmin, setCurrentAdmin] = useState(null)
+  const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(null)
   const [newAdmin, setNewAdmin] = useState({
     username: '',
     password: '',
@@ -168,7 +190,7 @@ export default function AdminCrudPage() {
     dataCriacao: null,
     ativo: null,
   })
-  const [editAdmin, setEditAdmin] = useState(null)
+  const [editAdmin, setEditAdmin] = useState<EditAdmin | null>(null)
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
   // Remover as linhas 157:10 e 157:17
   // const [phone, setPhone] = useState('')
@@ -183,9 +205,9 @@ export default function AdminCrudPage() {
         router.push('/auth')
         return
       }
-      let decoded
+      let decoded: CustomJwtPayload
       try {
-        decoded = jwtDecode(token)
+        decoded = jwtDecode<CustomJwtPayload>(token)
         console.log('Decoded Token:', decoded) // Log do token decodificado
       } catch (error) {
         console.error('Erro ao decodificar o token:', error)
@@ -204,6 +226,7 @@ export default function AdminCrudPage() {
         name: decoded.name,
         email: decoded.email,
         username: decoded.username,
+        nome: decoded.name, // Adicionar a propriedade 'nome'
       })
     }
     checkAdminStatus()
@@ -233,7 +256,7 @@ export default function AdminCrudPage() {
     try {
       await createAdmin(newAdmin)
       toast.success('Administrador cadastrado com sucesso.')
-      queryClient.invalidateQueries(['admins'])
+      queryClient.invalidateQueries({ queryKey: ['admins'] })
       setNewAdmin({
         username: '',
         password: '',
@@ -250,13 +273,14 @@ export default function AdminCrudPage() {
   }
 
   const handleUpdateAdmin = async () => {
+    if (!editAdmin) return
     try {
       const updatedAdmin = await updateAdmin(
         editAdmin.idAdministrador,
         editAdmin,
       )
       toast.success('Administrador atualizado com sucesso.')
-      queryClient.invalidateQueries(['admins'])
+      queryClient.invalidateQueries({ queryKey: ['admins'] })
       setEditAdmin(null) // Fechar o formulário de edição
 
       // Atualize o estado do administrador atual se o administrador atualizado for o mesmo
@@ -265,23 +289,18 @@ export default function AdminCrudPage() {
           ...currentAdmin,
           username: updatedAdmin.username,
           nome: updatedAdmin.nome,
-          telefone: updatedAdmin.telefone,
-          dataNascimento: updatedAdmin.dataNascimento,
         })
       }
-
-      // Recarregue a página para garantir que os dados sejam atualizados
-      router.reload()
     } catch (error) {
       toast.error('Erro ao atualizar o administrador.')
     }
   }
 
-  const handleInactivateAdmin = async (idAdministrador) => {
+  const handleInactivateAdmin = async (idAdministrador: number) => {
     try {
       await inactivateAdmin(idAdministrador)
       toast.success('Administrador inativado com sucesso.')
-      queryClient.invalidateQueries(['admins'])
+      queryClient.invalidateQueries({ queryKey: ['admins'] })
     } catch (error) {
       toast.error('Erro ao inativar o administrador.')
     }
@@ -293,22 +312,41 @@ export default function AdminCrudPage() {
   ) => {
     const maskedPhone = maskPhoneNumber(e.target.value)
     if (isEditMode) {
-      setEditAdmin({ ...editAdmin, telefone: maskedPhone })
+      if (editAdmin) {
+        setEditAdmin({ ...editAdmin, telefone: maskedPhone })
+      }
     } else {
       setNewAdmin({ ...newAdmin, telefone: maskedPhone })
     }
   }
 
-  const handleDateChange = (e, isEditMode = false) => {
+  const handleDateChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isEditMode = false,
+  ) => {
     const maskedDate = maskDate(e.target.value)
     if (isEditMode) {
-      setEditAdmin({ ...editAdmin, dataNascimento: maskedDate })
+      if (editAdmin) {
+        setEditAdmin({ ...editAdmin, dataNascimento: maskedDate })
+      }
     } else {
       setNewAdmin({ ...newAdmin, dataNascimento: maskedDate })
     }
   }
 
-  const handleEditAdmin = (admin) => {
+  interface AdminToEdit {
+    idAdministrador: number
+    username: string
+    password: string
+    nome: string
+    telefone: string
+    dataNascimento: string
+    foto: File | null
+    dataCriacao: Date | null
+    ativo: boolean | null
+  }
+
+  const handleEditAdmin = (admin: AdminToEdit) => {
     setEditAdmin({
       ...admin,
       telefone: formatPhoneNumber(admin.telefone),
@@ -320,7 +358,7 @@ export default function AdminCrudPage() {
     <>
       <Header />
       <div className="flex h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar />
         <div className="container mx-auto p-4 flex-1 overflow-y-auto">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
@@ -344,7 +382,7 @@ export default function AdminCrudPage() {
                     Cadastrar Novo Administrador
                   </Button>
                 </SheetTrigger>
-                <SheetContent position="right" size="lg">
+                <SheetContent>
                   <SheetHeader>
                     <SheetTitle>Cadastrar Administrador</SheetTitle>
                   </SheetHeader>
@@ -398,7 +436,7 @@ export default function AdminCrudPage() {
           {/* Formulário de edição */}
           {editAdmin && (
             <Sheet open={!!editAdmin} onOpenChange={() => setEditAdmin(null)}>
-              <SheetContent position="right" size="lg">
+              <SheetContent>
                 <SheetHeader>
                   <SheetTitle>Editar Administrador</SheetTitle>
                 </SheetHeader>

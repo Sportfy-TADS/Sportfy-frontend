@@ -120,7 +120,7 @@ export default function CampeonatoDetailsPage(props: {
     <>
       <Header />
       <div className="flex h-screen">
-        <Sidebar className="h-full" />
+        <Sidebar />
         <div className="flex-1 p-4 overflow-y-auto">
           {/*
           <Breadcrumb>
