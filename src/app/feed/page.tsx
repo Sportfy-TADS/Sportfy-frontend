@@ -97,7 +97,7 @@ export default function FeedPage() {
       return
     }
 
-    const newPost = {
+    const newPost: Partial<Post> = {
       titulo: newPostTitle.trim(),
       descricao: newPostContent.trim(),
       idCanal: 1,
@@ -108,7 +108,7 @@ export default function FeedPage() {
     console.log('New post payload:', newPost) // Log post payload
 
     try {
-      await handleNewPost(newPost)
+      await handleNewPost(newPost as Post)
       console.log('Post created successfully') // Log success
       setIsDialogOpen(false)
       setTimeout(() => {
@@ -245,7 +245,7 @@ export default function FeedPage() {
                           </span>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
                             @{post.Usuario.username} •{' '}
-                            {formatDate(post.dataPublicacao)}
+                            {post.dataPublicacao ? formatDate(post.dataPublicacao) : 'Data não disponível'}
                           </span>
                         </div>
                       </CardHeader>
