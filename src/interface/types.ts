@@ -118,6 +118,7 @@ export interface Campeonato {
   situacaoCampeonato: string // Adicionado
   usernameCriador: string // Adicionado
   idAcademico: number // Adicionado
+  privacidade: string // Adicionado
 }
 
 export interface ApoioSaude {

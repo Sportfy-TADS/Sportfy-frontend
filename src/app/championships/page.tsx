@@ -119,9 +119,8 @@ export default function CampeonatoPage() {
           numero: String(data.numero),
           estado: String(data.uf).toUpperCase(), // Adicionando a propriedade 'estado'
         },
-        privacidadeCampeonato: privacidade,
+        privacidade, // Usando a sintaxe de propriedade abreviada
         idAcademico: Number(currentUserId),
-        idModalidadeEsportiva: 1,
         situacaoCampeonato: 'EM_ABERTO',
       }
 
