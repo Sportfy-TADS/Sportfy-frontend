@@ -119,6 +119,7 @@ export interface Campeonato {
   usernameCriador: string // Adicionado
   idAcademico: number // Adicionado
   privacidade: string // Adicionado
+  senha?: string // Adicionado
 }
 
 export interface ApoioSaude {
