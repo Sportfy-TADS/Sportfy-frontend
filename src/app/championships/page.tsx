@@ -102,6 +102,9 @@ export default function CampeonatoPage() {
       }
 
       const newCampeonato: Campeonato = {
+        idCampeonato: 0, // Adicionado
+        codigo: '', // Adicionado
+        usernameCriador: '', // Adicionado
         titulo: String(data.titulo).trim(),
         descricao: String(data.descricao).trim(),
         aposta: String(data.aposta).trim(),
@@ -212,7 +215,7 @@ export default function CampeonatoPage() {
     <>
       <Header />
       <div className="flex h-screen">
-        <Sidebar className="h-full" />
+        <Sidebar />
         <div className="flex-1 p-4 overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Campeonatos</h1>
