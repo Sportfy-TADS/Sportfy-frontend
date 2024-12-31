@@ -102,7 +102,14 @@ export default function FeedPage() {
       descricao: newPostContent.trim(),
       idCanal: 1,
       idModalidadeEsportiva: null,
-      idUsuario: loggedUser.idUsuario,
+      Usuario: {
+        idUsuario: loggedUser.idUsuario,
+        username: loggedUser.username,
+        nome: loggedUser.nome,
+        foto: loggedUser.foto,
+        permissao: loggedUser.permissao,
+        idAcademico: loggedUser.idAcademico,
+      },
     }
 
     console.log('New post payload:', newPost) // Log post payload
