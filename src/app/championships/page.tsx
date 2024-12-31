@@ -513,7 +513,7 @@ export default function CampeonatoPage() {
                           <Lock className="mr-2 text-blue-700" />
                           <p className="text-lg font-semibold">Privacidade:</p>
                           <p className="text-lg ml-2">
-                            {campeonato.privacidadeCampeonato === 'PUBLICO'
+                            {campeonato.privacidade === 'PUBLICO'
                               ? 'Público'
                               : 'Privado'}
                           </p>

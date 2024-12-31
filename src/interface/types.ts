@@ -113,6 +113,7 @@ export interface Campeonato {
     cep: string
     uf: string // Adicionado
     bairro: string // Adicionado
+    complemento?: string // Adicionado
   }
   codigo: string // Adicionado
   situacaoCampeonato: string // Adicionado
