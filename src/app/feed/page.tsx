@@ -245,7 +245,9 @@ export default function FeedPage() {
                           </span>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
                             @{post.Usuario.username} •{' '}
-                            {post.dataPublicacao ? formatDate(post.dataPublicacao) : 'Data não disponível'}
+                            {post.dataPublicacao
+                              ? formatDate(post.dataPublicacao)
+                              : 'Data não disponível'}
                           </span>
                         </div>
                       </CardHeader>
