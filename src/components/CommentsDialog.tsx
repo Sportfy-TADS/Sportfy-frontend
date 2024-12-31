@@ -20,7 +20,11 @@ import { Comentario, Usuario } from '@/interface/types'
 interface CommentsDialogProps {
   isOpen: boolean
   onClose: () => void
+  comments: Comentario[] // Adicionado
+  loading: boolean
   postId: number
+  loggedUser: Usuario | null
+  handleDeleteComment: (commentId: number, postId: number) => Promise<void>
 }
 
 const likeComment = async (userId: number, commentId: number) => {
@@ -185,18 +189,19 @@ const CommentItem: React.FC<{
 const CommentsDialog: React.FC<CommentsDialogProps> = ({
   isOpen,
   onClose,
+  comments,
+  loading,
   postId,
+  loggedUser,
+  handleDeleteComment,
 }) => {
-  const { handleCreateComment, handleUpdateComment, loggedUser } = useFeed() // Usar o hook
+  const { handleCreateComment, handleUpdateComment } = useFeed() // Usar o hook
   const [newComment, setNewComment] = useState('')
-  const [comments, setComments] = useState<Comentario[]>([])
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      setComments([])
       setPage(0)
       setHasMore(true)
       loadComments(0)
@@ -204,7 +209,6 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
   }, [isOpen])
 
   const loadComments = async (pageToLoad: number) => {
-    setLoading(true)
     try {
       const response = await fetchComments(postId, pageToLoad)
       if (response.length < 10) {
@@ -212,12 +216,9 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
       } else {
         setPage((prev) => prev + 1)
       }
-      setComments((prev) => [...prev, ...response])
     } catch (error) {
       console.error('Erro ao carregar comentários:', error)
       toast.error('Erro ao carregar comentários.')
-    } finally {
-      setLoading(false)
     }
   }
 
