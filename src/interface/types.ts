@@ -112,6 +112,7 @@ export interface Campeonato {
     estado: string
     cep: string
     uf: string // Adicionado
+    bairro: string // Adicionado
   }
   codigo: string // Adicionado
   situacaoCampeonato: string // Adicionado
@@ -149,7 +150,7 @@ export interface Endereco {
   cep: string
   uf: string // Adicionado
   cidade: string
-  bairro: string
+  bairro: string // Adicionado
   rua: string
   numero: number
   complemento: string | null

@@ -48,7 +48,7 @@ export default function CampeonatoPage() {
   // Remover 'createMutation' da desestruturação
   const { campeonatos, isLoading, /* createMutation, */ deleteMutation } =
     useChampionships()
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function CampeonatoPage() {
 
   const filteredCampeonatos = useMemo(() => {
     if (!searchTerm) return campeonatos
-    return campeonatos.filter((campeonato) =>
+    return campeonatos.filter((campeonato: Campeonato) =>
       campeonato.titulo.toLowerCase().includes(searchTerm.toLowerCase()),
     )
   }, [campeonatos, searchTerm])
@@ -101,7 +101,6 @@ export default function CampeonatoPage() {
         return
       }
 
-      // Corrigir o tipo 'any' para 'Campeonato'
       const newCampeonato: Campeonato = {
         titulo: String(data.titulo).trim(),
         descricao: String(data.descricao).trim(),
@@ -118,6 +117,7 @@ export default function CampeonatoPage() {
           bairro: String(data.bairro),
           rua: String(data.logradouro),
           numero: String(data.numero),
+          estado: String(data.uf).toUpperCase(), // Adicionando a propriedade 'estado'
         },
         privacidadeCampeonato: privacidade,
         idAcademico: Number(currentUserId),
@@ -125,12 +125,10 @@ export default function CampeonatoPage() {
         situacaoCampeonato: 'EM_ABERTO',
       }
 
-      // Conditionally add 'senha' if provided
       if (data.senha) {
         newCampeonato.senha = String(data.senha)
       }
 
-      // Conditionally add 'complemento' if provided
       if (data.complemento) {
         newCampeonato.endereco.complemento = String(data.complemento)
       }
@@ -164,7 +162,6 @@ export default function CampeonatoPage() {
       console.log('Championship created successfully:', result)
 
       toast.success('Campeonato criado com sucesso!')
-      // Optionally refresh the page or update the list
       window.location.reload()
     } catch (error) {
       console.error('Detailed error:', error)
