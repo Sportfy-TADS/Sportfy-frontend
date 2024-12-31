@@ -337,7 +337,7 @@ export default function FeedPage() {
         onClose={closeCommentsDialog}
         comments={selectedPostComments}
         loading={commentsLoading}
-        postId={selectedPostId} // Adicionado
+        postId={selectedPostId ?? 0} // Garantir que seja um número
         loggedUser={loggedUser} // Certificar-se de passar loggedUser
         handleDeleteComment={handleDeleteComment} // Pass handleDeleteComment
       />
