@@ -1,17 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
-import { useRouter } from 'next/navigation'
-
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { jwtDecode, JwtPayload } from 'jwt-decode'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -42,7 +40,7 @@ async function fetchAdmins() {
   )
   if (!res.ok) throw new Error('Erro ao buscar administradores.')
   const data = await res.json()
-  return data.content || [] // Retorna o conteúdo ou um array vazio
+  return data.content || [] 
 }
 
 interface NewAdmin {
@@ -107,7 +105,7 @@ async function inactivateAdmin(idAdministrador: number) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      mode: 'no-cors', // Adiciona o modo no-cors
+      mode: 'no-cors',
     },
   )
   if (!res.ok) throw new Error('Erro ao inativar administrador.')
@@ -125,16 +123,6 @@ function formatPhoneNumber(phoneNumber: string) {
   }
   return phoneNumber
 }
-
-// Remover a função 'formatDate'
-// function formatDate(date) {
-//   const cleaned = ('' + date).replace(/\D/g, '')
-//   const match = cleaned.match(/^(\d{2})(\d{2})(\d{4})$/)
-//   if (match) {
-//     return `${match[1]}/${match[2]}/${match[3]}`
-//   }
-//   return date
-// }
 
 function maskPhoneNumber(value: string) {
   return value
@@ -192,8 +180,6 @@ export default function AdminCrudPage() {
   })
   const [editAdmin, setEditAdmin] = useState<EditAdmin | null>(null)
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
-  // Remover as linhas 157:10 e 157:17
-  // const [phone, setPhone] = useState('')
 
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -208,16 +194,12 @@ export default function AdminCrudPage() {
       let decoded: CustomJwtPayload
       try {
         decoded = jwtDecode<CustomJwtPayload>(token)
-        console.log('Decoded Token:', decoded) // Log do token decodificado
       } catch (error) {
-        console.error('Erro ao decodificar o token:', error)
         router.push('/auth')
         return
       }
       if (!decoded.roles.includes('ADMINISTRADOR')) {
-        toast.error(
-          'Acesso negado! Somente administradores podem acessar esta página.',
-        )
+        toast.error('Acesso negado! Somente administradores podem acessar esta página.')
         router.push('/')
         return
       }
@@ -226,7 +208,7 @@ export default function AdminCrudPage() {
         name: decoded.name,
         email: decoded.email,
         username: decoded.username,
-        nome: decoded.name, // Adicionar a propriedade 'nome'
+        nome: decoded.name,
       })
     }
     checkAdminStatus()
@@ -266,7 +248,7 @@ export default function AdminCrudPage() {
         foto: null,
         dataCriacao: null,
         ativo: null,
-      }) // Resetar o formulário
+      })
     } catch (error) {
       toast.error('Erro ao cadastrar o administrador.')
     }
@@ -281,9 +263,8 @@ export default function AdminCrudPage() {
       )
       toast.success('Administrador atualizado com sucesso.')
       queryClient.invalidateQueries({ queryKey: ['admins'] })
-      setEditAdmin(null) // Fechar o formulário de edição
+      setEditAdmin(null)
 
-      // Atualize o estado do administrador atual se o administrador atualizado for o mesmo
       if (currentAdmin && currentAdmin.id === updatedAdmin.idAdministrador) {
         setCurrentAdmin({
           ...currentAdmin,
@@ -433,7 +414,6 @@ export default function AdminCrudPage() {
             </div>
           </div>
 
-          {/* Formulário de edição */}
           {editAdmin && (
             <Sheet open={!!editAdmin} onOpenChange={() => setEditAdmin(null)}>
               <SheetContent>
@@ -487,7 +467,6 @@ export default function AdminCrudPage() {
             </Sheet>
           )}
 
-          {/* Listagem de administradores */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
             {isLoading
               ? Array.from({ length: 6 }).map((_, index) => (
