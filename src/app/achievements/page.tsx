@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-// Remover import não utilizado
-// import { format } from 'date-fns'
 import { Target, CircleDashed, SignalHigh } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -28,7 +26,6 @@ interface Achievement {
   conquistado: boolean
 }
 
-// Extract Loading component
 const LoadingState = () => (
   <div className="min-h-screen bg-gray-900 text-white">
     <Header />
@@ -244,8 +241,6 @@ export default function AchievementsPage() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        {/* Ensure any date formatting is consistent */}
-                        {/* Example: If you display achievement dates */}
                         <div className="flex items-center text-sm">
                           <Target
                             className={`w-5 h-5 mr-3 ${achievement.conquistado ? 'text-green-500' : 'text-gray-500'}`}
