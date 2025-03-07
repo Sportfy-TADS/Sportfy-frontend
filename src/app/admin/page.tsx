@@ -1,9 +1,8 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { jwtDecode, JwtPayload } from 'jwt-decode'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { JwtPayload } from 'jwt-decode'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import Header from '@/components/Header'
@@ -26,6 +25,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAuth } from '@/hooks/useAuth'; // novo hook de autenticação
 
 async function fetchAdmins() {
   const token = localStorage.getItem('token')
@@ -166,8 +166,21 @@ interface Admin {
 
 interface EditAdmin extends UpdatedAdmin {}
 
+interface AdminToEdit {
+  idAdministrador: number
+  username: string
+  password: string
+  nome: string
+  telefone: string
+  dataNascimento: string
+  foto: File | null
+  dataCriacao: Date | null
+  ativo: boolean | null
+}
+
 export default function AdminCrudPage() {
-  const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(null)
+  // useAuth encapsula a verificação de autenticação e retorna o administrador atual
+  const currentAdmin = useAuth()
   const [newAdmin, setNewAdmin] = useState({
     username: '',
     password: '',
@@ -180,39 +193,7 @@ export default function AdminCrudPage() {
   })
   const [editAdmin, setEditAdmin] = useState<EditAdmin | null>(null)
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
-
-  const router = useRouter()
   const queryClient = useQueryClient()
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/auth')
-        return
-      }
-      let decoded: CustomJwtPayload
-      try {
-        decoded = jwtDecode<CustomJwtPayload>(token)
-      } catch (error) {
-        router.push('/auth')
-        return
-      }
-      if (!decoded.roles.includes('ADMINISTRADOR')) {
-        toast.error('Acesso negado! Somente administradores podem acessar esta página.')
-        router.push('/')
-        return
-      }
-      setCurrentAdmin({
-        id: decoded.idUsuario,
-        name: decoded.name,
-        email: decoded.email,
-        username: decoded.username,
-        nome: decoded.name,
-      })
-    }
-    checkAdminStatus()
-  }, [router])
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -234,7 +215,7 @@ export default function AdminCrudPage() {
       : admins
     : []
 
-  const handleCreateAdmin = async () => {
+  const handleCreateAdmin = useCallback(async () => {
     try {
       await createAdmin(newAdmin)
       toast.success('Administrador cadastrado com sucesso.')
@@ -252,88 +233,69 @@ export default function AdminCrudPage() {
     } catch (error) {
       toast.error('Erro ao cadastrar o administrador.')
     }
-  }
+  }, [newAdmin, queryClient])
 
-  const handleUpdateAdmin = async () => {
+  const handleUpdateAdmin = useCallback(async () => {
     if (!editAdmin) return
     try {
-      const updatedAdmin = await updateAdmin(
-        editAdmin.idAdministrador,
-        editAdmin,
-      )
+      const updatedAdmin = await updateAdmin(editAdmin.idAdministrador, editAdmin)
       toast.success('Administrador atualizado com sucesso.')
       queryClient.invalidateQueries({ queryKey: ['admins'] })
       setEditAdmin(null)
-
-      if (currentAdmin && currentAdmin.id === updatedAdmin.idAdministrador) {
-        setCurrentAdmin({
-          ...currentAdmin,
-          username: updatedAdmin.username,
-          nome: updatedAdmin.nome,
-        })
-      }
+      // Removido: atualização de currentAdmin, pois não temos setCurrentAdmin disponível
     } catch (error) {
       toast.error('Erro ao atualizar o administrador.')
     }
-  }
+  }, [editAdmin, queryClient])
 
-  const handleInactivateAdmin = async (idAdministrador: number) => {
-    try {
-      await inactivateAdmin(idAdministrador)
-      toast.success('Administrador inativado com sucesso.')
-      queryClient.invalidateQueries({ queryKey: ['admins'] })
-    } catch (error) {
-      toast.error('Erro ao inativar o administrador.')
-    }
-  }
-
-  const handlePhoneChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    isEditMode = false,
-  ) => {
-    const maskedPhone = maskPhoneNumber(e.target.value)
-    if (isEditMode) {
-      if (editAdmin) {
-        setEditAdmin({ ...editAdmin, telefone: maskedPhone })
+  const handleInactivateAdmin = useCallback(
+    async (idAdministrador: number) => {
+      try {
+        await inactivateAdmin(idAdministrador)
+        toast.success('Administrador inativado com sucesso.')
+        queryClient.invalidateQueries({ queryKey: ['admins'] })
+      } catch (error) {
+        toast.error('Erro ao inativar o administrador.')
       }
-    } else {
-      setNewAdmin({ ...newAdmin, telefone: maskedPhone })
-    }
-  }
+    },
+    [queryClient],
+  )
 
-  const handleDateChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    isEditMode = false,
-  ) => {
-    const maskedDate = maskDate(e.target.value)
-    if (isEditMode) {
-      if (editAdmin) {
-        setEditAdmin({ ...editAdmin, dataNascimento: maskedDate })
+  const handlePhoneChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>, isEditMode = false) => {
+      const maskedPhone = maskPhoneNumber(e.target.value)
+      if (isEditMode) {
+        if (editAdmin) {
+          setEditAdmin({ ...editAdmin, telefone: maskedPhone })
+        }
+      } else {
+        setNewAdmin({ ...newAdmin, telefone: maskedPhone })
       }
-    } else {
-      setNewAdmin({ ...newAdmin, dataNascimento: maskedDate })
-    }
-  }
+    },
+    [newAdmin, editAdmin],
+  )
 
-  interface AdminToEdit {
-    idAdministrador: number
-    username: string
-    password: string
-    nome: string
-    telefone: string
-    dataNascimento: string
-    foto: File | null
-    dataCriacao: Date | null
-    ativo: boolean | null
-  }
+  const handleDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>, isEditMode = false) => {
+      const maskedDate = maskDate(e.target.value)
+      if (isEditMode) {
+        if (editAdmin) {
+          setEditAdmin({ ...editAdmin, dataNascimento: maskedDate })
+        }
+      } else {
+        setNewAdmin({ ...newAdmin, dataNascimento: maskedDate })
+      }
+    },
+    [newAdmin, editAdmin],
+  )
 
-  const handleEditAdmin = (admin: AdminToEdit) => {
+  const handleEditAdmin = useCallback((admin: AdminToEdit) => {
     setEditAdmin({
       ...admin,
       telefone: formatPhoneNumber(admin.telefone),
       dataNascimento: formatDateForInput(admin.dataNascimento),
     })
-  }
+  }, [])
 
   return (
     <>
