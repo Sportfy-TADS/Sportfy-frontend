@@ -65,14 +65,14 @@ export default function GoalsPage() {
     error: errorMetasEsportivas,
   } = useQuery({
     queryKey: ['metasEsportivas', userData?.idAcademico],
-    queryFn: () => getMetaEsportiva(idAcademico!),
+    queryFn: () => getMetaEsportiva(userData?.idAcademico),
     enabled: !!userData?.idAcademico,
   })
 
   const updateMetaEsportivaMutation = useMutation({
     mutationFn: updateMetaEsportiva,
     onSuccess: () => {
-      queryClient.invalidateQueries(['metasEsportivas', userData?.idAcademico])
+      queryClient.invalidateQueries(['metasEsportivas', idAcademico!])
       toast.success('Meta esportiva atualizada com sucesso!')
     },
     onError: (error: unknown) => {
@@ -106,18 +106,18 @@ export default function GoalsPage() {
             toast.success('Meta atingida e excluída com sucesso!')
             queryClient.invalidateQueries([
               'metasEsportivas',
-              userData?.idAcademico,
+              idAcademico!,
             ])
-            queryClient.invalidateQueries(['goals', userData?.idAcademico])
+            queryClient.invalidateQueries(['goals', idAcademico!])
           },
         })
       } else {
         toast.success('Meta atualizada com sucesso!')
         queryClient.invalidateQueries([
           'metasEsportivas',
-          userData?.idAcademico,
+          idAcademico!,
         ])
-        queryClient.invalidateQueries(['goals', userData?.idAcademico])
+        queryClient.invalidateQueries(['goals', idAcademico!])
       }
     } catch (error: unknown) {
       console.error(
