@@ -65,7 +65,7 @@ export default function GoalsPage() {
     error: errorMetasEsportivas,
   } = useQuery({
     queryKey: ['metasEsportivas', userData?.idAcademico],
-    queryFn: () => getMetaEsportiva(userData?.idAcademico),
+    queryFn: () => getMetaEsportiva(idAcademico!),
     enabled: !!userData?.idAcademico,
   })
 
