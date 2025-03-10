@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react' // Add import
+import { useEffect, useState } from 'react'; // Add import
 
-import Image from 'next/image' // Adicionado
+import Image from 'next/image'; // Adicionado
 
 import { motion } from 'framer-motion'
 import { MessageCircle, Star } from 'lucide-react'
-import { Toaster, toast } from 'sonner' // Adicionado 'toast'
+import { Toaster, toast } from 'sonner'; // Adicionado 'toast'
 
 import CommentsDialog from '@/components/CommentsDialog'
 import Header from '@/components/Header'
@@ -22,7 +22,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useFeed } from '@/hooks/useFeed'
-import { fetchComments } from '@/http/feed' // Removed fetchPosts import as it's handled in useFeed
+import { fetchComments } from '@/http/feed'; // Removed fetchPosts import as it's handled in useFeed
 import { Comentario, Post } from '@/interface/types'
 
 export default function FeedPage() {
@@ -339,7 +339,6 @@ export default function FeedPage() {
         loading={commentsLoading}
         postId={selectedPostId ?? 0} // Garantir que seja um número
         loggedUser={loggedUser} // Certificar-se de passar loggedUser
-        handleDeleteComment={handleDeleteComment} // Pass handleDeleteComment
       />
     </>
   )
