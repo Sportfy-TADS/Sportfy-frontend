@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import GoalForm from '@/components/goals/GoalForm'
@@ -11,7 +11,7 @@ import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -31,11 +31,23 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useGoals } from '@/hooks/useGoals'
 import { useUserData } from '@/hooks/useUserData'
 import {
-  getMetaEsportiva,
-  updateMetaEsportiva,
-  updateGoal,
   deleteGoal,
+  getMetaEsportiva,
+  updateGoal,
+  updateMetaEsportiva,
 } from '@/http/goals'
+
+// Adicione esta definição de interface
+interface Goal {
+  idMetaDiaria: number;
+  titulo: string;
+  objetivo: string;
+  progressoItem: string;
+  progressoAtual: number;
+  progressoMaximo: number;
+  situacaoMetaDiaria: number;
+  isSports?: boolean;
+}
 
 export default function GoalsPage() {
   const [filter, setFilter] = useState('all')
