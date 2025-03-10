@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
-import Image from 'next/image' // Importar Image do next/image
+import Image from 'next/image'; // Importar Image do next/image
 
-import axios from 'axios' // Import axios
+import axios from 'axios'; // Import axios
 import { Star } from 'lucide-react'
-import { toast } from 'sonner' // Importar toast
+import { toast } from 'sonner'; // Importar toast
 
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useFeed } from '@/hooks/useFeed' // Importar o hook
+import { useFeed } from '@/hooks/useFeed'; // Importar o hook
 import { fetchComments } from '@/http/feed'
 import { Comentario, Usuario } from '@/interface/types'
 
@@ -24,7 +24,6 @@ interface CommentsDialogProps {
   loading: boolean
   postId: number
   loggedUser: Usuario | null
-  handleDeleteComment: (commentId: number, postId: number) => Promise<void>
 }
 
 const likeComment = async (userId: number, commentId: number) => {
@@ -193,7 +192,6 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
   loading,
   postId,
   loggedUser,
-  handleDeleteComment,
 }) => {
   const { handleCreateComment, handleUpdateComment } = useFeed() // Usar o hook
   const [newComment, setNewComment] = useState('')
