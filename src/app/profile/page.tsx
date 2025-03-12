@@ -97,6 +97,11 @@ export default function ProfilePage() {
 
       const username = decodedToken.sub
       const token = localStorage.getItem('token')
+      if (!token) {
+         console.error('Erro: Token não encontrado')
+         router.push('/auth')
+         return
+      }
 
       try {
         const response = await axios.get(
@@ -214,7 +219,7 @@ export default function ProfilePage() {
             <div className="flex justify-between items-start px-4">
               <Image
                 src={user?.foto || `https://via.placeholder.com/50`}
-                alt={user?.nome}
+                alt={user?.nome || 'User photo'}
                 width={128}
                 height={128}
                 className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 -mt-16"
@@ -280,8 +285,8 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
-                        {user?.metas?.length > 0 ? (
-                          user.metas.map((meta, index) => (
+                        {(user?.metas?.length ?? 0) > 0 ? (
+                          user?.metas?.map((meta, index) => (
                             <li key={index} className="text-sm">
                               {meta.titulo} - {meta.status || 'Em andamento'}
                             </li>
