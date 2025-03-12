@@ -18,10 +18,8 @@ import { signUpSchema } from '@/schemas'
 type SignUpSchema = z.infer<typeof signUpSchema>
 
 export default function RegisterPage() {
-  const {
-    mutateAsync: handleRegister,
-    status: { isLoading: isSubmitting },
-  } = useRegister()
+  const { mutateAsync: handleRegister, status } = useRegister()
+  const isSubmitting = status === 'pending'
 
   const { register, handleSubmit, control } = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema),
