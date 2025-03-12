@@ -89,7 +89,7 @@ export default function GoalsPage() {
           progressoAtual: goal.progressoAtual,
         })
       } else {
-        await updateGoal(goal)
+        await updateGoal({ ...goal, idAcademico: idAcademico! })
       }
 
       if (goal.progressoAtual >= goal.progressoMaximo) {
