@@ -49,6 +49,14 @@ interface Goal {
   isSports?: boolean;
 }
 
+// Define the CreateGoalData interface
+interface CreateGoalData {
+  titulo: string;
+  descricao: string;
+  progressoItem: string;
+  progressoMaximo: number;
+}
+
 export default function GoalsPage() {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -138,7 +146,7 @@ export default function GoalsPage() {
     }
   }, [isErrorMetasEsportivas, errorMetasEsportivas])
 
-  const filteredGoals = (goals as Goal[]).filter((goal: Goal) => {
+  const filteredGoals = ((goals as unknown) as Goal[]).filter((goal: Goal) => {
     if (filter === 'all') return true
     return goal.situacaoMetaDiaria === (filter === 'completed' ? 1 : 0)
   })
@@ -166,7 +174,7 @@ export default function GoalsPage() {
     <>
       <Header />
       <div className="flex h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar />
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto p-4">
             <div className="flex justify-between items-center mb-6">
