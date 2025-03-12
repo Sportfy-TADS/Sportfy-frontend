@@ -208,7 +208,7 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
 
   const loadComments = async (pageToLoad: number) => {
     try {
-      const response = await fetchComments(postId, pageToLoad)
+      const response = await fetchComments(postId)
       if (response.length < 10) {
         setHasMore(false)
       } else {
@@ -245,9 +245,7 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
         )
       } else {
         await likeComment(loggedUser.idUsuario, commentId)
-        comments[commentIndex].listaUsuarioCurtida.push({
-          idUsuario: loggedUser.idUsuario,
-        })
+        comments[commentIndex].listaUsuarioCurtida.push(loggedUser as Usuario)
       }
       setComments([...comments])
     } catch (error) {
