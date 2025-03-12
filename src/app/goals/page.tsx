@@ -72,7 +72,7 @@ export default function GoalsPage() {
   const updateMetaEsportivaMutation = useMutation({
     mutationFn: updateMetaEsportiva,
     onSuccess: () => {
-      queryClient.invalidateQueries(['metasEsportivas', idAcademico!])
+      queryClient.invalidateQueries({ queryKey: ['metasEsportivas', idAcademico!] })
       toast.success('Meta esportiva atualizada com sucesso!')
     },
     onError: (error: unknown) => {
