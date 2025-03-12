@@ -138,7 +138,6 @@ export default function Component() {
               />
             </div>
             <motion.ul
-              className="space-y-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -147,8 +146,8 @@ export default function Component() {
                 console.log(`Jogador ${index}:`, jogador) // Log jogador details
                 return (
                   <motion.li
-                    key={jogador.id || index} // Ensure key is unique and defined
-                    className="bg-white shadow rounded-lg p-4 flex justify-between items-center"
+                    key={jogador.id || index} // Ensure key is unique and defined - className="bg-white shadow rounded-lg p-4 flex justify-between items-center"
+                    
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -190,8 +189,8 @@ export default function Component() {
             <div className="space-y-4">
               {campeonatos.map((campeonato) => (
                 <motion.div
-                  key={campeonato.idCampeonato}
-                  className="bg-white shadow rounded-lg p-4"
+                  key={campeonato.idCampeonato} // className="bg-white shadow rounded-lg p-4"
+                  
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
