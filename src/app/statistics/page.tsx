@@ -55,7 +55,7 @@ export default function Statistics() {
   // Prepare chart data for each sport modality
   const chartDataByModality =
     usoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map(
-      (modality: SpecificType) => ({
+      (modality: any) => ({
         name: modality.nomeModalidadeEsportiva,
         metas: modality.totalMetasEsportivasInscritas,
         conquistas: modality.totalConquistasAlcancadas,
@@ -77,7 +77,7 @@ export default function Statistics() {
       <Header />
       <Toaster richColors />
       <div className="flex h-screen">
-        <Sidebar className="flex-none w-64" />
+        <Sidebar />
         <div className="flex-1 flex flex-col p-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             Estatísticas do Jogador
