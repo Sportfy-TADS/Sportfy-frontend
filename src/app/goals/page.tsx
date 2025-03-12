@@ -65,7 +65,7 @@ export default function GoalsPage() {
     error: errorMetasEsportivas,
   } = useQuery({
     queryKey: ['metasEsportivas', userData?.idAcademico],
-    queryFn: () => getMetaEsportiva(userData?.idAcademico),
+    queryFn: () => getMetaEsportiva(idAcademico!),
     enabled: !!userData?.idAcademico,
   })
 
@@ -93,37 +93,31 @@ export default function GoalsPage() {
       }
 
       if (goal.progressoAtual >= goal.progressoMaximo) {
-        Alert.confirm({
-          title: 'Conclus��o de Meta',
-          message: `
-            <strong>Título:</strong> ${goal.titulo} <br>
-            <strong>Objetivo:</strong> ${goal.objetivo || 'Não definido'} <br>
-            <strong>Progresso:</strong> ${goal.progressoAtual} / ${goal.progressoMaximo} ${goal.progressoItem} <br>
-            <strong>Situação:</strong> ${goal.situacaoMetaDiaria === 0 ? 'Pendente' : 'Concluída'}
-          `,
-          onConfirm: async () => {
-            await deleteGoal(goal.idMetaDiaria)
-            toast.success('Meta atingida e excluída com sucesso!')
-            queryClient.invalidateQueries([
-              'metasEsportivas',
-              idAcademico!,
-            ])
-            queryClient.invalidateQueries(['goals', idAcademico!])
-          },
-        })
+        toast.custom((toastId) => (
+          <div className="toast">
+            <h2>Conclusão de Meta</h2>
+            <div>
+              <strong>Título:</strong> {goal.titulo} <br/>
+              <strong>Objetivo:</strong> {goal.objetivo || 'Não definido'} <br/>
+              <strong>Progresso:</strong> {goal.progressoAtual} / {goal.progressoMaximo} {goal.progressoItem} <br/>
+              <strong>Situação:</strong> {goal.situacaoMetaDiaria === 0 ? 'Pendente' : 'Concluída'}
+            </div>
+            <button onClick={async () => {
+              await deleteGoal(goal.idMetaDiaria)
+              toast.success('Meta atingida e excluída com sucesso!')
+              queryClient.invalidateQueries({ queryKey: ['metasEsportivas', idAcademico!] })
+              queryClient.invalidateQueries({ queryKey: ['goals', idAcademico!] })
+              toast.dismiss(toastId)
+            }}>Confirmar</button>
+          </div>
+        ))
       } else {
         toast.success('Meta atualizada com sucesso!')
-        queryClient.invalidateQueries([
-          'metasEsportivas',
-          idAcademico!,
-        ])
-        queryClient.invalidateQueries(['goals', idAcademico!])
+        queryClient.invalidateQueries({ queryKey: ['metasEsportivas', idAcademico!] })
+        queryClient.invalidateQueries({ queryKey: ['goals', idAcademico!] })
       }
     } catch (error: unknown) {
-      console.error(
-        'Erro detalhado ao atualizar meta esportiva:',
-        (error as Error).message,
-      )
+      console.error('Erro ao atualizar meta esportiva:', error)
       toast.error(
         `Erro ao atualizar meta esportiva: ${(error as Error).message}`,
       )
@@ -229,14 +223,13 @@ export default function GoalsPage() {
                         className="p-4 border border-amber-300 rounded-md shadow-sm"
                       >
                         <CardHeader>
-                          <Skeleton variant="text" className="w-1/2 h-6 mb-2" />
+                          <Skeleton className="w-1/2 h-6 mb-2" />
                         </CardHeader>
                         <CardContent>
                           <Skeleton
-                            variant="text"
                             className="w-full h-4 mb-2"
                           />
-                          <Skeleton variant="text" className="w-3/4 h-4" />
+                          <Skeleton className="w-3/4 h-4" />
                         </CardContent>
                       </Card>
                     ))}
