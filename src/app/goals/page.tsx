@@ -268,7 +268,6 @@ export default function GoalsPage() {
                 isLoading={isLoadingMetasEsportivas}
                 onEdit={setEditingGoal}
                 onDelete={undefined}
-                userRole={userData?.role}
               />
             )}
 
