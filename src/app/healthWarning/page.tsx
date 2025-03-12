@@ -33,7 +33,7 @@ export default function ApoioSaudePage() {
     <>
       <Header />
       <div className="flex min-h-screen">
-        <Sidebar className="flex-none" />
+        <Sidebar/>
         <div className="container mx-auto p-4 flex-1">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Canal Saúde</h1>
