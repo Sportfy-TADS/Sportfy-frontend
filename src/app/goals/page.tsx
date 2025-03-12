@@ -138,7 +138,7 @@ export default function GoalsPage() {
     }
   }, [isErrorMetasEsportivas, errorMetasEsportivas])
 
-  const filteredGoals = goals.filter((goal: Goal) => {
+  const filteredGoals = (goals as Goal[]).filter((goal: Goal) => {
     if (filter === 'all') return true
     return goal.situacaoMetaDiaria === (filter === 'completed' ? 1 : 0)
   })
