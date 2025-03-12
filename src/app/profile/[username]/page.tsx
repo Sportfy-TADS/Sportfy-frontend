@@ -79,18 +79,20 @@ export default function ProfilePage() {
         setUser(data)
 
         if (data.modalidades) {
-          const statsPromises = data.modalidades.map(async (modalidade) => {
-            const statsResponse = await fetch(
+            const statsPromises: Promise<Estatisticas>[] = data.modalidades.map(
+            async (modalidade: { idModalidade: number; nomeModalidade: string }): Promise<Estatisticas> => {
+              const statsResponse: Response = await fetch(
               `http://localhost:8081/academico/buscar/estatisticas/${data.idAcademico}/modalidade/${modalidade.idModalidade}`,
               {
                 headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
                 },
               },
+              )
+              return statsResponse.json() as Promise<Estatisticas>
+            },
             )
-            return statsResponse.json()
-          })
           const stats = await Promise.all(statsPromises)
           setEstatisticas(stats)
         }
