@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 import Image from 'next/image'; // Importar Image do next/image
 
 import axios from 'axios'; // Import axios
-import { Star } from 'lucide-react'
+import { Star } from 'lucide-react';
 import { toast } from 'sonner'; // Importar toast
 
 import {
@@ -11,16 +11,17 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useFeed } from '@/hooks/useFeed'; // Importar o hook
-import { fetchComments } from '@/http/feed'
-import { Comentario, Usuario } from '@/interface/types'
+import { fetchComments } from '@/http/feed';
+import { Comentario, Usuario } from '@/interface/types';
 
 interface CommentsDialogProps {
   isOpen: boolean
   onClose: () => void
-  comments: Comentario[] // Adicionado
+  comments: Comentario[]
+  setComments: React.Dispatch<React.SetStateAction<Comentario[]>> // Adicionado
   loading: boolean
   postId: number
   loggedUser: Usuario | null
@@ -189,6 +190,7 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
   isOpen,
   onClose,
   comments,
+  setComments, // Adicionado
   loading,
   postId,
   loggedUser,
