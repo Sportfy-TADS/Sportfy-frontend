@@ -3,15 +3,15 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { useForm, Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
   DialogContent,
-  DialogHeader,
   DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -46,7 +46,7 @@ export function CreateGoal() {
     try {
       await createGoal(data)
       reset()
-      queryClient.invalidateQueries(['goals'])
+      queryClient.invalidateQueries({ queryKey: ['goals'] })
       toast.success('Meta criada com sucesso!')
     } catch {
       toast.error('Erro ao criar a meta')
