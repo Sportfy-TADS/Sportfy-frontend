@@ -4,26 +4,26 @@ import { useEffect, useState } from 'react'; // Add import
 
 import Image from 'next/image'; // Adicionado
 
-import { motion } from 'framer-motion'
-import { MessageCircle, Star } from 'lucide-react'
+import { motion } from 'framer-motion';
+import { MessageCircle, Star } from 'lucide-react';
 import { Toaster, toast } from 'sonner'; // Adicionado 'toast'
 
-import CommentsDialog from '@/components/CommentsDialog'
-import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import CommentsDialog from '@/components/CommentsDialog';
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
-import { useFeed } from '@/hooks/useFeed'
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { useFeed } from '@/hooks/useFeed';
 import { fetchComments } from '@/http/feed'; // Removed fetchPosts import as it's handled in useFeed
-import { Comentario, Post } from '@/interface/types'
+import { Comentario, Post } from '@/interface/types';
 
 export default function FeedPage() {
   const {
@@ -336,6 +336,7 @@ export default function FeedPage() {
         isOpen={isCommentsDialogOpen}
         onClose={closeCommentsDialog}
         comments={selectedPostComments}
+        setComments={setSelectedPostComments} // Corrigido: adiciona setComments
         loading={commentsLoading}
         postId={selectedPostId ?? 0} // Garantir que seja um número
         loggedUser={loggedUser} // Certificar-se de passar loggedUser
