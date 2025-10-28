@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { getGoals } from '@/http/get-goals'
+import { getGoals } from '@/http/goals'
 
 interface Goal {
   id: string
@@ -24,8 +24,11 @@ interface Goal {
 export function GoalList() {
   const [filter, setFilter] = useState('all')
   const { data: goals = [], isLoading } = useQuery({
-    queryKey: ['goals'],
-    queryFn: getGoals,
+    queryKey: ['goals', 1],
+    queryFn: ({ queryKey }) => {
+      const [, idAcademico] = queryKey
+      return getGoals(Number(idAcademico))
+    },
   })
 
   if (isLoading) return <p>Carregando...</p>
