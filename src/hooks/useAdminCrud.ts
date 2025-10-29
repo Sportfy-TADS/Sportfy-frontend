@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import { createAdmin, fetchAdmins, inactivateAdmin } from '@/http/admin'
 
-export default function useAdminCrud(currentAdmin) {
+export default function useAdminCrud(currentAdmin: any) {
   const [newAdmin, setNewAdmin] = useState({
     username: '',
     password: '',
