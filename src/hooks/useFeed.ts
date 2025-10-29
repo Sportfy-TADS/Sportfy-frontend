@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
-import axios from 'axios'
+import axios from 'axios';
 import { jwtDecode } from 'jwt-decode'; // Changed from named to default import
-import { toast } from 'sonner'
+import { toast } from 'sonner';
 
 import {
-    createComment,
-    createPost,
-    fetchComments,
-    fetchPosts,
-    // fetchLoggedUser, // Removido
-    likePost,
-    unlikePost,
-    updateComment,
-} from '@/http/feed'
-import { DecodedToken, Post, Usuario } from '@/interface/types'
+  createComment,
+  createPost,
+  fetchComments,
+  fetchPosts,
+  // fetchLoggedUser, // Removido
+  likePost,
+  unlikePost,
+  updateComment,
+} from '@/http/feed';
+import { DecodedToken, Post, Usuario } from '@/interface/types';
 
 export const useFeed = () => {
   const [posts, setPosts] = useState<Post[]>([])
@@ -55,6 +55,7 @@ export const useFeed = () => {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) {
+      console.warn('⚠️ Token não encontrado no localStorage')
       throw new Error('Token não encontrado')
     }
 
@@ -73,6 +74,7 @@ export const useFeed = () => {
 
     loadInitialPosts()
     const user = getLoggedUser() // Usar a função renomeada
+    console.log('👤 Usuário logado:', user) // Log do usuário
     setLoggedUser(user)
 
     // Remove the interval to prevent overwriting posts
@@ -94,80 +96,85 @@ export const useFeed = () => {
   }
 
   const handleLikePost = async (postId: number) => {
-    if (!loggedUser) {
-      toast.error('Você precisa estar logado para curtir')
-      return
-    }
+    if (loggedUser) {
+      try {
+        const post = posts.find((post) => post.idPublicacao === postId)
+        const usuarioJaCurtiu = post?.listaUsuarioCurtida.some(
+          (usuario) => usuario.idUsuario === loggedUser.idUsuario,
+        )
 
-    const post = posts.find((post) => post.idPublicacao === postId)
-    if (!post) {
-      console.error('Post não encontrado')
-      return
-    }
+        console.log('Handling like for post:', {
+          postId,
+          userId: loggedUser.idUsuario,
+          usuarioJaCurtiu,
+        })
 
-    const usuarioJaCurtiu = post.listaUsuarioCurtida.some(
-      (usuario) => usuario.idUsuario === loggedUser.idUsuario,
-    )
-
-    // OPTIMISTIC UPDATE - Atualiza a UI imediatamente
-    const optimisticUser = {
-      idUsuario: loggedUser.idUsuario,
-      username: loggedUser.username,
-      nome: loggedUser.nome,
-      foto: loggedUser.foto,
-      permissao: loggedUser.permissao,
-      idAcademico: loggedUser.idAcademico || loggedUser.idUsuario,
-    }
-
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.idPublicacao === postId
-          ? {
-              ...post,
-              listaUsuarioCurtida: usuarioJaCurtiu
-                ? post.listaUsuarioCurtida.filter(
-                    (usuario) => usuario.idUsuario !== loggedUser.idUsuario,
-                  )
-                : [...post.listaUsuarioCurtida, optimisticUser],
-            }
-          : post,
-      ),
-    )
-
-    // Fazer a chamada para o servidor em background
-    try {
-      if (usuarioJaCurtiu) {
-        await unlikePost(loggedUser.idUsuario, postId)
-      } else {
-        await likePost(loggedUser.idUsuario, postId)
-      }
-    } catch (error) {
-      console.error('Erro ao sincronizar curtida com servidor:', error)
-      
-      // ROLLBACK - Reverte a mudança em caso de erro
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.idPublicacao === postId
-            ? {
-                ...post,
-                listaUsuarioCurtida: usuarioJaCurtiu
-                  ? [...post.listaUsuarioCurtida, optimisticUser]
-                  : post.listaUsuarioCurtida.filter(
+        if (usuarioJaCurtiu) {
+          await unlikePost(loggedUser.idUsuario, postId)
+          setPosts((prevPosts) =>
+            prevPosts.map((post) =>
+              post.idPublicacao === postId
+                ? {
+                    ...post,
+                    listaUsuarioCurtida: post.listaUsuarioCurtida.filter(
                       (usuario) => usuario.idUsuario !== loggedUser.idUsuario,
                     ),
-              }
-            : post,
-        ),
-      )
-      
-      toast.error('Erro ao atualizar curtida. Tente novamente.')
+                  }
+                : post,
+            ),
+          )
+        } else {
+          await likePost(loggedUser.idUsuario, postId)
+          setPosts((prevPosts) =>
+            prevPosts.map((post) =>
+              post.idPublicacao === postId
+                ? {
+                    ...post,
+                    listaUsuarioCurtida: [
+                      ...post.listaUsuarioCurtida,
+                      {
+                        idUsuario: loggedUser.idUsuario,
+                        username: loggedUser.username,
+                        nome: loggedUser.nome,
+                        foto: loggedUser.foto,
+                        permissao: loggedUser.permissao,
+                        idAcademico:
+                          loggedUser.idAcademico || loggedUser.idUsuario,
+                      },
+                    ],
+                  }
+                : post,
+            ),
+          )
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar a curtida:', error)
+        toast.error('Erro ao atualizar a curtida.')
+      }
     }
   }
 
   const handleNewPost = async (newPost: Post) => {
     try {
       console.log('Creating new post:', newPost)
-      const createdPost = await createPost(newPost)
+      
+      // Estrutura correta para enviar para a API
+      const postData = {
+        titulo: newPost.titulo,
+        descricao: newPost.descricao,
+        idCanal: newPost.idCanal,
+        idModalidadeEsportiva: newPost.idModalidadeEsportiva,
+        Usuario: {
+          idUsuario: newPost.Usuario.idUsuario,
+          username: newPost.Usuario.username,
+          nome: newPost.Usuario.nome,
+          foto: newPost.Usuario.foto,
+          permissao: newPost.Usuario.permissao,
+          idAcademico: newPost.Usuario.idAcademico,
+        },
+      }
+      
+      const createdPost = await createPost(postData)
 
       if (!createdPost) {
         throw new Error('Não foi possível criar a publicação')
@@ -195,53 +202,92 @@ export const useFeed = () => {
         throw new Error('Post não encontrado')
       }
 
-      const updatedPost = {
-        titulo: newPostTitle,
-        descricao: newPostContent,
-        idCanal: post.idCanal,
-        idModalidadeEsportiva: post.idModalidadeEsportiva,
-        Usuario: {
-          idUsuario: loggedUser?.idUsuario,
-          username: loggedUser?.username,
-          nome: loggedUser?.nome,
-          foto: loggedUser?.foto || null,
-          permissao: loggedUser?.permissao,
-          idAcademico: loggedUser?.idAcademico || loggedUser?.idUsuario,
-        },
-        listaUsuarioCurtida: post.listaUsuarioCurtida,
-        listaComentario: post.listaComentario,
+      if (!loggedUser) {
+        throw new Error('Usuário não autenticado')
       }
 
-      console.log('Updating post:', updatedPost) // Log the updated post data
+      // Estrutura correta para enviar para a API de edição
+      const updatedPostData = {
+        titulo: newPostTitle.trim(),
+        descricao: newPostContent.trim(),
+        idCanal: post.idCanal,
+        idModalidadeEsportiva: post.idModalidadeEsportiva,
+        dataPublicacao: post.dataPublicacao,
+        Usuario: {
+          idUsuario: loggedUser.idUsuario,
+        },
+      }
 
-      const result = await axios.put(
+      console.log('🔄 Atualizando post:', {
+        postId,
+        data: updatedPostData,
+      })
+
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/publicacao/atualizarPublicacao/${postId}`,
-        updatedPost,
+        updatedPostData,
         {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
+          timeout: 10000,
         },
       )
 
-      console.log('Post update response:', result) // Log the response
+      console.log('✅ Resposta da atualização:', {
+        status: response.status,
+        data: response.data,
+      })
 
       toast.success('Publicação atualizada com sucesso!')
 
-      // Update the post in the posts list
+      // Atualizar o post na lista local
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
-          post.idPublicacao === postId ? { ...post, ...result.data } : post,
+          post.idPublicacao === postId 
+            ? { 
+                ...post, 
+                titulo: newPostTitle.trim(),
+                descricao: newPostContent.trim(),
+                ...response.data 
+              } 
+            : post,
         ),
       )
 
-      setEditingPost(null)
       setNewPostTitle('')
       setNewPostContent('')
+      return response.data
     } catch (error) {
-      console.error('Error updating post:', error) // Log the error
-      toast.error('Erro ao atualizar a publicação.')
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Erro da API ao atualizar:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        })
+        
+        // Tratar erros específicos
+        if (error.response?.status === 401) {
+          toast.error('Token de autenticação inválido ou expirado')
+        } else if (error.response?.status === 403) {
+          toast.error('Não autorizado a editar esta publicação')
+        } else if (error.response?.status === 404) {
+          toast.error('Publicação não encontrada')
+        } else if (error.response?.status === 400) {
+          const errorMessage = error.response?.data?.message || 
+                              error.response?.data?.error || 
+                              'Dados inválidos'
+          toast.error(`Erro de validação: ${errorMessage}`)
+        } else {
+          toast.error(`Erro ao atualizar: ${error.response?.data?.message || error.message}`)
+        }
+      } else {
+        console.error('❌ Erro desconhecido ao atualizar:', error)
+        toast.error('Erro de conexão ao atualizar a publicação')
+      }
+      throw error
     }
   }
 
@@ -252,7 +298,25 @@ export const useFeed = () => {
         throw new Error('Token não encontrado')
       }
 
-      console.log('Deleting post with ID:', postId) // Log the post ID
+      if (!loggedUser) {
+        throw new Error('Usuário não autenticado')
+      }
+
+      // Verificar se o post existe e se o usuário pode deletá-lo
+      const post = posts.find((p) => p.idPublicacao === postId)
+      if (!post) {
+        throw new Error('Post não encontrado')
+      }
+
+      if (post.Usuario.idUsuario !== loggedUser.idUsuario) {
+        throw new Error('Você só pode deletar seus próprios posts')
+      }
+
+      console.log('🗑️ Removendo post:', {
+        postId,
+        titulo: post.titulo,
+        usuario: post.Usuario.username,
+      })
 
       const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerPublicacao/${postId}`,
@@ -261,20 +325,52 @@ export const useFeed = () => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
+          timeout: 10000,
         },
       )
 
-      console.log('Post delete response:', response) // Log the response
+      console.log('✅ Resposta da remoção:', {
+        status: response.status,
+        data: response.data,
+      })
 
       toast.success('Publicação removida com sucesso!')
 
-      // Remove the post from the posts list
+      // Remover o post da lista local
       setPosts((prevPosts) =>
         prevPosts.filter((post) => post.idPublicacao !== postId),
       )
+
+      return response.data
     } catch (error) {
-      console.error('Error deleting post:', error) // Log the error
-      toast.error('Erro ao remover a publicação.')
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Erro da API ao remover:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        })
+        
+        // Tratar erros específicos
+        if (error.response?.status === 401) {
+          toast.error('Token de autenticação inválido ou expirado')
+        } else if (error.response?.status === 403) {
+          toast.error('Não autorizado a remover esta publicação')
+        } else if (error.response?.status === 404) {
+          toast.error('Publicação não encontrada')
+        } else if (error.response?.status === 400) {
+          const errorMessage = error.response?.data?.message || 
+                              error.response?.data?.error || 
+                              'Operação inválida'
+          toast.error(`Erro: ${errorMessage}`)
+        } else {
+          toast.error(`Erro ao remover: ${error.response?.data?.message || error.message}`)
+        }
+      } else {
+        console.error('❌ Erro desconhecido ao remover:', error)
+        toast.error('Erro de conexão ao remover a publicação')
+      }
+      throw error
     }
   }
 
@@ -293,9 +389,7 @@ export const useFeed = () => {
     if (loggedUser) {
       try {
         const newComment = {
-          idComentario: 0,
           descricao,
-          dataComentario: new Date().toISOString(),
           idPublicacao: postId,
           Usuario: {
             idUsuario: loggedUser.idUsuario,
@@ -304,7 +398,6 @@ export const useFeed = () => {
             foto: loggedUser.foto || null,
             permissao: loggedUser.permissao,
           },
-          listaUsuarioCurtida: [],
         }
 
         const createdComment = await createComment(newComment) // Removed token parameter
@@ -342,15 +435,8 @@ export const useFeed = () => {
   ) => {
     if (loggedUser) {
       try {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          throw new Error('Token not found')
-        }
-
         const updatedComment = {
-          idComentario: commentId,
           descricao,
-          dataComentario,
           idPublicacao,
           Usuario: {
             idUsuario: loggedUser.idUsuario,
@@ -359,10 +445,9 @@ export const useFeed = () => {
             foto: loggedUser.foto || null,
             permissao: loggedUser.permissao,
           },
-          listaUsuarioCurtida: [],
         }
 
-        const result = await updateComment(commentId, updatedComment, token)
+        const result = await updateComment(commentId, updatedComment)
         toast.success('Comentário atualizado com sucesso!')
 
         // Atualizar o comentário localmente garantindo que listaComentario seja um array

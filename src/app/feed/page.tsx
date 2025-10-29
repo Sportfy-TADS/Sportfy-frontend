@@ -9,6 +9,16 @@ import { Toaster, toast } from 'sonner'; // Adicionado 'toast'
 import CommentsDialog from '@/components/CommentsDialog';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
@@ -49,6 +59,8 @@ export default function FeedPage() {
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
   const [likingPosts, setLikingPosts] = useState<Set<number>>(new Set()) // Track posts being liked
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
 
   // Debounced like handler to prevent spam clicks
   const debouncedHandleLikePost = useCallback(
@@ -96,12 +108,34 @@ export default function FeedPage() {
   }
 
   const saveEditedPost = async () => {
-    if (editingPost) {
+    if (!editingPost) {
+      toast.error('Nenhum post selecionado para edição')
+      return
+    }
+
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      toast.error('Título e descrição são obrigatórios')
+      return
+    }
+
+    try {
+      console.log('🔄 Iniciando edição do post:', {
+        postId: editingPost.idPublicacao,
+        titulo: newPostTitle,
+        descricao: newPostContent,
+      })
+
       await handleEditPost(editingPost.idPublicacao)
+      
       setEditingPost(null)
       setNewPostTitle('')
       setNewPostContent('')
       setIsDialogOpen(false)
+      
+      console.log('✅ Post editado com sucesso')
+    } catch (error) {
+      console.error('❌ Erro ao editar post:', error)
+      // O toast de erro já é mostrado no handleEditPost
     }
   }
 
@@ -112,8 +146,34 @@ export default function FeedPage() {
     setIsDialogOpen(true)
   }
 
+  const confirmDeletePost = (post: Post) => {
+    setPostToDelete(post)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const executeDeletePost = async () => {
+    if (!postToDelete) return
+
+    try {
+      console.log('🗑️ Confirmando exclusão do post:', postToDelete.titulo)
+      await handleDeletePost(postToDelete.idPublicacao)
+      setIsDeleteDialogOpen(false)
+      setPostToDelete(null)
+    } catch (error) {
+      console.error('❌ Erro ao deletar post:', error)
+      // O toast de erro já é mostrado no handleDeletePost
+    }
+  }
+
+  const cancelDeletePost = () => {
+    setIsDeleteDialogOpen(false)
+    setPostToDelete(null)
+  }
+
   const createNewPost = async () => {
     console.log('Creating new post...') // Log start of function
+    
+    // Validação básica
     if (!newPostTitle.trim() || !newPostContent.trim()) {
       toast.error('Título e descrição são obrigatórios')
       console.log('Failed: Title or content is empty') // Log validation failure
@@ -123,6 +183,14 @@ export default function FeedPage() {
     if (!loggedUser?.idUsuario) {
       toast.error('Usuário não autenticado')
       console.log('Failed: User not authenticated') // Log authentication failure
+      return
+    }
+
+    // Verificar se há token
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error('Token de autenticação não encontrado')
+      console.log('Failed: No authentication token') // Log token failure
       return
     }
 
@@ -144,8 +212,9 @@ export default function FeedPage() {
     console.log('New post payload:', newPost) // Log post payload
 
     try {
+      console.log('🔄 Enviando requisição para criar post...')
       await handleNewPost(newPost as Post)
-      console.log('Post created successfully') // Log success
+      console.log('✅ Post criado com sucesso') // Log success
       setIsDialogOpen(false)
       setTimeout(() => {
         toast.success('Publicação criada com sucesso!')
@@ -153,7 +222,7 @@ export default function FeedPage() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Erro desconhecido'
-      console.error('Failed to create post:', {
+      console.error('❌ Falhou ao criar post:', {
         error,
         message: errorMessage,
         payload: newPost,
@@ -294,7 +363,7 @@ export default function FeedPage() {
                   Editar
                 </button>
                 <button
-                  onClick={() => handleDeletePost(post.idPublicacao)}
+                  onClick={() => confirmDeletePost(post)}
                   className="flex items-center space-x-1 text-sm hover:text-red-600 dark:hover:text-red-400 transition-colors duration-150"
                 >
                   Excluir
@@ -323,17 +392,23 @@ export default function FeedPage() {
             <Button
               onClick={openNewPostDialog}
               className="mb-4 w-full py-2 text-xl font-semibold bg-blue-500 dark:bg-blue-600 text-white rounded-full hover:bg-blue-600 dark:hover:bg-blue-700 shadow-md"
+              disabled={!loggedUser}
             >
-              Nova Publicação
+              {loggedUser ? 'Nova Publicação' : 'Faça login para publicar'}
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent className="dark:bg-gray-800">
                 <DialogHeader>
                   <DialogTitle className="dark:text-white">
                     {editingPost
-                      ? 'Editar Publicação'
+                      ? `Editar Publicação #${editingPost.idPublicacao}`
                       : 'Criar Nova Publicação'}
                   </DialogTitle>
+                  {editingPost && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Editando post de {editingPost.Usuario.nome} (@{editingPost.Usuario.username})
+                    </p>
+                  )}
                 </DialogHeader>
                 <div className="space-y-4">
                   <input
@@ -351,8 +426,9 @@ export default function FeedPage() {
                   <Button
                     onClick={editingPost ? saveEditedPost : createNewPost}
                     className="w-full bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full"
+                    disabled={!newPostTitle.trim() || !newPostContent.trim()}
                   >
-                    {editingPost ? 'Salvar' : 'Publicar'}
+                    {editingPost ? 'Salvar Alterações' : 'Publicar'}
                   </Button>
                 </div>
               </DialogContent>
@@ -404,6 +480,34 @@ export default function FeedPage() {
         postId={selectedPostId ?? 0} // Garantir que seja um número
         loggedUser={loggedUser} // Certificar-se de passar loggedUser
       />
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="dark:bg-gray-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600 dark:text-red-400">
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-300">
+              Tem certeza que deseja excluir a publicação "{postToDelete?.titulo}"?
+              <br />
+              <span className="text-sm text-gray-500 dark:text-gray-400 mt-2 block">
+                Esta ação não pode ser desfeita.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeletePost} className="dark:border-gray-600">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executeDeletePost}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

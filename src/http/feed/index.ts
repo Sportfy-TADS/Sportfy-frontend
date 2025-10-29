@@ -110,26 +110,59 @@ export const likePost = async (userId: number, postId: number) => {
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`
+    console.log('🔄 Enviando requisição de curtida:', { userId, postId, url })
+    
     const response = await axios.post(url, null, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      timeout: 5000, // 5 segundos de timeout
+      timeout: 8000, // Aumentado para 8 segundos
     })
-    return response.data
+    
+    console.log('✅ Resposta da curtida:', {
+      status: response.status,
+      data: response.data,
+      userId,
+      postId
+    })
+    
+    // Verificar se a operação foi bem-sucedida
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data }
+    } else {
+      throw new Error(`Status inesperado: ${response.status}`)
+    }
   } catch (error) {
+    console.error('❌ Erro ao curtir post:', {
+      userId,
+      postId,
+      error: error instanceof Error ? error.message : String(error)
+    })
+    
     if (axios.isAxiosError(error)) {
       if (error.code === 'ECONNABORTED') {
         throw new Error('Timeout: Operação demorou muito para responder')
       }
       if (error.response?.status === 409) {
         // Conflito - usuário já curtiu
-        console.warn('Post já foi curtido pelo usuário')
-        return { success: true }
+        console.warn('⚠️ Post já foi curtido pelo usuário')
+        return { success: true, data: null }
       }
+      if (error.response?.status === 401) {
+        throw new Error('Token inválido ou expirado')
+      }
+      if (error.response?.status === 404) {
+        throw new Error('Post não encontrado')
+      }
+      // Log detalhado do erro
+      console.error('❌ Detalhes do erro da API:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url
+      })
     }
-    console.error('Error liking post:', error)
     throw error
   }
 }
@@ -142,39 +175,76 @@ export const unlikePost = async (userId: number, postId: number) => {
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${userId}/${postId}`
+    console.log('🔄 Enviando requisição de descurtida:', { userId, postId, url })
+    
     const response = await axios.delete(url, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      timeout: 5000, // 5 segundos de timeout
+      timeout: 8000, // Aumentado para 8 segundos
     })
-    return response.data
+    
+    console.log('✅ Resposta da descurtida:', {
+      status: response.status,
+      data: response.data,
+      userId,
+      postId
+    })
+    
+    // Verificar se a operação foi bem-sucedida
+    if (response.status === 200 || response.status === 204) {
+      return { success: true, data: response.data }
+    } else {
+      throw new Error(`Status inesperado: ${response.status}`)
+    }
   } catch (error) {
+    console.error('❌ Erro ao descurtir post:', {
+      userId,
+      postId,
+      error: error instanceof Error ? error.message : String(error)
+    })
+    
     if (axios.isAxiosError(error)) {
       if (error.code === 'ECONNABORTED') {
         throw new Error('Timeout: Operação demorou muito para responder')
       }
       if (error.response?.status === 404) {
         // Not Found - curtida não existe
-        console.warn('Curtida não encontrada para remoção')
-        return { success: true }
+        console.warn('⚠️ Curtida não encontrada para remoção')
+        return { success: true, data: null }
       }
+      if (error.response?.status === 401) {
+        throw new Error('Token inválido ou expirado')
+      }
+      // Log detalhado do erro
+      console.error('❌ Detalhes do erro da API:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url
+      })
     }
-    console.error('Error unliking post:', error)
     throw error
   }
 }
 
-interface Post {
+interface PostCreate {
   titulo: string
   descricao: string
   idCanal: number
   idModalidadeEsportiva: number | null
-  idUsuario: number
+  Usuario: {
+    idUsuario: number
+    username: string
+    nome: string
+    foto?: string | null
+    permissao: string
+    idAcademico: number
+  }
 }
 
-export const createPost = async (newPost: Post) => {
+export const createPost = async (newPost: PostCreate) => {
   const token = getToken()
   if (!token) {
     throw new Error('Token não encontrado')
@@ -182,31 +252,36 @@ export const createPost = async (newPost: Post) => {
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/cadastrarPublicacao`
-    console.log('Creating post:', {
+    
+    const postData = {
+      titulo: newPost.titulo.trim(),
+      descricao: newPost.descricao.trim(),
+      idCanal: Number(newPost.idCanal),
+      idModalidadeEsportiva: newPost.idModalidadeEsportiva,
+      dataPublicacao: new Date().toISOString(),
+      Usuario: {
+        idUsuario: Number(newPost.Usuario.idUsuario),
+      },
+    }
+
+    console.log('🔄 Criando post:', {
       url,
-      payload: newPost,
+      payload: postData,
+      token: token ? 'presente' : 'ausente',
+    })
+
+    const response = await axios.post(url, postData, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+      timeout: 10000, // 10 segundos
     })
 
-    const response = await axios.post(
-      url,
-      {
-        ...newPost,
-        dataPublicacao: new Date().toISOString(),
-        Usuario: {
-          idUsuario: newPost.idUsuario,
-        },
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    )
+    console.log('✅ Resposta da criação de post:', {
+      status: response.status,
+      data: response.data,
+    })
 
     if (!response.data) {
       throw new Error('Resposta vazia do servidor')
@@ -215,23 +290,43 @@ export const createPost = async (newPost: Post) => {
     return response.data
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('API Error Details:', {
+      console.error('❌ Erro da API:', {
         status: error.response?.status,
+        statusText: error.response?.statusText,
         data: error.response?.data,
         message: error.message,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          data: JSON.parse(error.config?.data || '{}'),
-          headers: error.config?.headers,
-        },
+        url: error.config?.url,
+        method: error.config?.method,
+        requestData: error.config?.data,
       })
-      throw new Error(
-        `Erro ao criar publicação: ${error.response?.data?.message || error.message}`,
-      )
+      
+      // Tratar erros específicos
+      if (error.response?.status === 401) {
+        throw new Error('Token de autenticação inválido ou expirado')
+      }
+      if (error.response?.status === 403) {
+        throw new Error('Não autorizado a criar publicações')
+      }
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message || 
+                            error.response?.data?.error || 
+                            'Dados inválidos'
+        throw new Error(`Erro de validação: ${errorMessage}`)
+      }
+      if (error.response?.status === 500) {
+        throw new Error('Erro interno do servidor')
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Erro desconhecido'
+      
+      throw new Error(`Erro ao criar publicação: ${errorMessage}`)
     }
-    console.error('Unknown error:', error)
-    throw new Error('Erro desconhecido ao criar publicação')
+    
+    console.error('❌ Erro desconhecido:', error)
+    throw new Error('Erro de conexão ao criar publicação')
   }
 }
 
@@ -257,9 +352,15 @@ export const fetchComments = async (postId: number) => {
 }
 
 interface Comment {
-  texto: string
+  descricao: string
   idPublicacao: number
-  idUsuario: number
+  Usuario: {
+    idUsuario: number
+    username: string
+    nome: string
+    foto?: string | null
+    permissao: string
+  }
 }
 
 export const createComment = async (comment: Comment) => {
