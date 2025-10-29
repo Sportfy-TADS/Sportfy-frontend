@@ -9,10 +9,10 @@ import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -54,7 +54,7 @@ export function CreateGoal() {
   }
 
   return (
-    <DialogContent>
+    <DialogContent description="Formulário para cadastrar meta">
       <DialogHeader>
         <DialogTitle>Cadastrar Meta</DialogTitle>
       </DialogHeader>

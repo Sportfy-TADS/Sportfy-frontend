@@ -1,8 +1,9 @@
 interface NewAdmin {
-  name: string
-  email: string
   username: string
   password: string
+  nome: string
+  telefone: string
+  dataNascimento: string
 }
 
 export async function fetchAdmins() {
@@ -17,11 +18,25 @@ export async function fetchAdmins() {
     },
   )
   if (!res.ok) throw new Error('Erro ao buscar administradores.')
-  return await res.json()
+  const data = await res.json()
+  
+  // Garantir que retorna sempre um array
+  if (Array.isArray(data)) {
+    return data
+  } else if (data && Array.isArray(data.content)) {
+    return data.content
+  } else if (data && Array.isArray(data.data)) {
+    return data.data
+  } else {
+    return []
+  }
 }
 
 export async function createAdmin(newAdmin: NewAdmin) {
   const token = localStorage.getItem('token')
+  console.log('Token para criar admin:', token)
+  console.log('Dados para criar admin:', newAdmin)
+  
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
     {
@@ -33,8 +48,16 @@ export async function createAdmin(newAdmin: NewAdmin) {
       body: JSON.stringify(newAdmin),
     },
   )
-  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
-  return await res.json()
+  
+  console.log('Status da resposta:', res.status)
+  const responseText = await res.text()
+  console.log('Resposta da API:', responseText)
+  
+  if (!res.ok) {
+    throw new Error(`Erro ao cadastrar administrador: ${res.status} - ${responseText}`)
+  }
+  
+  return JSON.parse(responseText)
 }
 
 export async function inactivateAdmin(id: number) {

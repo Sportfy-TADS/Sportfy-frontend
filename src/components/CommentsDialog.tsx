@@ -294,7 +294,7 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="dark:bg-gray-800">
+      <DialogContent description="Lista de comentários e formulário para adicionar novo comentário" className="dark:bg-gray-800">
         <DialogHeader>
           <DialogTitle className="dark:text-white">Comentários</DialogTitle>
         </DialogHeader>

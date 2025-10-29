@@ -10,22 +10,22 @@ import CommentsDialog from '@/components/CommentsDialog';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
@@ -428,7 +428,7 @@ export default function FeedPage() {
               {loggedUser ? 'Nova Publicação' : 'Faça login para publicar'}
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogContent className="dark:bg-gray-800">
+              <DialogContent description="Criar ou editar publicação" className="dark:bg-gray-800">
                 <DialogHeader>
                   <DialogTitle className="dark:text-white">
                     {editingPost

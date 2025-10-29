@@ -60,6 +60,45 @@ interface UpdatedAdmin extends NewAdmin {
 
 async function createAdmin(newAdmin: NewAdmin) {
   const token = localStorage.getItem('token')
+  console.log('Token para criar admin (page):', token)
+  console.log('Dados para criar admin (page):', newAdmin)
+
+  // Normalize fields to backend-expected formats
+  const normalizeToIso = (d: string) => {
+    if (!d) return null
+    // Already ISO-like (contains T)
+    if (d.includes('T')) return d
+
+    // dd/mm/yyyy -> convert
+    const matchDMY = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+    if (matchDMY) {
+      const [, day, month, year] = matchDMY
+      const dt = new Date(Number(year), Number(month) - 1, Number(day))
+      return dt.toISOString()
+    }
+
+    // yyyy-mm-dd -> convert to ISO at midnight local
+    const matchYMD = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (matchYMD) {
+      const [, year, month, day] = matchYMD
+      const dt = new Date(Number(year), Number(month) - 1, Number(day))
+      return dt.toISOString()
+    }
+
+    // fallback: try Date constructor
+    const parsed = new Date(d)
+    if (!isNaN(parsed.getTime())) return parsed.toISOString()
+    return d
+  }
+
+  const cleanPhone = (p: string) => (p ? String(p).replace(/\D/g, '') : p)
+
+  const payload = {
+    ...newAdmin,
+    dataNascimento: normalizeToIso(String(newAdmin.dataNascimento || '')),
+    telefone: cleanPhone(String(newAdmin.telefone || '')),
+  }
+
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
     {
@@ -68,11 +107,19 @@ async function createAdmin(newAdmin: NewAdmin) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(newAdmin),
+      body: JSON.stringify(payload),
     },
   )
-  if (!res.ok) throw new Error('Erro ao cadastrar administrador.')
-  return await res.json()
+
+  console.log('Status da resposta (page):', res.status)
+  const responseText = await res.text()
+  console.log('Resposta da API (page):', responseText)
+
+  if (!res.ok) {
+    throw new Error(`Erro ao cadastrar administrador: ${res.status} - ${responseText}`)
+  }
+
+  return JSON.parse(responseText)
 }
 
 async function updateAdmin(
