@@ -1,52 +1,91 @@
-import axios from 'axios'
+import axios from 'axios';
 // Import default
-import { jwtDecode } from 'jwt-decode' // Changed from named to default import
+import { jwtDecode } from 'jwt-decode'; // Changed from named to default import
 
-// Add axios interceptor for debugging
-axios.interceptors.request.use((request) => {
-  console.log('Request:', {
-    url: request.url,
-    method: request.method,
-    headers: request.headers,
-    data: request.data,
+// Optional axios logging for debugging. Enable by setting DEBUG_AXIOS=true in dev env.
+if (process.env.NODE_ENV === 'development' && process.env.DEBUG_AXIOS === 'true') {
+  axios.interceptors.request.use((request) => {
+    console.log('Request:', {
+      url: request.url,
+      method: request.method,
+      headers: request.headers,
+      data: request.data,
+    })
+    return request
   })
-  return request
-})
 
-axios.interceptors.response.use(
-  (response) => {
-    console.log('Response:', {
-      status: response.status,
-      data: response.data,
-      headers: response.headers,
-    })
-    return response
-  },
-  (error) => {
-    console.log('Error Response:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    })
-    return Promise.reject(error)
-  },
-)
+  axios.interceptors.response.use(
+    (response) => {
+      console.log('Response:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+      })
+      return response
+    },
+    (error) => {
+      console.log('Error Response:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      })
+      return Promise.reject(error)
+    },
+  )
+}
 
 const getToken = (): string | null => localStorage.getItem('token')
 
 export const fetchPosts = async (page: number = 0, size: number = 10) => {
   const token = getToken()
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`
+
+  const cacheKey = `feed:${page}:${size}`
+
+  // In development return cached posts immediately if available and refresh in background
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        // Refresh in background
+        ;(async () => {
+          try {
+            const response = await axios.get(url, {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            })
+            const content = response.data.content || []
+            localStorage.setItem(cacheKey, JSON.stringify(content))
+          } catch (e) {
+            // ignore background refresh errors
+          }
+        })()
+        return JSON.parse(cached)
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
+  }
+
   try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await axios.get(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-    )
-    return response.data.content || []
+    })
+    const content = response.data.content || []
+    // cache for dev to speed up subsequent loads
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(content))
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+    return content
   } catch (error) {
     console.error('Error fetching posts:', error)
     throw error

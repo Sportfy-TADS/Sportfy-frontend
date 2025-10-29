@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 
-import Image from 'next/image'; // Importar Image do next/image
+import Image from 'next/image';
 
-import axios from 'axios'; // Import axios
+import axios from 'axios';
 import { Star } from 'lucide-react';
-import { toast } from 'sonner'; // Importar toast
+import { toast } from 'sonner';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFeed } from '@/hooks/useFeed'; // Importar o hook
+import { useFeed } from '@/hooks/useFeed';
 import { fetchComments } from '@/http/feed';
 import { Comentario, Usuario } from '@/interface/types';
 
@@ -21,7 +21,7 @@ interface CommentsDialogProps {
   isOpen: boolean
   onClose: () => void
   comments: Comentario[]
-  setComments: React.Dispatch<React.SetStateAction<Comentario[]>> // Adicionado
+  setComments: React.Dispatch<React.SetStateAction<Comentario[]>>
   loading: boolean
   postId: number
   loggedUser: Usuario | null
@@ -70,8 +70,8 @@ const CommentItem: React.FC<{
     descricao: string,
     idPublicacao: number,
     dataComentario: Date,
-  ) => void // Atualizado
-  loggedUser: Usuario | null // Adicionado
+  ) => void
+  loggedUser: Usuario | null
 }> = ({ comment, handleLikeComment, handleUpdateComment, loggedUser }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(comment.descricao)
@@ -83,7 +83,7 @@ const CommentItem: React.FC<{
         editedContent,
         comment.idPublicacao,
         new Date(comment.dataComentario),
-      ) // Passar idPublicacao
+      )
       setIsEditing(false)
     } else {
       toast.error('Digite um conteúdo válido.')
@@ -98,34 +98,44 @@ const CommentItem: React.FC<{
     handleLikeComment(comment.idComentario)
   }
 
+  const commentDate = new Date(comment.dataComentario)
+  const dateStr = commentDate.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+  const timeStr = commentDate.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const formattedDate = `${dateStr} às ${timeStr}`
+
   return (
     <div className="ml-4 mt-2">
       <div className="p-2 border rounded bg-gray-50 dark:bg-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-3">
             <Image
               src={comment.Usuario?.foto || 'https://via.placeholder.com/40'}
               alt="Avatar"
-              width={32}
-              height={32}
-              className="w-8 h-8 rounded-full"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-full"
             />
-            <span className="font-semibold text-sm dark:text-white">
-              {comment.Usuario?.nome}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {new Date(comment.dataComentario).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
+            <div className="flex-1 min-w-0 flex flex-col">
+              <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                {comment.Usuario?.nome}
+              </span>
+              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2 truncate">
+                <span className="truncate">@{comment.Usuario?.username || comment.Usuario?.apelido || ''}</span>
+                <span>·</span>
+                <span className="whitespace-nowrap">{formattedDate}</span>
+              </div>
+            </div>
           </div>
           <div className="flex space-x-2">
             {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' &&
-              loggedUser?.idUsuario === comment.Usuario.idUsuario && ( // Verifica permissão e idUsuario de forma case-insensitive
+              loggedUser?.idUsuario === comment.Usuario.idUsuario && (
                 <button
                   onClick={() => setIsEditing(!isEditing)}
                   className="text-xs text-yellow-500 hover:underline"
@@ -179,7 +189,7 @@ const CommentItem: React.FC<{
             comment={reply}
             handleLikeComment={handleLikeComment}
             handleUpdateComment={handleUpdateComment}
-            loggedUser={loggedUser} // Passar loggedUser
+            loggedUser={loggedUser}
           />
         ))}
     </div>
@@ -190,12 +200,12 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
   isOpen,
   onClose,
   comments,
-  setComments, // Adicionado
+  setComments,
   loading,
   postId,
   loggedUser,
 }) => {
-  const { handleCreateComment, handleUpdateComment } = useFeed() // Usar o hook
+  const { handleCreateComment, handleUpdateComment } = useFeed()
   const [newComment, setNewComment] = useState('')
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
@@ -280,7 +290,6 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
         <div className="max-h-[60vh] overflow-y-auto">
           {loading ? (
             Array.from({ length: 3 }).map((_, idx) => (
-              // ...existing Skeleton components...
               <Skeleton
                 key={idx}
                 className="h-20 w-full mb-2 rounded-lg dark:bg-gray-700"
@@ -295,7 +304,7 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
                     comment={comment}
                     handleLikeComment={handleLikeComment}
                     handleUpdateComment={handleUpdateComment}
-                    loggedUser={loggedUser} // Passar loggedUser
+                    loggedUser={loggedUser}
                   />
                 ))
               ) : (
@@ -340,6 +349,6 @@ const CommentsDialog: React.FC<CommentsDialogProps> = ({
       </DialogContent>
     </Dialog>
   )
-} // Fechar o componente CommentsDialog corretamente
+}
 
 export default CommentsDialog

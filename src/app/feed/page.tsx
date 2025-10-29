@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'; // Add import
+import { memo, useEffect, useState } from 'react';
 
-import Image from 'next/image'; // Adicionado
-
-import { motion } from 'framer-motion';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle, Star } from 'lucide-react';
 import { Toaster, toast } from 'sonner'; // Adicionado 'toast'
 
@@ -167,6 +165,105 @@ export default function FeedPage() {
     return new Date(dateString).toLocaleDateString('pt-BR', options)
   }
 
+  // Memoized Post card to reduce re-renders
+  const PostCard = memo(function PostCard({
+    post,
+    loggedUser,
+    startEditingPost,
+    handleLikePost,
+    openCommentsDialog,
+    handleDeletePost,
+    formatDate,
+  }: any) {
+    return (
+      <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
+        <CardHeader className="pb-2">
+          <div className="flex items-start space-x-3">
+            <Avatar>
+              {post.Usuario.foto ? (
+                <AvatarImage
+                  src={post.Usuario.foto}
+                  alt={post.Usuario.nome || post.Usuario.username}
+                  loading="lazy"
+                  decoding="async"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10"
+                />
+              ) : (
+                <AvatarFallback className="w-10 h-10">
+                  {(
+                    post.Usuario.nome?.slice(0, 1) ||
+                    post.Usuario.username?.slice(0, 1) ||
+                    '?'
+                  ).toString().toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                  {post.Usuario.nome}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5">
+                <span className="truncate">@{post.Usuario.username}</span>
+                <span>·</span>
+                <span className="whitespace-nowrap">{post.dataPublicacao ? formatDate(post.dataPublicacao) : 'Data não disponível'}</span>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="mt-2">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            {post.titulo}
+          </h2>
+          <p className="text-md text-gray-800 dark:text-gray-200 mb-2">{post.descricao}</p>
+          <div className="flex items-center justify-start space-x-6 text-gray-600 dark:text-gray-400 mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
+            <button
+              onClick={() => handleLikePost(post.idPublicacao)}
+              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+            >
+              <Star
+                className={`w-5 h-5 ${
+                  post.listaUsuarioCurtida?.some(
+                    (usuario: any) => usuario.idUsuario === loggedUser?.idUsuario,
+                  )
+                    ? 'text-amber-300 fill-amber-300'
+                    : 'text-gray-300'
+                }`}
+              />
+              <span>{post.listaUsuarioCurtida?.length || 0}</span>
+            </button>
+            <button
+              onClick={() => openCommentsDialog(post.idPublicacao)}
+              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+            >
+              <MessageCircle className="w-5 h-5" />
+              {post.listaComentario?.length > 0 && <span>{post.listaComentario.length}</span>}
+            </button>
+            {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && post.Usuario.idUsuario === loggedUser.idUsuario && (
+              <>
+                <button
+                  onClick={() => startEditingPost(post)}
+                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDeletePost(post.idPublicacao)}
+                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  Excluir
+                </button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  })
+
   return (
     <>
       <Toaster /> {/* Adicionado Toaster */}
@@ -228,95 +325,17 @@ export default function FeedPage() {
                 ))
               ) : posts.length ? (
                 posts.map((post) => (
-                  <motion.div
-                    key={post.idPublicacao}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
-                      <CardHeader className="flex items-start space-x-3 pb-2">
-                        <Image
-                          src={
-                            post.Usuario.foto ||
-                            `https://via.placeholder.com/50`
-                          }
-                          alt="Avatar"
-                          width={48}
-                          height={48}
-                          className="rounded-full"
-                        />
-                        <div className="flex flex-col justify-center">
-                          <span className="font-semibold text-base text-gray-900 dark:text-white">
-                            {post.Usuario.nome}
-                          </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            @{post.Usuario.username} •{' '}
-                            {post.dataPublicacao
-                              ? formatDate(post.dataPublicacao)
-                              : 'Data não disponível'}
-                          </span>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="mt-2">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                          {post.titulo}
-                        </h2>
-                        <p className="text-md text-gray-800 dark:text-gray-200 mb-2">
-                          {post.descricao}
-                        </p>
-                        <div className="flex items-center justify-start space-x-6 text-gray-600 dark:text-gray-400 mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
-                          <button
-                            onClick={() => handleLikePost(post.idPublicacao)}
-                            className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-                          >
-                            <Star
-                              className={`w-5 h-5 ${
-                                post.listaUsuarioCurtida?.some(
-                                  (usuario) =>
-                                    usuario.idUsuario === loggedUser?.idUsuario,
-                                )
-                                  ? 'text-amber-300 fill-amber-300'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                            <span>{post.listaUsuarioCurtida?.length || 0}</span>
-                          </button>
-                          <button
-                            onClick={() =>
-                              openCommentsDialog(post.idPublicacao)
-                            }
-                            className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-                          >
-                            <MessageCircle className="w-5 h-5" />
-                            {post.listaComentario?.length > 0 && (
-                              <span>{post.listaComentario.length}</span>
-                            )}
-                          </button>
-                          {loggedUser?.permissao?.toUpperCase() ===
-                            'ACADEMICO' &&
-                            post.Usuario.idUsuario === loggedUser.idUsuario && ( // Adicionado '?' para permissao
-                              <>
-                                <button
-                                  onClick={() => startEditingPost(post)}
-                                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-                                >
-                                  Editar
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeletePost(post.idPublicacao)
-                                  }
-                                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-                                >
-                                  Excluir
-                                </button>
-                              </>
-                            )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                  <div key={post.idPublicacao}>
+                    <PostCard
+                      post={post}
+                      loggedUser={loggedUser}
+                      startEditingPost={startEditingPost}
+                      handleLikePost={handleLikePost}
+                      openCommentsDialog={openCommentsDialog}
+                      handleDeletePost={handleDeletePost}
+                      formatDate={formatDate}
+                    />
+                  </div>
                 ))
               ) : (
                 <p className="text-gray-600 dark:text-gray-400">
