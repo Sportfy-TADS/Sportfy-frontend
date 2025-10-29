@@ -1,3 +1,10 @@
+interface NewAdmin {
+  name: string
+  email: string
+  username: string
+  password: string
+}
+
 export async function fetchAdmins() {
   const token = localStorage.getItem('token')
   const res = await fetch(
@@ -13,7 +20,7 @@ export async function fetchAdmins() {
   return await res.json()
 }
 
-export async function createAdmin(newAdmin) {
+export async function createAdmin(newAdmin: NewAdmin) {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/cadastrar`,
@@ -30,7 +37,7 @@ export async function createAdmin(newAdmin) {
   return await res.json()
 }
 
-export async function inactivateAdmin(id) {
+export async function inactivateAdmin(id: number) {
   const token = localStorage.getItem('token')
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/inativar/${id}`,
