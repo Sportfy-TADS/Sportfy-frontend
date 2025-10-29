@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import Image from 'next/image';
-
 import axios from 'axios';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import {
     Dialog,
@@ -115,13 +115,25 @@ const CommentItem: React.FC<{
       <div className="p-2 border rounded bg-gray-50 dark:bg-gray-700">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3">
-            <Image
-              src={comment.Usuario?.foto || 'https://via.placeholder.com/40'}
-              alt="Avatar"
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-full"
-            />
+            <Avatar className="w-10 h-10">
+              {comment.Usuario?.foto && comment.Usuario.foto.trim() !== '' ? (
+                <AvatarImage 
+                  src={comment.Usuario.foto} 
+                  alt={comment.Usuario?.nome || comment.Usuario?.username || 'Avatar'}
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <AvatarFallback className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
+                  {(
+                    comment.Usuario?.nome?.slice(0, 1) ||
+                    comment.Usuario?.username?.slice(0, 1) ||
+                    comment.Usuario?.apelido?.slice(0, 1) ||
+                    '?'
+                  ).toString().toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
             <div className="flex-1 min-w-0 flex flex-col">
               <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                 {comment.Usuario?.nome}

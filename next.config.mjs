@@ -2,11 +2,11 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
-    // allow the placeholder host used in development and any real remote avatars
-    domains: ['via.placeholder.com'],
-    // optional: if you need more flexible matching you can use remotePatterns
+    // Configure domains for external images if needed
+    domains: [],
+    // Use remotePatterns for more flexible matching of external images
     // remotePatterns: [
-    //   { protocol: 'https', hostname: 'via.placeholder.com' },
+    //   { protocol: 'https', hostname: 'example.com' },
     // ],
   },
 }

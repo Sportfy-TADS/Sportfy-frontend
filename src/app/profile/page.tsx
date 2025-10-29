@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import axios from 'axios'
-import { Trophy, Target, Medal } from 'lucide-react'
+import { Medal, Target, Trophy } from 'lucide-react'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchAchievements } from '@/http/achievements'
 import { getCampeonatos } from '@/http/championships'
@@ -217,13 +218,23 @@ export default function ProfilePage() {
 
             {/* Foto e Botão Editar */}
             <div className="flex justify-between items-start px-4">
-              <Image
-                src={user?.foto || `https://via.placeholder.com/50`}
-                alt={user?.nome || 'User photo'}
-                width={128}
-                height={128}
-                className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 -mt-16"
-              />
+              <Avatar className="w-32 h-32 border-4 border-white dark:border-gray-900 -mt-16">
+                {user?.foto && user.foto.trim() !== '' ? (
+                  <AvatarImage 
+                    src={user.foto} 
+                    alt={user?.nome || 'User photo'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <AvatarFallback className="w-full h-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-4xl">
+                    {(
+                      user?.nome?.slice(0, 1) ||
+                      user?.username?.slice(0, 1) ||
+                      'U'
+                    ).toString().toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
               <Button
                 onClick={() => router.push('/profile/edit')}
                 className="mt-4 bg-blue-500 hover:bg-blue-600 text-white"

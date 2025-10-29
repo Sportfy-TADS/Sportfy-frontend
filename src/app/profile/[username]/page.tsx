@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-import Image from 'next/image'
 import { useParams } from 'next/navigation'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Estatisticas {
   modalidade: string
@@ -166,15 +166,23 @@ export default function ProfilePage() {
               }}
             />
             <div className="absolute -bottom-12 left-4">
-              <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-800 border-4 border-white dark:border-gray-800">
-                <Image
-                  src="https://via.placeholder.com/150"
-                  alt={user?.nome}
-                  className="w-full h-full rounded-full object-cover"
-                  width={150}
-                  height={150}
-                />
-              </div>
+              <Avatar className="w-24 h-24 border-4 border-white dark:border-gray-800">
+                {user?.foto && user.foto.trim() !== '' ? (
+                  <AvatarImage 
+                    src={user.foto} 
+                    alt={user?.nome || 'User avatar'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <AvatarFallback className="w-full h-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-2xl">
+                    {(
+                      user?.nome?.slice(0, 1) ||
+                      user?.username?.slice(0, 1) ||
+                      'U'
+                    ).toString().toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
             </div>
           </div>
 
