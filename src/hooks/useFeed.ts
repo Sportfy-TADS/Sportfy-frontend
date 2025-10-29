@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import axios from 'axios'
-import { jwtDecode } from 'jwt-decode' // Changed from named to default import
+import { jwtDecode } from 'jwt-decode'; // Changed from named to default import
 import { toast } from 'sonner'
 
 import {
-  fetchPosts,
-  // fetchLoggedUser, // Removido
-  likePost,
-  unlikePost,
-  createPost,
-  fetchComments,
-  createComment,
-  updateComment,
+    createComment,
+    createPost,
+    fetchComments,
+    fetchPosts,
+    // fetchLoggedUser, // Removido
+    likePost,
+    unlikePost,
+    updateComment,
 } from '@/http/feed'
-import { Post, DecodedToken, Usuario } from '@/interface/types'
+import { DecodedToken, Post, Usuario } from '@/interface/types'
 
 export const useFeed = () => {
   const [posts, setPosts] = useState<Post[]>([])
@@ -94,61 +94,73 @@ export const useFeed = () => {
   }
 
   const handleLikePost = async (postId: number) => {
-    if (loggedUser) {
-      try {
-        const post = posts.find((post) => post.idPublicacao === postId)
-        const usuarioJaCurtiu = post?.listaUsuarioCurtida.some(
-          (usuario) => usuario.idUsuario === loggedUser.idUsuario,
-        )
+    if (!loggedUser) {
+      toast.error('Você precisa estar logado para curtir')
+      return
+    }
 
-        console.log('Handling like for post:', {
-          postId,
-          userId: loggedUser.idUsuario,
-          usuarioJaCurtiu,
-        })
+    const post = posts.find((post) => post.idPublicacao === postId)
+    if (!post) {
+      console.error('Post não encontrado')
+      return
+    }
 
-        if (usuarioJaCurtiu) {
-          await unlikePost(loggedUser.idUsuario, postId)
-          setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-              post.idPublicacao === postId
-                ? {
-                    ...post,
-                    listaUsuarioCurtida: post.listaUsuarioCurtida.filter(
+    const usuarioJaCurtiu = post.listaUsuarioCurtida.some(
+      (usuario) => usuario.idUsuario === loggedUser.idUsuario,
+    )
+
+    // OPTIMISTIC UPDATE - Atualiza a UI imediatamente
+    const optimisticUser = {
+      idUsuario: loggedUser.idUsuario,
+      username: loggedUser.username,
+      nome: loggedUser.nome,
+      foto: loggedUser.foto,
+      permissao: loggedUser.permissao,
+      idAcademico: loggedUser.idAcademico || loggedUser.idUsuario,
+    }
+
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.idPublicacao === postId
+          ? {
+              ...post,
+              listaUsuarioCurtida: usuarioJaCurtiu
+                ? post.listaUsuarioCurtida.filter(
+                    (usuario) => usuario.idUsuario !== loggedUser.idUsuario,
+                  )
+                : [...post.listaUsuarioCurtida, optimisticUser],
+            }
+          : post,
+      ),
+    )
+
+    // Fazer a chamada para o servidor em background
+    try {
+      if (usuarioJaCurtiu) {
+        await unlikePost(loggedUser.idUsuario, postId)
+      } else {
+        await likePost(loggedUser.idUsuario, postId)
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar curtida com servidor:', error)
+      
+      // ROLLBACK - Reverte a mudança em caso de erro
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.idPublicacao === postId
+            ? {
+                ...post,
+                listaUsuarioCurtida: usuarioJaCurtiu
+                  ? [...post.listaUsuarioCurtida, optimisticUser]
+                  : post.listaUsuarioCurtida.filter(
                       (usuario) => usuario.idUsuario !== loggedUser.idUsuario,
                     ),
-                  }
-                : post,
-            ),
-          )
-        } else {
-          await likePost(loggedUser.idUsuario, postId)
-          setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-              post.idPublicacao === postId
-                ? {
-                    ...post,
-                    listaUsuarioCurtida: [
-                      ...post.listaUsuarioCurtida,
-                      {
-                        idUsuario: loggedUser.idUsuario,
-                        username: loggedUser.username,
-                        nome: loggedUser.nome,
-                        foto: loggedUser.foto,
-                        permissao: loggedUser.permissao,
-                        idAcademico:
-                          loggedUser.idAcademico || loggedUser.idUsuario,
-                      },
-                    ],
-                  }
-                : post,
-            ),
-          )
-        }
-      } catch (error) {
-        console.error('Erro ao atualizar a curtida:', error)
-        toast.error('Erro ao atualizar a curtida.')
-      }
+              }
+            : post,
+        ),
+      )
+      
+      toast.error('Erro ao atualizar curtida. Tente novamente.')
     }
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle, Star } from 'lucide-react';
@@ -48,6 +48,37 @@ export default function FeedPage() {
   >([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
+  const [likingPosts, setLikingPosts] = useState<Set<number>>(new Set()) // Track posts being liked
+
+  // Debounced like handler to prevent spam clicks
+  const debouncedHandleLikePost = useCallback(
+    (() => {
+      let timeouts: { [key: number]: NodeJS.Timeout } = {}
+      
+      return (postId: number) => {
+        // Clear existing timeout for this post
+        if (timeouts[postId]) {
+          clearTimeout(timeouts[postId])
+        }
+        
+        // Set debounce timeout
+        timeouts[postId] = setTimeout(() => {
+          if (!likingPosts.has(postId)) {
+            setLikingPosts(prev => new Set(prev).add(postId))
+            handleLikePost(postId).finally(() => {
+              setLikingPosts(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(postId)
+                return newSet
+              })
+            })
+          }
+          delete timeouts[postId]
+        }, 150) // 150ms debounce
+      }
+    })(),
+    [handleLikePost, likingPosts]
+  )
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -174,7 +205,12 @@ export default function FeedPage() {
     openCommentsDialog,
     handleDeletePost,
     formatDate,
+    isLiking,
   }: any) {
+    const isUserLiked = post.listaUsuarioCurtida?.some(
+      (usuario: any) => usuario.idUsuario === loggedUser?.idUsuario,
+    )
+
     return (
       <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
         <CardHeader className="pb-2">
@@ -222,37 +258,44 @@ export default function FeedPage() {
           <div className="flex items-center justify-start space-x-6 text-gray-600 dark:text-gray-400 mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
             <button
               onClick={() => handleLikePost(post.idPublicacao)}
-              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+              disabled={isLiking}
+              className={`flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-150 ${
+                isLiking ? 'opacity-60 cursor-not-allowed' : ''
+              } ${
+                isUserLiked ? 'transform scale-110' : ''
+              }`}
             >
               <Star
-                className={`w-5 h-5 ${
-                  post.listaUsuarioCurtida?.some(
-                    (usuario: any) => usuario.idUsuario === loggedUser?.idUsuario,
-                  )
-                    ? 'text-amber-300 fill-amber-300'
-                    : 'text-gray-300'
+                className={`w-5 h-5 transition-all duration-200 ${
+                  isUserLiked
+                    ? 'text-amber-400 fill-amber-400 drop-shadow-md'
+                    : 'text-gray-300 hover:text-amber-300'
+                } ${
+                  isLiking ? 'animate-pulse' : ''
                 }`}
               />
-              <span>{post.listaUsuarioCurtida?.length || 0}</span>
+              <span className="font-medium">{post.listaUsuarioCurtida?.length || 0}</span>
             </button>
             <button
               onClick={() => openCommentsDialog(post.idPublicacao)}
-              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-150"
             >
               <MessageCircle className="w-5 h-5" />
-              {post.listaComentario?.length > 0 && <span>{post.listaComentario.length}</span>}
+              {post.listaComentario?.length > 0 && (
+                <span className="font-medium">{post.listaComentario.length}</span>
+              )}
             </button>
             {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && post.Usuario.idUsuario === loggedUser.idUsuario && (
               <>
                 <button
                   onClick={() => startEditingPost(post)}
-                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-150"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => handleDeletePost(post.idPublicacao)}
-                  className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+                  className="flex items-center space-x-1 text-sm hover:text-red-600 dark:hover:text-red-400 transition-colors duration-150"
                 >
                   Excluir
                 </button>
@@ -330,10 +373,11 @@ export default function FeedPage() {
                       post={post}
                       loggedUser={loggedUser}
                       startEditingPost={startEditingPost}
-                      handleLikePost={handleLikePost}
+                      handleLikePost={debouncedHandleLikePost}
                       openCommentsDialog={openCommentsDialog}
                       handleDeletePost={handleDeletePost}
                       formatDate={formatDate}
+                      isLiking={likingPosts.has(post.idPublicacao)}
                     />
                   </div>
                 ))

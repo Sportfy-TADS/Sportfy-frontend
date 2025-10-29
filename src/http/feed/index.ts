@@ -2,6 +2,11 @@ import axios from 'axios';
 // Import default
 import { jwtDecode } from 'jwt-decode'; // Changed from named to default import
 
+// Configure axios defaults for better performance
+axios.defaults.timeout = 10000; // 10 seconds default timeout
+axios.defaults.headers.common['Accept'] = 'application/json';
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
 // Optional axios logging for debugging. Enable by setting DEBUG_AXIOS=true in dev env.
 if (process.env.NODE_ENV === 'development' && process.env.DEBUG_AXIOS === 'true') {
   axios.interceptors.request.use((request) => {
@@ -99,18 +104,31 @@ export const fetchLoggedUser = () => {
 
 export const likePost = async (userId: number, postId: number) => {
   const token = getToken()
+  if (!token) {
+    throw new Error('Token não encontrado')
+  }
+
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/curtirPublicacao/${userId}/${postId}`
-    console.log('Sending like request to URL:', url)
     const response = await axios.post(url, null, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+      timeout: 5000, // 5 segundos de timeout
     })
-    console.log('Like response:', response)
     return response.data
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Timeout: Operação demorou muito para responder')
+      }
+      if (error.response?.status === 409) {
+        // Conflito - usuário já curtiu
+        console.warn('Post já foi curtido pelo usuário')
+        return { success: true }
+      }
+    }
     console.error('Error liking post:', error)
     throw error
   }
@@ -118,18 +136,31 @@ export const likePost = async (userId: number, postId: number) => {
 
 export const unlikePost = async (userId: number, postId: number) => {
   const token = getToken()
+  if (!token) {
+    throw new Error('Token não encontrado')
+  }
+
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/removerCurtidaPublicacao/${userId}/${postId}`
-    console.log('Sending unlike request to URL:', url)
     const response = await axios.delete(url, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+      timeout: 5000, // 5 segundos de timeout
     })
-    console.log('Unlike response:', response)
     return response.data
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Timeout: Operação demorou muito para responder')
+      }
+      if (error.response?.status === 404) {
+        // Not Found - curtida não existe
+        console.warn('Curtida não encontrada para remoção')
+        return { success: true }
+      }
+    }
     console.error('Error unliking post:', error)
     throw error
   }
