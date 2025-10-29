@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
@@ -60,7 +60,7 @@ export default function Header() {
           const userData = JSON.parse(storedUserData)
           setIsLoggedIn(true)
           setUserName(userData.nome)
-          setUserImage(userData.foto || `https://via.placeholder.com/50`)
+          setUserImage(userData.foto || '')
           return
         }
 
@@ -100,7 +100,7 @@ export default function Header() {
         localStorage.setItem('userData', JSON.stringify(userResponse))
         setIsLoggedIn(true)
         setUserName(userResponse.nome)
-        setUserImage(userResponse.foto || `https://via.placeholder.com/50`)
+        setUserImage(userResponse.foto || '')
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error)
         setIsLoggedIn(false)
@@ -220,13 +220,10 @@ export default function Header() {
     router.push('/feed')
   }
 
-  // Função para pegar as iniciais do nome
+  // Função para pegar a primeira letra do nome
   const getInitials = (name: string) => {
-    if (!name) return ''
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
+    if (!name || name.trim() === '') return 'U'
+    return name.trim().charAt(0).toUpperCase()
   }
 
   return (
@@ -285,7 +282,7 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="cursor-pointer w-10 h-10 rounded-lg">
-                {userImage ? (
+                {userImage && userImage.trim() !== '' ? (
                   <AvatarImage src={userImage} />
                 ) : (
                   <AvatarFallback>{getInitials(userName)}</AvatarFallback>
