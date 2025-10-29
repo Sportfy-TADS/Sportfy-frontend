@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
@@ -6,7 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { fetchUsoAcademico } from '@/http/statistics'
-import { getUserIdFromToken, getUserData } from '@/utils/auth'
+import { UsoAcademico } from '@/interface/types'
+import { getUserData, getUserIdFromToken } from '@/utils/auth'
 
 interface UserData {
   idAcademico: number
@@ -39,7 +40,7 @@ export function useStatistics() {
     data: usoAcademico,
     isLoading: isLoadingUsoAcademico,
     error: errorUsoAcademico,
-  } = useQuery({
+  } = useQuery<UsoAcademico>({
     queryKey: ['usoAcademico', academicoId],
     queryFn: () => fetchUsoAcademico(academicoId!),
     enabled: academicoId !== null,

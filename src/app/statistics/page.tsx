@@ -1,61 +1,64 @@
 'use client'
 
-import React from 'react'
 
 import {
-  BarChart,
   Bar,
+  BarChart,
   CartesianGrid,
-  XAxis,
-  Tooltip,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
 } from 'recharts'
 import { Toaster } from 'sonner'
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import {
+  ChartConfig,
   ChartContainer,
   ChartTooltipContent,
-  ChartConfig,
 } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useStatistics } from '@/hooks/useStatistics'
+import { EstatisticaPorModalidade, UsoAcademico } from '@/interface/types'
 
 export default function Statistics() {
   const { usoAcademico, isLoadingUsoAcademico, errorUsoAcademico } =
     useStatistics()
 
+  // Type assertion to ensure proper typing
+  const typedUsoAcademico = usoAcademico as UsoAcademico | undefined
+
   // Prepare chart data based on usoAcademico
-  const chartData = usoAcademico
+  const chartData = typedUsoAcademico
     ? [
         {
           name: 'Campeonatos Criados',
-          total: usoAcademico.totalCampeonatosCriados,
+          total: typedUsoAcademico.totalCampeonatosCriados,
         },
         {
           name: 'Campeonatos Participados',
-          total: usoAcademico.totalCampeonatosParticipados,
+          total: typedUsoAcademico.totalCampeonatosParticipados,
         },
         {
           name: 'Modalidades Inscritas',
-          total: usoAcademico.totalModalidadesEsportivasInscritas,
+          total: typedUsoAcademico.totalModalidadesEsportivasInscritas,
         },
         {
           name: 'Metas Esportivas Inscritas',
-          total: usoAcademico.totalMetasEsportivasInscritas,
+          total: typedUsoAcademico.totalMetasEsportivasInscritas,
         },
         {
           name: 'Conquistas Alcançadas',
-          total: usoAcademico.totalConquistasAlcancadas,
+          total: typedUsoAcademico.totalConquistasAlcancadas,
         },
       ]
     : []
 
   // Prepare chart data for each sport modality
   const chartDataByModality =
-    usoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map(
-      (modality: any) => ({
+    typedUsoAcademico?.listaEstatisticaPorModalidadeEsportivaDto.map(
+      (modality: EstatisticaPorModalidade) => ({
         name: modality.nomeModalidadeEsportiva,
         metas: modality.totalMetasEsportivasInscritas,
         conquistas: modality.totalConquistasAlcancadas,
@@ -88,7 +91,7 @@ export default function Statistics() {
             <p className="text-red-500">
               Erro ao carregar os dados de uso acadêmico.
             </p>
-          ) : usoAcademico ? (
+          ) : typedUsoAcademico ? (
             <>
               <ChartContainer
                 config={chartConfig}

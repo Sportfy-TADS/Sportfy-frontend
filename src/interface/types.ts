@@ -180,3 +180,20 @@ export interface PaginatedResponse {
   size: number
   number: number
 }
+
+export interface EstatisticaPorModalidade {
+  nomeModalidadeEsportiva: string
+  totalMetasEsportivasInscritas: number
+  totalConquistasAlcancadas: number
+  totalCampeonatosCriados: number
+  totalCampeonatosParticipados: number
+}
+
+export interface UsoAcademico {
+  totalCampeonatosCriados: number
+  totalCampeonatosParticipados: number
+  totalModalidadesEsportivasInscritas: number
+  totalMetasEsportivasInscritas: number
+  totalConquistasAlcancadas: number
+  listaEstatisticaPorModalidadeEsportivaDto: EstatisticaPorModalidade[]
+}

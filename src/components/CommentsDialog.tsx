@@ -128,7 +128,6 @@ const CommentItem: React.FC<{
                   {(
                     comment.Usuario?.nome?.slice(0, 1) ||
                     comment.Usuario?.username?.slice(0, 1) ||
-                    comment.Usuario?.apelido?.slice(0, 1) ||
                     '?'
                   ).toString().toUpperCase()}
                 </AvatarFallback>

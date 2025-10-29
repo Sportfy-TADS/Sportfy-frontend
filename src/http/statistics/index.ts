@@ -1,4 +1,6 @@
-export async function fetchUsoAcademico(idAcademico: number) {
+import { UsoAcademico } from '@/interface/types'
+
+export async function fetchUsoAcademico(idAcademico: number): Promise<UsoAcademico> {
   console.log('Chamando fetchUsoAcademico com idAcademico:', idAcademico)
   const token = localStorage.getItem('token')
   const response = await fetch(
