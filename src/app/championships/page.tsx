@@ -1,39 +1,39 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react';
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 
-import { format } from 'date-fns' // Import date-fns
-import { User, Lock, Calendar, Info, MapPin, Trash, Trophy } from 'lucide-react'
-import { toast } from 'sonner'
+import { format } from 'date-fns'; // Import date-fns
+import { Calendar, Info, Lock, MapPin, Trash, Trophy, User } from 'lucide-react';
+import { toast } from 'sonner';
 
-import Header from '@/components/Header'
-import Sidebar from '@/components/Sidebar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
-import { Campeonato } from '@/interface/types'
-import { getUserIdFromToken } from '@/services/championshipService'
+} from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { Campeonato } from '@/interface/types';
+import { getUserIdFromToken } from '@/services/championshipService';
 
-import { useChampionships } from './hooks/useChampionships'
+import { useChampionships } from './hooks/useChampionships';
 
 export default function CampeonatoPage() {
   // Remover a declaração e uso de 'selectedCampeonato'
@@ -45,8 +45,8 @@ export default function CampeonatoPage() {
   const [uf, setUf] = useState('')
   const [privacidade, setPrivacidade] = useState('PUBLICO')
   const [searchTerm, setSearchTerm] = useState('')
-  // Remover 'createMutation' da desestruturação
-  const { campeonatos, isLoading, /* createMutation, */ deleteMutation } =
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const { campeonatos, isLoading, createMutation, deleteMutation } =
     useChampionships()
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const router = useRouter()
@@ -60,6 +60,19 @@ export default function CampeonatoPage() {
       setCurrentUserId(userId)
     }
   }, [router])
+
+  useEffect(() => {
+    if (createMutation.isSuccess) {
+      setIsSheetOpen(false)
+      // Reset form states
+      setCep('')
+      setLogradouro('')
+      setBairro('')
+      setCidade('')
+      setUf('')
+      setPrivacidade('PUBLICO')
+    }
+  }, [createMutation.isSuccess])
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -83,93 +96,64 @@ export default function CampeonatoPage() {
     const formData = new FormData(event.currentTarget)
     const data = Object.fromEntries(formData.entries())
 
-    console.log('Form data received:', data)
-
-    try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        console.error('No token found')
-        toast.error('Usuário não autenticado')
-        router.push('/auth')
-        return
-      }
-
-      console.log('Current user ID:', currentUserId)
-      if (!currentUserId) {
-        console.error('No user ID found')
-        toast.error('ID do usuário não encontrado')
-        return
-      }
-
-      const newCampeonato: Campeonato = {
-        idCampeonato: 0, // Adicionado
-        codigo: '', // Adicionado
-        usernameCriador: '', // Adicionado
-        titulo: String(data.titulo).trim(),
-        descricao: String(data.descricao).trim(),
-        aposta: String(data.aposta).trim(),
-        dataInicio: `${data.dataInicio}T09:00:00Z`,
-        dataFim: `${data.dataFim}T18:00:00Z`,
-        limiteTimes: Number(data.limiteTimes),
-        limiteParticipantes: Number(data.limiteParticipantes),
-        ativo: true,
-        endereco: {
-          cep: String(data.cep).replace(/\D/g, ''),
-          uf: String(data.uf).toUpperCase(),
-          cidade: String(data.cidade),
-          bairro: String(data.bairro),
-          rua: String(data.logradouro),
-          numero: String(data.numero),
-          estado: String(data.uf).toUpperCase(), // Adicionando a propriedade 'estado'
-        },
-        privacidade, // Usando a sintaxe de propriedade abreviada
-        idAcademico: Number(currentUserId),
-        situacaoCampeonato: 'EM_ABERTO',
-      }
-
-      if (data.senha) {
-        newCampeonato.senha = String(data.senha)
-      }
-
-      if (data.complemento) {
-        newCampeonato.endereco.complemento = String(data.complemento)
-      }
-
-      console.log('Prepared championship data:', newCampeonato)
-      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_URL}/campeonatos`)
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/campeonatos`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(newCampeonato),
-        },
-      )
-
-      console.log('Response status:', response.status)
-
-      const responseText = await response.text()
-      console.log('Raw response:', responseText)
-
-      if (!response.ok) {
-        console.error('Server error details:', responseText)
-        throw new Error(`Error creating championship: ${responseText}`)
-      }
-
-      const result = JSON.parse(responseText)
-      console.log('Championship created successfully:', result)
-
-      toast.success('Campeonato criado com sucesso!')
-      window.location.reload()
-    } catch (error) {
-      console.error('Detailed error:', error)
-      console.error('Error stack:', (error as Error).stack)
-      toast.error('Erro ao criar campeonato')
+    // Validações básicas
+    if (!data.titulo || !data.descricao || !data.aposta) {
+      toast.error('Por favor, preencha todos os campos obrigatórios')
+      return
     }
+
+    if (!currentUserId) {
+      toast.error('ID do usuário não encontrado')
+      return
+    }
+
+    // Validar datas
+    const dataInicio = new Date(String(data.dataInicio))
+    const dataFim = new Date(String(data.dataFim))
+    
+    if (dataInicio >= dataFim) {
+      toast.error('A data de início deve ser anterior à data de fim')
+      return
+    }
+
+    if (dataInicio < new Date()) {
+      toast.error('A data de início não pode ser no passado')
+      return
+    }
+
+    const newCampeonato: Campeonato = {
+      idCampeonato: 0,
+      codigo: '',
+      usernameCriador: '',
+      titulo: String(data.titulo).trim(),
+      descricao: String(data.descricao).trim(),
+      aposta: String(data.aposta).trim(),
+      dataInicio: `${data.dataInicio}T09:00:00Z`,
+      dataFim: `${data.dataFim}T18:00:00Z`,
+      limiteTimes: Number(data.limiteTimes),
+      limiteParticipantes: Number(data.limiteParticipantes),
+      ativo: true,
+      endereco: {
+        cep: String(data.cep).replace(/\D/g, ''),
+        uf: String(data.uf).toUpperCase(),
+        cidade: String(data.cidade),
+        bairro: String(data.bairro),
+        rua: String(data.logradouro),
+        numero: String(data.numero),
+        estado: String(data.uf).toUpperCase(),
+        complemento: data.complemento ? String(data.complemento) : undefined,
+      },
+      privacidade,
+      idAcademico: Number(currentUserId),
+      situacaoCampeonato: 'EM_ABERTO',
+    }
+
+    if (data.senha) {
+      newCampeonato.senha = String(data.senha)
+    }
+
+    console.log('Dados do campeonato a serem enviados:', newCampeonato)
+    createMutation.mutate(newCampeonato)
   }
 
   // Remover a função 'handleUpdateCampeonato'
@@ -226,187 +210,216 @@ export default function CampeonatoPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
               />
-              <Sheet>
+              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button className="bg-blue-500 hover:bg-blue-600">
+                  <Button 
+                    className="bg-blue-500 hover:bg-blue-600"
+                    onClick={() => setIsSheetOpen(true)}
+                  >
                     Cadastrar Campeonato
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Cadastrar Novo Campeonato</SheetTitle>
+                <SheetContent className="w-[400px] sm:w-[500px]">
+                  <SheetHeader className="pb-2">
+                    <SheetTitle className="text-lg">Cadastrar Novo Campeonato</SheetTitle>
                   </SheetHeader>
                   <form
                     onSubmit={handleCreateCampeonato}
-                    className="space-y-4 mt-4 max-h-[70vh] overflow-y-auto"
+                    className="flex flex-col h-[calc(100vh-100px)]"
                   >
-                    <div>
-                      <Label htmlFor="titulo">
-                        Título <span className="text-red-500">*</span>
-                      </Label>
-                      <Input id="titulo" name="titulo" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="descricao">
-                        Descrição <span className="text-red-500">*</span>
-                      </Label>
-                      <Textarea id="descricao" name="descricao" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="aposta">
-                        Aposta <span className="text-red-500">*</span>
-                      </Label>
-                      <Input id="aposta" name="aposta" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="dataInicio">
-                        Data de Início <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="dataInicio"
-                        name="dataInicio"
-                        type="date"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="dataFim">
-                        Data de Fim <span className="text-red-500">*</span>
-                      </Label>
-                      <Input id="dataFim" name="dataFim" type="date" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="limiteTimes">
-                        Limite de Times <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="limiteTimes"
-                        name="limiteTimes"
-                        type="number"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="limiteParticipantes">
-                        Limite de Participantes{' '}
-                        <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="limiteParticipantes"
-                        name="limiteParticipantes"
-                        type="number"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="privacidadeCampeonato">
-                        Privacidade do Campeonato{' '}
-                        <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={privacidade}
-                        onValueChange={setPrivacidade}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a privacidade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="PUBLICO">Público</SelectItem>
-                          <SelectItem value="PRIVADO">Privado</SelectItem>{' '}
-                          {/* Fixed closing tag */}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {privacidade === 'PRIVADO' && (
+                    <div className="flex-1 space-y-3 overflow-y-auto pr-2">
                       <div>
-                        <Label htmlFor="senha">
-                          Senha <span className="text-red-500">*</span>
+                        <Label htmlFor="titulo" className="text-sm font-medium">
+                          Título <span className="text-red-500">*</span>
+                        </Label>
+                        <Input id="titulo" name="titulo" required className="h-8 mt-1" />
+                      </div>
+                      <div>
+                        <Label htmlFor="descricao" className="text-sm font-medium">
+                          Descrição <span className="text-red-500">*</span>
+                        </Label>
+                        <Textarea id="descricao" name="descricao" required className="h-16 mt-1 resize-none" />
+                      </div>
+                      <div>
+                        <Label htmlFor="aposta" className="text-sm font-medium">
+                          Aposta <span className="text-red-500">*</span>
+                        </Label>
+                        <Input id="aposta" name="aposta" required className="h-8 mt-1" />
+                      </div>
+                      <div>
+                        <Label htmlFor="dataInicio" className="text-sm font-medium">
+                          Data de Início <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          id="senha"
-                          name="senha"
-                          type="password"
+                          id="dataInicio"
+                          name="dataInicio"
+                          type="date"
+                          min={new Date().toISOString().split('T')[0]}
                           required
+                          className="h-8 mt-1"
                         />
                       </div>
-                    )}
-                    <div>
-                      <Label htmlFor="cep">
-                        CEP <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="cep"
-                        name="cep"
-                        type="text"
-                        value={cep}
-                        onChange={handleCepChange}
-                        required
-                      />
+                      <div>
+                        <Label htmlFor="dataFim" className="text-sm font-medium">
+                          Data de Fim <span className="text-red-500">*</span>
+                        </Label>
+                        <Input 
+                          id="dataFim" 
+                          name="dataFim" 
+                          type="date"
+                          min={new Date().toISOString().split('T')[0]}
+                          required 
+                          className="h-8 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="limiteTimes" className="text-sm font-medium">
+                          Limite de Times <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="limiteTimes"
+                          name="limiteTimes"
+                          type="number"
+                          min="2"
+                          defaultValue="8"
+                          required
+                          className="h-8 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="limiteParticipantes" className="text-sm font-medium">
+                          Limite de Participantes <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="limiteParticipantes"
+                          name="limiteParticipantes"
+                          type="number"
+                          min="4"
+                          defaultValue="16"
+                          required
+                          className="h-8 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="privacidadeCampeonato" className="text-sm font-medium">
+                          Privacidade <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={privacidade}
+                          onValueChange={setPrivacidade}
+                        >
+                          <SelectTrigger className="h-8 mt-1">
+                            <SelectValue placeholder="Selecione a privacidade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PUBLICO">Público</SelectItem>
+                            <SelectItem value="PRIVADO">Privado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {privacidade === 'PRIVADO' && (
+                        <div>
+                          <Label htmlFor="senha" className="text-sm font-medium">
+                            Senha <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="senha"
+                            name="senha"
+                            type="password"
+                            required
+                            className="h-8 mt-1"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <Label htmlFor="cep" className="text-sm font-medium">
+                          CEP <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="cep"
+                          name="cep"
+                          type="text"
+                          value={cep}
+                          onChange={handleCepChange}
+                          required
+                          className="h-8 mt-1"
+                          placeholder="00000-000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="logradouro" className="text-sm font-medium">
+                          Logradouro <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="logradouro"
+                          name="logradouro"
+                          type="text"
+                          value={logradouro}
+                          required
+                          className="h-8 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="numero" className="text-sm font-medium">
+                          Número <span className="text-red-500">*</span>
+                        </Label>
+                        <Input id="numero" name="numero" type="text" required className="h-8 mt-1" />
+                      </div>
+                      <div>
+                        <Label htmlFor="cidade" className="text-sm font-medium">
+                          Cidade <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="cidade"
+                          name="cidade"
+                          type="text"
+                          value={cidade}
+                          required
+                          className="h-8 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="uf" className="text-sm font-medium">
+                          UF <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="uf"
+                          name="uf"
+                          type="text"
+                          value={uf}
+                          required
+                          className="h-8 mt-1"
+                          maxLength={2}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bairro" className="text-sm font-medium">
+                          Bairro <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="bairro"
+                          name="bairro"
+                          type="text"
+                          value={bairro}
+                          required
+                          className="h-8 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="complemento" className="text-sm font-medium">Complemento</Label>
+                        <Textarea id="complemento" name="complemento" className="h-16 mt-1 resize-none" />
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="logradouro">
-                        Logradouro <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="logradouro"
-                        name="logradouro"
-                        type="text"
-                        value={logradouro}
-                        required
-                      />
+                    
+                    <div className="pt-4 border-t mt-4">
+                      <Button
+                        type="submit"
+                        className="w-full bg-blue-500 hover:bg-blue-600"
+                        disabled={createMutation.isPending}
+                      >
+                        {createMutation.isPending ? 'Salvando...' : 'Salvar'}
+                      </Button>
                     </div>
-                    <div>
-                      <Label htmlFor="numero">
-                        Número <span className="text-red-500">*</span>
-                      </Label>
-                      <Input id="numero" name="numero" type="text" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="cidade">
-                        Cidade <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="cidade"
-                        name="cidade"
-                        type="text"
-                        value={cidade}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="uf">
-                        UF <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="uf"
-                        name="uf"
-                        type="text"
-                        value={uf}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="bairro">
-                        Bairro <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="bairro"
-                        name="bairro"
-                        type="text"
-                        value={bairro}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="complemento">Complemento</Label>
-                      <Textarea id="complemento" name="complemento" />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="bg-blue-500 hover:bg-blue-600"
-                    >
-                      Salvar
-                    </Button>
                   </form>
                 </SheetContent>
               </Sheet>

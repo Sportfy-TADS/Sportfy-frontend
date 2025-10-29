@@ -1,15 +1,16 @@
 import axios from 'axios'
 
+import { Campeonato } from '@/interface/types'
 import {
-  getToken,
-  getUserIdFromToken,
-  getHttpOptions,
+    getHttpOptions,
+    getToken,
+    getUserIdFromToken,
 } from '@/services/championshipService'
 
 export const getChampionships = async () => {
   const token = getToken()
   const response = await fetch(
-    `http://localhost:8081/campeonatos/listar?sort=dataCriacao,desc`,
+    `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/listar?sort=dataCriacao,desc`,
     {
       headers: {
         'Content-Type': 'application/json',
@@ -22,17 +23,16 @@ export const getChampionships = async () => {
   return data.content
 }
 
-interface ChampionshipData {
-  name: string
-  date: string
-  location: string
-  // Add other fields as necessary
-}
-
-export const createChampionship = async (data: ChampionshipData) => {
+export const createChampionship = async (data: Campeonato) => {
   try {
     const token = getToken()
     const idAcademico = getUserIdFromToken()
+
+    console.log('=== DEBUG CREATE CHAMPIONSHIP ===')
+    console.log('1. Token exists:', !!token)
+    console.log('2. User ID:', idAcademico)
+    console.log('3. API URL:', process.env.NEXT_PUBLIC_API_URL)
+    console.log('4. Input data:', JSON.stringify(data, null, 2))
 
     if (!token) {
       throw new Error('Usuário não autenticado')
@@ -47,13 +47,10 @@ export const createChampionship = async (data: ChampionshipData) => {
       idAcademico,
     }
 
-    console.log(
-      'Sending championship payload:',
-      JSON.stringify(payload, null, 2),
-    )
+    console.log('5. Final payload:', JSON.stringify(payload, null, 2))
 
     const response = await axios.post(
-      `http://localhost:8081/campeonatos`,
+      `${process.env.NEXT_PUBLIC_API_URL}/campeonatos`,
       payload,
       {
         headers: {
@@ -64,29 +61,33 @@ export const createChampionship = async (data: ChampionshipData) => {
       },
     )
 
-    console.log('Championship creation response:', response)
+    console.log('6. Response status:', response.status)
+    console.log('7. Response data:', response.data)
 
     if (response.status !== 201 && response.status !== 200) {
       throw new Error('Erro ao criar campeonato')
     }
 
-    if (!response.data) {
-      return payload
-    }
-
-    return response.data
+    return response.data || payload
   } catch (error) {
-    console.error('Error creating championship:', error)
+    console.error('=== ERROR CREATING CHAMPIONSHIP ===')
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error response:', error.response?.data)
+      console.error('Axios error status:', error.response?.status)
+      console.error('Axios error message:', error.message)
+    } else {
+      console.error('Generic error:', error)
+    }
     throw error
   }
 }
 
 export const updateChampionship = async (
   id: number,
-  data: ChampionshipData,
+  data: Campeonato,
 ) => {
   const token = getToken()
-  const response = await fetch(`http://localhost:8081/campeonatos/${id}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export const updateChampionship = async (
 
 export const deleteChampionship = async (id: number) => {
   const token = getToken()
-  const response = await fetch(`http://localhost:8081/campeonatos/${id}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ export const getChampionshipById = async (id: string, token?: string) => {
   console.log(`Fetching championship with ID: ${id}`)
   try {
     const response = await axios.get(
-      `http://localhost:8081/campeonatos/${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/campeonatos/${id}`,
       getHttpOptions(token),
     )
     console.log('API response:', response.data)

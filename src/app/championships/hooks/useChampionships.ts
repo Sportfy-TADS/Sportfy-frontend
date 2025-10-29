@@ -1,14 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
 import { toast } from 'sonner'
 
 import {
-  getChampionships,
-  createChampionship,
-  updateChampionship,
-  deleteChampionship,
+    createChampionship,
+    deleteChampionship,
+    getChampionships,
+    updateChampionship,
 } from '@/http/championship'
-import { ChampionshipData } from '@/interface/types' // Adicionado ChampionshipData
+import { Campeonato } from '@/interface/types'
 
 export const useChampionships = () => {
   const queryClient = useQueryClient()
@@ -37,15 +37,15 @@ export const useChampionships = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
       toast.success('Campeonato criado com sucesso!')
+      // Reset do formulário será feito pelo componente pai
     },
     onError: (error: AxiosError) =>
       handleError(error, 'Erro ao criar campeonato.'),
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: ChampionshipData) => {
-      const updatedData = { ...data, date: data.date.toISOString() }
-      return updateChampionship(updatedData.idCampeonato, updatedData)
+    mutationFn: (data: Campeonato) => {
+      return updateChampionship(data.idCampeonato, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campeonatos'] })
