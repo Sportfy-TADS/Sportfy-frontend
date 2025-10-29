@@ -29,6 +29,7 @@ interface Academico {
   genero: string
   telefone: string
   dataNascimento: string
+  foto?: string
   modalidades: Array<{
     idModalidade: number
     nomeModalidade: string
