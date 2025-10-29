@@ -7,10 +7,10 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFeed } from '@/hooks/useFeed';
@@ -138,7 +138,7 @@ const CommentItem: React.FC<{
                 {comment.Usuario?.nome}
               </span>
               <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2 truncate">
-                <span className="truncate">@{comment.Usuario?.username || comment.Usuario?.apelido || ''}</span>
+                <span className="truncate">@{comment.Usuario?.username || ''}</span>
                 <span>·</span>
                 <span className="whitespace-nowrap">{formattedDate}</span>
               </div>
