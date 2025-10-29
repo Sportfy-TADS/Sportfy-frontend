@@ -38,6 +38,13 @@ export default function GoalForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validação adicional para modo de edição
+    if (isEditMode && progressoAtual > progressoMaximo) {
+      alert('O progresso atual não pode ser maior que o objetivo!')
+      return
+    }
+    
     const formData: GoalFormData = {
       titulo,
       descricao,
@@ -122,10 +129,26 @@ export default function GoalForm({
           <Input
             type="number"
             value={progressoAtual}
-            onChange={(e) => setProgressoAtual(Number(e.target.value))}
+            onChange={(e) => {
+              const value = Number(e.target.value)
+              // Não permitir que o progresso atual seja maior que o máximo
+              if (value <= progressoMaximo) {
+                setProgressoAtual(value)
+              }
+            }}
             placeholder="Exemplo: 1"
+            max={progressoMaximo}
+            min={0}
             required
           />
+          {progressoAtual > progressoMaximo && (
+            <p className="text-red-500 text-sm mt-1">
+              O progresso não pode ser maior que o objetivo ({progressoMaximo})
+            </p>
+          )}
+          <p className="text-gray-500 text-sm mt-1">
+            Máximo: {progressoMaximo} {progressoItem}
+          </p>
         </div>
       )}
 
@@ -133,7 +156,7 @@ export default function GoalForm({
         type="submit"
         disabled={
           isEditMode
-            ? !progressoAtual
+            ? !progressoAtual || progressoAtual > progressoMaximo || progressoAtual < 0
             : !titulo || !descricao || !progressoMaximo || !progressoItem
         }
       >
