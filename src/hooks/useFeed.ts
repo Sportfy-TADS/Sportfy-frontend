@@ -12,7 +12,7 @@ import {
   // fetchLoggedUser, // Removido
   likePost,
   unlikePost,
-  updateComment,
+  updateComment
 } from '@/http/feed';
 import { DecodedToken, Post, Usuario } from '@/interface/types';
 
@@ -52,6 +52,41 @@ export const useFeed = () => {
     return null
   }
 
+  const loadCommentsCount = async (posts: Post[]) => {
+    try {
+      console.log('🔢 Carregando contagens de comentários para', posts.length, 'posts')
+      
+      const postsWithCounts = await Promise.all(
+        posts.map(async (post) => {
+          try {
+            const comments = await fetchComments(post.idPublicacao)
+            return {
+              ...post,
+              listaComentario: comments || [],
+            }
+          } catch (error) {
+            console.error('Erro ao buscar comentários para post', post.idPublicacao, ':', error)
+            return {
+              ...post,
+              listaComentario: [],
+            }
+          }
+        })
+      )
+      
+      console.log('✅ Comentários carregados:', postsWithCounts.map(p => ({
+        id: p.idPublicacao,
+        titulo: p.titulo,
+        comentarios: p.listaComentario.length
+      })))
+      
+      return postsWithCounts
+    } catch (error) {
+      console.error('Erro ao carregar comentários:', error)
+      return posts
+    }
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -62,7 +97,27 @@ export const useFeed = () => {
     const loadInitialPosts = async () => {
       try {
         const initialPosts = await fetchPosts(0, 10) // Removed token parameter
-        setPosts(initialPosts)
+        
+        // Normalizar posts para garantir que listaComentario sempre seja um array
+        const normalizedPosts = initialPosts.map((post: Post) => ({
+          ...post,
+          listaComentario: post.listaComentario || [],
+          listaUsuarioCurtida: post.listaUsuarioCurtida || [],
+        }))
+        
+        console.log('📋 Posts carregados (antes das contagens):', {
+          total: normalizedPosts.length,
+          primeiroPost: normalizedPosts[0] ? {
+            titulo: normalizedPosts[0].titulo,
+            comentarios: normalizedPosts[0].listaComentario.length,
+            curtidas: normalizedPosts[0].listaUsuarioCurtida.length,
+          } : null
+        })
+        
+        // Carregar contagens reais de comentários
+        const postsWithCommentCounts = await loadCommentsCount(normalizedPosts)
+        
+        setPosts(postsWithCommentCounts)
         setPage(0) // Initialize page
       } catch (error) {
         console.error('Erro ao carregar os posts:', error)
@@ -180,7 +235,14 @@ export const useFeed = () => {
         throw new Error('Não foi possível criar a publicação')
       }
 
-      setPosts((prevPosts) => [createdPost, ...prevPosts])
+      // Normalizar o post criado para garantir arrays
+      const normalizedPost = {
+        ...createdPost,
+        listaComentario: createdPost.listaComentario || [],
+        listaUsuarioCurtida: createdPost.listaUsuarioCurtida || [],
+      }
+
+      setPosts((prevPosts) => [normalizedPost, ...prevPosts])
       setNewPostTitle('')
       setNewPostContent('')
       return createdPost
@@ -534,7 +596,17 @@ export const useFeed = () => {
       if (morePosts.length === 0) {
         setHasMore(false)
       } else {
-        appendPosts(morePosts)
+        // Normalizar posts antes de adicionar
+        const normalizedPosts = morePosts.map((post: Post) => ({
+          ...post,
+          listaComentario: post.listaComentario || [],
+          listaUsuarioCurtida: post.listaUsuarioCurtida || [],
+        }))
+        
+        // Carregar contagens reais de comentários para os novos posts
+        const postsWithCommentCounts = await loadCommentsCount(normalizedPosts)
+        
+        appendPosts(postsWithCommentCounts)
         setPage(nextPage)
       }
     } catch (error) {
@@ -567,5 +639,6 @@ export const useFeed = () => {
     appendPosts, // Add this
     loadMore, // Expose loadMore
     hasMore, // Expose hasMore
+    setPosts, // Expose setPosts for syncing comments
   }
 }

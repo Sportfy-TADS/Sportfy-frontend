@@ -49,6 +49,8 @@ export default function FeedPage() {
     loadMore, // Use loadMore
     hasMore, // Use hasMore
     handleDeleteComment, // Add handleDeleteComment
+    handleCreateComment, // Add handleCreateComment for syncing
+    setPosts, // Add setPosts to sync comments
   } = useFeed()
   const [editingPost, setEditingPost] = useState<Post | null>(null) // Alterado tipo de 'any' para 'Post | null'
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -236,9 +238,22 @@ export default function FeedPage() {
   const openCommentsDialog = async (postId: number) => {
     setCommentsLoading(true)
     setSelectedPostId(postId)
+    
     try {
-      const response = await fetchComments(postId)
-      setSelectedPostComments(response)
+      // Buscar o post atual para ver se já temos os comentários
+      const currentPost = posts.find(p => p.idPublicacao === postId)
+      
+      if (currentPost && currentPost.listaComentario.length > 0) {
+        // Se já temos comentários, usar os que já estão carregados
+        console.log('📋 Usando comentários já carregados:', currentPost.listaComentario.length)
+        setSelectedPostComments(currentPost.listaComentario)
+      } else {
+        // Se não temos comentários, buscar do servidor
+        console.log('🔄 Buscando comentários do servidor para post:', postId)
+        const response = await fetchComments(postId)
+        setSelectedPostComments(response)
+      }
+      
       setIsCommentsDialogOpen(true)
     } catch (error) {
       console.error('Erro ao carregar comentários:', error)
@@ -250,6 +265,24 @@ export default function FeedPage() {
 
   const closeCommentsDialog = () => {
     setIsCommentsDialogOpen(false)
+    
+    // Sincronizar a contagem de comentários no post principal
+    if (selectedPostId !== null) {
+      console.log('🔄 Sincronizando comentários do post:', {
+        postId: selectedPostId,
+        comentarios: selectedPostComments.length
+      })
+      
+      // Atualizar o post com a contagem correta de comentários
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.idPublicacao === selectedPostId 
+            ? { ...post, listaComentario: selectedPostComments }
+            : post
+        )
+      )
+    }
+    
     setSelectedPostComments([])
     setSelectedPostId(null)
   }
@@ -350,9 +383,7 @@ export default function FeedPage() {
               className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-150"
             >
               <MessageCircle className="w-5 h-5" />
-              {post.listaComentario?.length > 0 && (
-                <span className="font-medium">{post.listaComentario.length}</span>
-              )}
+              <span className="font-medium">{post.listaComentario?.length || 0}</span>
             </button>
             {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && post.Usuario.idUsuario === loggedUser.idUsuario && (
               <>

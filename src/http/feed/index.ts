@@ -82,6 +82,16 @@ export const fetchPosts = async (page: number = 0, size: number = 10) => {
       },
     })
     const content = response.data.content || []
+    
+    // Log para verificar estrutura dos posts
+    if (content.length > 0) {
+      console.log('📋 Estrutura do primeiro post:', {
+        titulo: content[0].titulo,
+        listaComentario: content[0].listaComentario,
+        comentariosCount: content[0].listaComentario?.length || 0,
+      })
+    }
+    
     // cache for dev to speed up subsequent loads
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       try {
@@ -348,6 +358,26 @@ export const fetchComments = async (postId: number) => {
     }
     console.error('Erro ao buscar comentários:', error)
     throw error
+  }
+}
+
+export const fetchCommentsCount = async (postId: number): Promise<number> => {
+  const token = getToken()
+  try {
+    const url = `http://localhost:8081/comentario/${postId}/comentarios?page=0&size=1`
+    const response = await axios.get(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data.totalElements || 0
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return 0
+    }
+    console.error('Erro ao buscar contagem de comentários:', error)
+    return 0
   }
 }
 
