@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { use, useEffect, useState } from 'react'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -87,12 +87,16 @@ export default function CampeonatoDetailsPage(props: {
     event.preventDefault()
     const token = localStorage.getItem('token')
     const teamData = {
-      name: teamName,
-      isPrivate,
-      password: isPrivate ? password : undefined,
+      nome: teamName,
+      // backend expects the team inside a championship route, and uses Portuguese keys
+      // include password under the property name used in other parts of the app
+      senhaCampeonato: isPrivate ? password : undefined,
     }
     try {
-      const res = await fetch('http://localhost:8081/times', {
+      // create team for the current campeonato
+      const res = await fetch(
+        `http://localhost:8081/campeonatos/${campeonato?.idCampeonato}/times`,
+        {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +109,10 @@ export default function CampeonatoDetailsPage(props: {
         throw new Error(errorData.message || 'Falha ao criar o time.')
       }
       toast.success('Time criado com sucesso!')
-      // Optionally, redirect or update the UI
+      setTeamName('')
+      setPassword('')
+      // redirect to the times list for this campeonato
+      router.push(`/championships/${campeonato?.idCampeonato}/times`)
     } catch (error) {
       console.error('Erro ao criar o time:', error)
       toast.error('Erro ao criar o time.')
