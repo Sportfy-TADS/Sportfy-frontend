@@ -86,17 +86,19 @@ export default function CampeonatoDetailsPage(props: {
   const handleCreateTeam = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const token = localStorage.getItem('token')
+    
+    // Estrutura correta baseada no exemplo fornecido
     const teamData = {
       nome: teamName,
-      // backend expects the team inside a championship route, and uses Portuguese keys
-      // include password under the property name used in other parts of the app
-      senhaCampeonato: isPrivate ? password : undefined,
+      campeonato: campeonato?.idCampeonato,
+      ...(isPrivate && password && { senhaCampeonato: password }),
     }
+    
+    console.log('Enviando dados:', JSON.stringify(teamData, null, 2))
+    
     try {
-      // create team for the current campeonato
-      const res = await fetch(
-        `http://localhost:8081/campeonatos/${campeonato?.idCampeonato}/times`,
-        {
+      // Usar o endpoint correto: /campeonatos/times em vez de /campeonatos/{id}/times
+      const res = await fetch('http://localhost:8081/campeonatos/times', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
