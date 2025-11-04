@@ -38,7 +38,27 @@ export default function Page({ params }: { params: Promise<{ idCampeonato: strin
 
 				if (!res.ok) {
 					const text = await res.text().catch(() => '')
-					setError(`${res.status} ${res.statusText}${text ? ' - ' + text : ''}`)
+					
+					// Mensagens específicas para diferentes códigos de erro
+					let errorMessage = ''
+					switch (res.status) {
+						case 404:
+							errorMessage = 'Campeonato não encontrado ou não possui times cadastrados'
+							break
+						case 401:
+							errorMessage = 'Acesso não autorizado. Faça login para visualizar os times'
+							break
+						case 403:
+							errorMessage = 'Você não tem permissão para visualizar os times deste campeonato'
+							break
+						case 500:
+							errorMessage = 'Erro interno do servidor. Tente novamente em alguns instantes'
+							break
+						default:
+							errorMessage = `Erro ${res.status}: ${res.statusText}${text ? ' - ' + text : ''}`
+					}
+					
+					setError(errorMessage)
 					setTeams([])
 					return
 				}
@@ -102,8 +122,35 @@ export default function Page({ params }: { params: Promise<{ idCampeonato: strin
 					{loading && <p>Carregando times...</p>}
 
 					{error && (
-						<div className="text-red-600 mb-4">
-							<strong>Erro ao buscar times:</strong> {error}
+						<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+							<div className="flex items-center mb-2">
+								<svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+									<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+								</svg>
+								<h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+									Não foi possível carregar os times
+								</h3>
+							</div>
+							<p className="text-sm text-red-700 dark:text-red-300 mb-3">{error}</p>
+							
+							{error.includes('404') || error.includes('não encontrado') ? (
+								<div className="text-sm text-red-600 dark:text-red-400">
+									<p className="mb-2">Possíveis soluções:</p>
+									<ul className="list-disc list-inside space-y-1 text-xs">
+										<li>Verifique se o ID do campeonato está correto</li>
+										<li>O campeonato pode ainda não ter times cadastrados</li>
+										<li>Volte à lista de campeonatos e tente novamente</li>
+									</ul>
+								</div>
+							) : error.includes('não autorizado') || error.includes('permissão') ? (
+								<div className="text-sm text-red-600 dark:text-red-400">
+									<p>Tente fazer login ou verificar suas permissões de acesso.</p>
+								</div>
+							) : (
+								<div className="text-sm text-red-600 dark:text-red-400">
+									<p>Tente recarregar a página ou entre em contato com o suporte se o problema persistir.</p>
+								</div>
+							)}
 						</div>
 					)}
 
