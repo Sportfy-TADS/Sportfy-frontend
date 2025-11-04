@@ -1,6 +1,8 @@
 
 'use client'
 
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
 import { useEffect, useState } from 'react'
 
 type Team = {
@@ -89,43 +91,51 @@ export default function Page({ params }: { params: { idCampeonato: string } }) {
 	}
 
 	return (
-		<div className="p-4">
-			<h1 className="text-2xl font-semibold mb-4">Times do campeonato {id}</h1>
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+			<Header />
+			<div className="flex">
+				<Sidebar />
+				<main className="flex-1 p-4">
+					<h1 className="text-2xl font-semibold mb-4">Times do campeonato {id}</h1>
 
-			{loading && <p>Carregando times...</p>}
+					{loading && <p>Carregando times...</p>}
 
-			{error && (
-				<div className="text-red-600 mb-4">
-					<strong>Erro ao buscar times:</strong> {error}
-				</div>
-			)}
+					{error && (
+						<div className="text-red-600 mb-4">
+							<strong>Erro ao buscar times:</strong> {error}
+						</div>
+					)}
 
-			{!loading && !error && teams && teams.length === 0 && <p>Nenhum time encontrado.</p>}
+					{!loading && !error && teams && teams.length === 0 && <p>Nenhum time encontrado.</p>}
 
-			{!loading && teams && teams.length > 0 && (
-				<ul className="space-y-2">
-					{teams.map((t) => {
-						const name = t.nome ?? t.name ?? `Time ${t.id ?? ''}`
-						const isPublic = isPublicTeam(t)
-						return (
-							<li key={t.id ?? name} className="p-2 border rounded flex items-center justify-between">
-								<div className="font-medium">{name}</div>
-								{isPublic ? (
-									<button onClick={() => joinTeam(t)} className="ml-4 px-3 py-1 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700">
-										Entrar
-									</button>
-								) : (
-									<div className="text-sm text-slate-500">Privado</div>
-								)}
-							</li>
-						)
-					})}
-				</ul>
-			)}
+					{!loading && teams && teams.length > 0 && (
+						<ul className="space-y-2">
+							{teams.map((t) => {
+								const name = t.nome ?? t.name ?? `Time ${t.id ?? ''}`
+								const isPublic = isPublicTeam(t)
+								return (
+									<li key={t.id ?? name} className="p-2 border rounded flex items-center justify-between">
+										<div className="font-medium">{name}</div>
+										{isPublic ? (
+											<button onClick={() => joinTeam(t)} className="ml-4 px-3 py-1 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700">
+												Entrar
+											</button>
+										) : (
+											<div className="text-sm text-slate-500">Privado</div>
+										)}
+									</li>
+								)
+							})}
+						</ul>
+					)}
 
-			<div className="mt-6 text-sm text-slate-500">
-				<p>Endpoint consultado: <code>{`${process.env.NEXT_PUBLIC_API_URL || ''}/championships/${id}/times`}</code></p>
-				<p>Coloque um token válido em <code>localStorage.token</code> se o endpoint exigir autenticação.</p>
+					{!localStorage.getItem('token') && !localStorage.getItem('jwt') && (
+						<div className="mt-6 text-sm text-slate-500">
+							<p>Endpoint consultado: <code>{`${process.env.NEXT_PUBLIC_API_URL || ''}/campeonatos/${id}/times`}</code></p>
+							<p>Coloque um token válido em <code>localStorage.token</code> se o endpoint exigir autenticação.</p>
+						</div>
+					)}
+				</main>
 			</div>
 		</div>
 	)
