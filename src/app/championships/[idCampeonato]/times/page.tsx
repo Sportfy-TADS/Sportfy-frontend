@@ -23,7 +23,7 @@ export default function Page({ params }: { params: { idCampeonato: string } }) {
 			setError(null)
 			try {
 				const token = typeof window !== 'undefined' ? localStorage.getItem('token') || localStorage.getItem('jwt') : null
-				const url = `${process.env.NEXT_PUBLIC_API_URL || ''}/championships/${id}/times`
+				const url = `${process.env.NEXT_PUBLIC_API_URL || ''}/campeonatos/${id}/times`
 				const res = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
