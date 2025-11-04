@@ -5,8 +5,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { jwtDecode } from 'jwt-decode'
-import { LogOut } from 'lucide-react'
+import { LogOut, X } from 'lucide-react'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -49,6 +59,7 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   
   // Refs para controle de requisições
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -301,6 +312,11 @@ export default function Header() {
     router.push('/auth')
   }, [router])
 
+  // Função para confirmar logout
+  const confirmLogout = useCallback(() => {
+    setShowLogoutDialog(true)
+  }, [])
+
   // Função otimizada para navegar ao feed
   const goToFeed = useCallback(() => {
     router.push('/feed')
@@ -415,7 +431,7 @@ export default function Header() {
                 Estatística
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+              <DropdownMenuItem onClick={confirmLogout} className="text-red-500">
                 <LogOut className="ml-2" />
                 Sair
               </DropdownMenuItem>
@@ -423,6 +439,28 @@ export default function Header() {
           </DropdownMenu>
         </div>
       )}
+
+      {/* Dialog de confirmação de logout */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar saída</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza de que deseja sair do sistema? Você precisará fazer login novamente para acessar sua conta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="flex items-center gap-2">
+              <X className="w-4 h-4" />
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700 flex items-center gap-2">
+              <LogOut className="w-4 h-4" />
+              Sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   )
 }
