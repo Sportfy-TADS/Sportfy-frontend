@@ -3,7 +3,7 @@
 
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 type Team = {
 	id?: number
@@ -11,8 +11,9 @@ type Team = {
 	[key: string]: any
 }
 
-export default function Page({ params }: { params: { idCampeonato: string } }) {
-	const id = params.idCampeonato
+export default function Page({ params }: { params: Promise<{ idCampeonato: string }> }) {
+	const resolvedParams = use(params)
+	const id = resolvedParams.idCampeonato
 	const [teams, setTeams] = useState<Team[] | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
