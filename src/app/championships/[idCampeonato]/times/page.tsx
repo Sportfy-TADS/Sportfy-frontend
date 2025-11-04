@@ -59,6 +59,35 @@ export default function Page({ params }: { params: { idCampeonato: string } }) {
 		}
 	}, [id])
 
+	// Heurística para descobrir se o time é público (não exige senha)
+	function isPublicTeam(t: Team) {
+		// explicit public flags
+		if (t.publico === true || t.is_public === true) return true
+
+		// explicit private flags => not public
+		const privateFlags = ['privado', 'isPrivate', 'private', 'is_private']
+		if (privateFlags.some((k) => t[k] === true || String(t[k]).toLowerCase() === 'true')) return false
+
+		// password-like fields: if present and non-empty/true => not public
+		const pw = t.senha ?? t.password ?? t.hasPassword ?? t.requiresPassword ?? t.needsPassword
+		if (pw !== undefined && pw !== null) {
+			if (typeof pw === 'boolean') return pw === false
+			if (typeof pw === 'string') return pw.trim().length === 0
+			// numbers or other truthy values -> consider as protected
+			return false
+		}
+
+		// default: consider public
+		return true
+	}
+
+	function joinTeam(t: Team) {
+		// navega para uma rota de join simples. Ajuste conforme sua API/rotas.
+		const teamIdOrName = t.id ?? encodeURIComponent(t.nome ?? '')
+		const target = `/campeonatos/${id}/times/${teamIdOrName}/entrar`
+		if (typeof window !== 'undefined') window.location.href = target
+	}
+
 	return (
 		<div className="p-4">
 			<h1 className="text-2xl font-semibold mb-4">Times do campeonato {id}</h1>
@@ -75,13 +104,22 @@ export default function Page({ params }: { params: { idCampeonato: string } }) {
 
 			{!loading && teams && teams.length > 0 && (
 				<ul className="space-y-2">
-					{teams.map((t) => (
-						<li key={t.id ?? t.nome ?? Math.random()} className="p-2 border rounded">
-							<div className="font-medium">{t.nome ?? t.name ?? `Time ${t.id ?? ''}`}</div>
-							<div className="text-sm text-slate-600">{t.sigla ?? t.abbr ?? ''}</div>
-							<pre className="mt-2 text-xs bg-slate-50 p-2 rounded overflow-auto">{JSON.stringify(t, null, 2)}</pre>
-						</li>
-					))}
+					{teams.map((t) => {
+						const name = t.nome ?? t.name ?? `Time ${t.id ?? ''}`
+						const isPublic = isPublicTeam(t)
+						return (
+							<li key={t.id ?? name} className="p-2 border rounded flex items-center justify-between">
+								<div className="font-medium">{name}</div>
+								{isPublic ? (
+									<button onClick={() => joinTeam(t)} className="ml-4 px-3 py-1 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700">
+										Entrar
+									</button>
+								) : (
+									<div className="text-sm text-slate-500">Privado</div>
+								)}
+							</li>
+						)
+					})}
 				</ul>
 			)}
 
