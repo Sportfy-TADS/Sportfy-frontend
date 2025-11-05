@@ -27,10 +27,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/hooks/useAuth'; // novo hook de autenticação
 
-async function fetchAdmins() {
+async function fetchAdmins(page = 0, size = 20) {
   const token = localStorage.getItem('token')
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar`,
+    `${process.env.NEXT_PUBLIC_API_URL}/administrador/listar?page=${page}&size=${size}`,
     {
       headers: {
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ async function fetchAdmins() {
   )
   if (!res.ok) throw new Error('Erro ao buscar administradores.')
   const data = await res.json()
-  return data.content || [] 
+  return data
 }
 
 interface NewAdmin {
@@ -297,6 +297,8 @@ export default function AdminCrudPage() {
   })
   const [editAdmin, setEditAdmin] = useState<EditAdmin | null>(null)
   const [showAdminsOnly, setShowAdminsOnly] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -307,11 +309,15 @@ export default function AdminCrudPage() {
     }
   }, [])
 
-  const { data: admins = [], isLoading } = useQuery({
-    queryKey: ['admins'],
-    queryFn: fetchAdmins,
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ['admins', currentPage, pageSize],
+    queryFn: () => fetchAdmins(currentPage, pageSize),
     enabled: !!currentAdmin,
   })
+
+  const admins = paginatedData?.content || []
+  const totalPages = paginatedData?.totalPages || 0
+  const totalElements = paginatedData?.totalElements || 0
 
   const filteredAdmins = Array.isArray(admins)
     ? showAdminsOnly
@@ -324,6 +330,7 @@ export default function AdminCrudPage() {
       await createAdmin(newAdmin)
       toast.success('Administrador cadastrado com sucesso.')
       queryClient.invalidateQueries({ queryKey: ['admins'] })
+      setCurrentPage(0) // Reset to first page
       setNewAdmin({
         username: '',
         password: '',
@@ -346,7 +353,6 @@ export default function AdminCrudPage() {
       toast.success('Administrador atualizado com sucesso.')
       queryClient.invalidateQueries({ queryKey: ['admins'] })
       setEditAdmin(null)
-      // Removido: atualização de currentAdmin, pois não temos setCurrentAdmin disponível
     } catch (error) {
       toast.error('Erro ao atualizar o administrador.')
     }
@@ -401,6 +407,15 @@ export default function AdminCrudPage() {
     })
   }, [])
 
+  const handlePageChange = useCallback((newPage: number) => {
+    setCurrentPage(newPage)
+  }, [])
+
+  const handlePageSizeChange = useCallback((newSize: string) => {
+    setPageSize(parseInt(newSize))
+    setCurrentPage(0) // Reset to first page when changing size
+  }, [])
+
   return (
     <>
       <Header />
@@ -421,6 +436,16 @@ export default function AdminCrudPage() {
                 <SelectContent>
                   <SelectItem value="admins">Mostrar apenas Admins</SelectItem>
                   <SelectItem value="all">Mostrar Todos</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select onValueChange={handlePageSizeChange} defaultValue="20">
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Tamanho" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 por página</SelectItem>
+                  <SelectItem value="20">20 por página</SelectItem>
+                  <SelectItem value="50">50 por página</SelectItem>
                 </SelectContent>
               </Select>
               <Sheet>
@@ -480,6 +505,34 @@ export default function AdminCrudPage() {
             </div>
           </div>
 
+          {/* Pagination Info */}
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Mostrando {filteredAdmins.length} de {totalElements} administradores
+            </p>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0}
+              >
+                Anterior
+              </Button>
+              <span className="text-sm">
+                Página {currentPage + 1} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages - 1}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+
           {editAdmin && (
             <Sheet open={!!editAdmin} onOpenChange={() => setEditAdmin(null)}>
               <SheetContent>
@@ -535,7 +588,7 @@ export default function AdminCrudPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
             {isLoading
-              ? Array.from({ length: 6 }).map((_, index) => (
+              ? Array.from({ length: pageSize }).map((_, index) => (
                   <Skeleton key={index} className="w-full h-32 rounded-lg" />
                 ))
               : filteredAdmins.map((admin) => (
@@ -572,6 +625,54 @@ export default function AdminCrudPage() {
                     </CardContent>
                   </Card>
                 ))}
+          </div>
+
+          {/* Bottom Pagination */}
+          <div className="flex justify-center items-center mt-8 space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(0)}
+              disabled={currentPage === 0}
+            >
+              Primeira
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+            >
+              Anterior
+            </Button>
+            
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = Math.max(0, Math.min(currentPage - 2 + i, totalPages - 5 + i))
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  onClick={() => handlePageChange(pageNum)}
+                  size="sm"
+                >
+                  {pageNum + 1}
+                </Button>
+              )
+            })}
+
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              Próxima
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(totalPages - 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              Última
+            </Button>
           </div>
         </div>
       </div>
