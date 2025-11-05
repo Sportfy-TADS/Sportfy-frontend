@@ -127,6 +127,55 @@ async function updateAdmin(
   updatedAdmin: UpdatedAdmin,
 ) {
   const token = localStorage.getItem('token')
+  console.log('Token para atualizar admin:', token)
+  console.log('Dados para atualizar admin:', updatedAdmin)
+
+  // Normalize fields to backend-expected formats
+  const normalizeToIso = (d: string) => {
+    if (!d) return null
+    // Already ISO-like (contains T)
+    if (d.includes('T')) return d
+
+    // dd/mm/yyyy -> convert
+    const matchDMY = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+    if (matchDMY) {
+      const [, day, month, year] = matchDMY
+      const dt = new Date(Number(year), Number(month) - 1, Number(day))
+      return dt.toISOString()
+    }
+
+    // yyyy-mm-dd -> convert to ISO at midnight local
+    const matchYMD = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (matchYMD) {
+      const [, year, month, day] = matchYMD
+      const dt = new Date(Number(year), Number(month) - 1, Number(day))
+      return dt.toISOString()
+    }
+
+    // fallback: try Date constructor
+    const parsed = new Date(d)
+    if (!isNaN(parsed.getTime())) return parsed.toISOString()
+    return d
+  }
+
+  const cleanPhone = (p: string) => (p ? String(p).replace(/\D/g, '') : p)
+
+  // Use the exact format expected by the API, including required fields
+  const payload = {
+    idAdministrador: idAdministrador,
+    username: updatedAdmin.username,
+    password: updatedAdmin.password,
+    nome: updatedAdmin.nome,
+    telefone: cleanPhone(String(updatedAdmin.telefone || '')),
+    dataNascimento: normalizeToIso(String(updatedAdmin.dataNascimento || '')),
+    foto: null, // Keep as null for now
+    dataCriacao: new Date().toISOString(), // Current timestamp or keep original if available
+    ativo: true,
+    permissao: "ADMINISTRADOR"
+  }
+
+  console.log('Payload normalizado para atualização:', payload)
+
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/administrador/atualizar/${idAdministrador}`,
     {
@@ -135,11 +184,19 @@ async function updateAdmin(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(updatedAdmin),
+      body: JSON.stringify(payload),
     },
   )
-  if (!res.ok) throw new Error('Erro ao atualizar administrador.')
-  return await res.json()
+
+  console.log('Status da resposta atualização:', res.status)
+  const responseText = await res.text()
+  console.log('Resposta da API atualização:', responseText)
+
+  if (!res.ok) {
+    throw new Error(`Erro ao atualizar administrador: ${res.status} - ${responseText}`)
+  }
+
+  return JSON.parse(responseText)
 }
 
 async function inactivateAdmin(idAdministrador: number) {
