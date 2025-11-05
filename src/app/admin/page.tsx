@@ -2,6 +2,17 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { JwtPayload } from 'jwt-decode'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Edit,
+  Filter,
+  Plus,
+  Save,
+  Trash2
+} from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -434,7 +445,12 @@ export default function AdminCrudPage() {
                   <SelectValue placeholder="Filtrar usuários" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admins">Mostrar apenas Admins</SelectItem>
+                  <SelectItem value="admins">
+                    <div className="flex items-center space-x-2">
+                      <Filter className="h-4 w-4" />
+                      <span>Mostrar apenas Admins</span>
+                    </div>
+                  </SelectItem>
                   <SelectItem value="all">Mostrar Todos</SelectItem>
                 </SelectContent>
               </Select>
@@ -451,6 +467,7 @@ export default function AdminCrudPage() {
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="bg-white text-black">
+                    <Plus className="h-4 w-4 mr-2" />
                     Cadastrar Novo Administrador
                   </Button>
                 </SheetTrigger>
@@ -497,6 +514,7 @@ export default function AdminCrudPage() {
                       variant="outline"
                       className="mt-4 bg-white text-black"
                     >
+                      <Save className="h-4 w-4 mr-2" />
                       Salvar
                     </Button>
                   </div>
@@ -517,6 +535,7 @@ export default function AdminCrudPage() {
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 0}
               >
+                <ChevronLeft className="h-4 w-4 mr-1" />
                 Anterior
               </Button>
               <span className="text-sm">
@@ -529,6 +548,7 @@ export default function AdminCrudPage() {
                 disabled={currentPage >= totalPages - 1}
               >
                 Próxima
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>
@@ -579,6 +599,7 @@ export default function AdminCrudPage() {
                     variant="outline"
                     className="mt-4 bg-white text-black"
                   >
+                    <Save className="h-4 w-4 mr-2" />
                     Salvar
                   </Button>
                 </div>
@@ -611,6 +632,7 @@ export default function AdminCrudPage() {
                           variant="outline"
                           className="mt-4 bg-white text-black"
                         >
+                          <Edit className="h-4 w-4 mr-2" />
                           Editar
                         </Button>
                         <Button
@@ -619,6 +641,7 @@ export default function AdminCrudPage() {
                             handleInactivateAdmin(admin.idAdministrador)
                           }
                         >
+                          <Trash2 className="h-4 w-4 mr-2" />
                           Inativar
                         </Button>
                       </div>
@@ -634,14 +657,14 @@ export default function AdminCrudPage() {
               onClick={() => handlePageChange(0)}
               disabled={currentPage === 0}
             >
-              Primeira
+              <ChevronsLeft className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 0}
             >
-              Anterior
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             
             {/* Page numbers */}
@@ -664,14 +687,14 @@ export default function AdminCrudPage() {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
             >
-              Próxima
+              <ChevronRight className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               onClick={() => handlePageChange(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
             >
-              Última
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
