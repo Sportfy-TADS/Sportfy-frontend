@@ -1,210 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { AlertCircle, Edit, Plus, Power, RefreshCw, Save, Trash2, Wifi, WifiOff } from 'lucide-react'
-import { toast } from 'sonner'
+import { AlertCircle, Edit, Plus, Power, RefreshCw, Trash2, Wifi, WifiOff } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { ApoioSaudeForm } from '@/components/apoio-saude/apoio-saude-form'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-/*
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
- */
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useApoioSaude } from '@/hooks/use-apoio-saude'
+import { getErrorGuidance } from '@/lib/utils/api-error-handler'
+import { ApoioSaude } from '@/types/apoio-saude'
 
-// Funções de API
-interface ApoioSaude {
-  idApoioSaude: number
-  nome: string
-  email: string
-  telefone: string
-  descricao: string
-  dataPublicacao: string
-  idAdministrador: number
-  ativo: boolean
-}
+const ITEMS_PER_PAGE = 6
 
-// Enhanced error handling function
-function getErrorMessage(error: any): string {
-  if (error?.message?.includes('CORS') || error?.message?.includes('fetch')) {
-    return 'Problema de conexão com o servidor. Verifique se o backend está rodando na porta 8081 e configurado para aceitar requisições CORS.'
-  }
-  if (error?.message?.includes('404')) {
-    return 'Serviço não encontrado. Verifique se o servidor está funcionando.'
-  }
-  if (error?.message?.includes('401')) {
-    return 'Sua sessão expirou. Faça login novamente.'
-  }
-  if (error?.message?.includes('403')) {
-    return 'Você não tem permissão para realizar esta ação.'
-  }
-  if (error?.message?.includes('500')) {
-    return 'Erro interno do servidor. Tente novamente em alguns minutos.'
-  }
-  if (error?.message?.includes('NetworkError') || error?.name === 'TypeError') {
-    return 'Erro de conexão. Verifique se o servidor backend está rodando e acessível.'
-  }
-  return error?.message || 'Ocorreu um erro inesperado. Tente novamente.'
-}
-
-async function fetchApoioSaude(): Promise<ApoioSaude[]> {
-  const token = localStorage.getItem('token')
-  
-  if (!token) {
-    throw new Error('Token de autenticação não encontrado. Faça login novamente.')
-  }
-  
-  try {
-    const response = await fetch('http://localhost:8081/apoioSaude/listar', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      mode: 'cors', // Explicitly set CORS mode
-    })
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        localStorage.removeItem('token')
-        throw new Error('Sua sessão expirou. Redirecionando para login...')
-      }
-      throw new Error(`Erro ${response.status}: ${response.statusText}`)
-    }
-    
-    const data = await response.json()
-    console.log('Dados recebidos da API:', data)
-    
-    // The API returns a direct array, not a paginated object
-    return Array.isArray(data) ? data : []
-  } catch (error) {
-    console.error('Erro detalhado:', error)
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      throw new Error('CORS: Erro de conexão. Verifique se o servidor backend está configurado para aceitar requisições do frontend.')
-    }
-    throw error
-  }
-}
-
-async function createApoioSaude(data: {
-  nome: string
-  email: string
-  telefone: string
-  descricao: string
-  dataPublicacao: string
-  idAdministrador: number
-  ativo: boolean
-}): Promise<ApoioSaude> {
-  const token = localStorage.getItem('token')
-  
-  if (!token) {
-    throw new Error('Token de autenticação não encontrado.')
-  }
-
-  if (!data.nome.trim() || !data.email.trim() || !data.telefone.trim() || !data.descricao.trim()) {
-    throw new Error('Todos os campos são obrigatórios.')
-  }
-
-  try {
-    const response = await fetch('http://localhost:8081/apoioSaude', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    })
-    
-    if (!response.ok) {
-      const errorData = await response.text()
-      throw new Error(`Erro ao cadastrar: ${errorData || response.statusText}`)
-    }
-    
-    return response.json()
-  } catch (error) {
-    if (error instanceof TypeError) {
-      throw new Error('Erro de conexão ao cadastrar apoio à saúde.')
-    }
-    throw error
-  }
-}
-
-async function updateApoioSaude(
-  id: number,
-  data: {
-    nome: string
-    email: string
-    telefone: string
-    descricao: string
-  },
-): Promise<ApoioSaude> {
-  const token = localStorage.getItem('token')
-  const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  })
-  if (!response.ok) {
-    throw new Error('Erro ao atualizar apoio à saúde')
-  }
-  return response.json()
-}
-
-async function deleteApoioSaude(id: number): Promise<{ success: boolean }> {
-  const token = localStorage.getItem('token')
-  const response = await fetch(`http://localhost:8081/apoioSaude/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  })
-  if (!response.ok) {
-    throw new Error('Erro ao deletar apoio à saúde')
-  }
-  return response.json()
-}
-
-async function deactivateApoioSaude(id: number): Promise<{ success: boolean }> {
-  const token = localStorage.getItem('token')
-  const response = await fetch(
-    `http://localhost:8081/apoioSaude/desativar/${id}`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  )
-  if (!response.ok) {
-    throw new Error('Erro ao desativar apoio à saúde')
-  }
-  return response.json()
-}
-
-// Add phone formatting functions
 function maskPhoneNumber(value: string) {
   return value
     .replace(/\D/g, '')
@@ -212,36 +25,24 @@ function maskPhoneNumber(value: string) {
     .replace(/(\d{4,5})(\d{4})$/, '$1-$2')
 }
 
-function cleanPhone(p: string) {
-  return p ? String(p).replace(/\D/g, '') : p
+function cleanPhone(phone: string) {
+  return phone ? String(phone).replace(/\D/g, '') : phone
 }
 
 export default function ApoioSaudePage() {
-  const [newApoioSaude, setNewApoioSaude] = useState({
+  const [formData, setFormData] = useState({
     nome: '',
     email: '',
     telefone: '',
     descricao: '',
-    dataPublicacao: new Date().toISOString(),
-    idAdministrador: 1,
-    ativo: true,
   })
-  const [editApoioSaude, setEditApoioSaude] = useState<{
-    idApoioSaude: number
-    nome: string
-    email: string
-    telefone: string
-    descricao: string
-    dataPublicacao: string
-    idAdministrador: number
-    ativo: boolean
-  } | null>(null)
+  const [editingItem, setEditingItem] = useState<ApoioSaude | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline'>('online')
   const [currentPage, setCurrentPage] = useState(0)
-  const [itemsPerPage, setItemsPerPage] = useState(6)
   const [searchTerm, setSearchTerm] = useState('')
-  const queryClient = useQueryClient()
+
+  const { apoiosSaude, isLoading, isError, error, refetch, mutations } = useApoioSaude()
 
   // Network status monitoring
   useEffect(() => {
@@ -257,234 +58,117 @@ export default function ApoioSaudePage() {
     }
   }, [])
 
-  const {
-    data: apoiosSaude = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['apoiosSaude'],
-    queryFn: fetchApoioSaude,
-    retry: (failureCount, error) => {
-      // Don't retry on auth errors
-      if (error?.message?.includes('401') || error?.message?.includes('403')) {
-        return false
-      }
-      return failureCount < 2
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-
-  const createMutation = useMutation({
-    mutationFn: createApoioSaude,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
-      toast.success('Apoio à saúde cadastrado com sucesso!')
-      setIsSheetOpen(false)
-      setNewApoioSaude({
-        nome: '',
-        email: '',
-        telefone: '',
-        descricao: '',
-        dataPublicacao: new Date().toISOString(),
-        idAdministrador: 1,
-        ativo: true,
-      })
-    },
-    onError: (error) => {
-      const message = getErrorMessage(error)
-      toast.error(message)
-      console.error('Erro ao cadastrar:', error)
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (variables: {
-      id: number
-      data: { nome: string; email: string; telefone: string; descricao: string }
-    }) => updateApoioSaude(variables.id, variables.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
-      toast.success('Apoio à saúde atualizado com sucesso!')
-      setIsSheetOpen(false)
-      setEditApoioSaude(null)
-      setNewApoioSaude({
-        nome: '',
-        email: '',
-        telefone: '',
-        descricao: '',
-        dataPublicacao: new Date().toISOString(),
-        idAdministrador: 1,
-        ativo: true,
-      })
-    },
-    onError: (error) => {
-      const message = getErrorMessage(error)
-      toast.error(message)
-      console.error('Erro ao atualizar:', error)
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteApoioSaude,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
-      toast.success('Apoio à saúde removido com sucesso!')
-    },
-    onError: (error) => {
-      const message = getErrorMessage(error)
-      toast.error(message)
-      console.error('Erro ao deletar:', error)
-    },
-  })
-
-  const deactivateMutation = useMutation({
-    mutationFn: deactivateApoioSaude,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['apoiosSaude'] })
-      toast.success('Apoio à saúde desativado com sucesso!')
-    },
-    onError: (error) => {
-      const message = getErrorMessage(error)
-      toast.error(message)
-      console.error('Erro ao desativar:', error)
-    },
-  })
-
-  // Handle auth errors by redirecting to login
-  useEffect(() => {
-    if (isError && error?.message?.includes('401')) {
-      setTimeout(() => {
-        window.location.href = '/login'
-      }, 3000)
-    }
-  }, [isError, error])
-
-  useEffect(() => {
-    if (isError) {
-      console.error('Erro ao carregar apoios à saúde:', error)
-      toast.error('Erro ao carregar dados dos apoios à saúde')
-    }
-  }, [isError, error])
-
-  useEffect(() => {
-    console.log('Estado atual - isLoading:', isLoading, 'apoiosSaude:', apoiosSaude)
-    if (!isLoading) {
-      if (apoiosSaude.length === 0) {
-        console.warn('Nenhum apoio à saúde encontrado')
-      } else {
-        console.log(`${apoiosSaude.length} apoios à saúde carregados:`, apoiosSaude)
-      }
-    }
-  }, [isLoading, apoiosSaude])
-
+  // Clean up development artifacts
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      setInterval(() => {
+      const cleanup = setInterval(() => {
         document.querySelector('body > nextjs-portal')?.remove()
       }, 10)
+      return () => clearInterval(cleanup)
     }
   }, [])
 
-  // Client-side filtering and pagination
-  const filteredApoios = apoiosSaude.filter((apoio) =>
-    apoio.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    apoio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    apoio.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const totalPages = Math.ceil(filteredApoios.length / itemsPerPage)
-  const startIndex = currentPage * itemsPerPage
-  const paginatedApoios = filteredApoios.slice(startIndex, startIndex + itemsPerPage)
+  // Memoized filtered and paginated data
+  const { filteredApoios, totalPages, paginatedApoios } = useMemo(() => {
+    const filtered = apoiosSaude.filter((apoio) =>
+      apoio.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apoio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apoio.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+    const startIndex = currentPage * ITEMS_PER_PAGE
+    const paginated = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+    
+    return { filteredApoios: filtered, totalPages, paginatedApoios: paginated }
+  }, [apoiosSaude, searchTerm, currentPage])
 
   // Reset to first page when search changes
   useEffect(() => {
     setCurrentPage(0)
   }, [searchTerm])
 
-  const handleCreateApoioSaude = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const payload = {
-      ...newApoioSaude,
-      telefone: cleanPhone(newApoioSaude.telefone),
-    }
-    createMutation.mutate(payload)
-  }
-
-  const handleUpdateApoioSaude = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (editApoioSaude) {
-      updateMutation.mutate({
-        id: editApoioSaude.idApoioSaude,
-        data: {
-          nome: newApoioSaude.nome,
-          email: newApoioSaude.email,
-          telefone: cleanPhone(newApoioSaude.telefone),
-          descricao: newApoioSaude.descricao,
-        },
-      })
-    }
-  }
-
-  const handleDeleteClick = (id: number) => {
-    if (confirm('Tem certeza que deseja deletar este apoio à saúde?')) {
-      deleteMutation.mutate(id)
-    }
-  }
-
-  const handleDeactivateClick = (id: number) => {
-    if (confirm('Tem certeza que deseja desativar este apoio à saúde?')) {
-      deactivateMutation.mutate(id)
-    }
-  }
-
-  const handleEditClick = (apoio: ApoioSaude) => {
-    setEditApoioSaude(apoio)
-    setNewApoioSaude({
-      nome: apoio.nome,
-      email: apoio.email,
-      telefone: maskPhoneNumber(apoio.telefone),
-      descricao: apoio.descricao,
-      dataPublicacao: apoio.dataPublicacao,
-      idAdministrador: apoio.idAdministrador,
-      ativo: apoio.ativo,
-    })
-    setIsSheetOpen(true)
-  }
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const maskedPhone = maskPhoneNumber(e.target.value)
-    setNewApoioSaude({
-      ...newApoioSaude,
-      telefone: maskedPhone,
-    })
-  }
-
-  const handleNewClick = () => {
-    setEditApoioSaude(null)
-    setNewApoioSaude({
+  const resetForm = useCallback(() => {
+    setFormData({
       nome: '',
       email: '',
       telefone: '',
       descricao: '',
+    })
+    setEditingItem(null)
+  }, [])
+
+  const handleCreateSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const payload = {
+      ...formData,
+      telefone: cleanPhone(formData.telefone),
       dataPublicacao: new Date().toISOString(),
       idAdministrador: 1,
       ativo: true,
+    }
+    
+    mutations.create.mutate(payload, {
+      onSuccess: () => {
+        setIsSheetOpen(false)
+        resetForm()
+      }
+    })
+  }, [formData, mutations.create, resetForm])
+
+  const handleUpdateSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingItem) return
+    
+    mutations.update.mutate({
+      id: editingItem.idApoioSaude,
+      data: {
+        ...formData,
+        telefone: cleanPhone(formData.telefone),
+      },
+    }, {
+      onSuccess: () => {
+        setIsSheetOpen(false)
+        resetForm()
+      }
+    })
+  }, [editingItem, formData, mutations.update, resetForm])
+
+  const handleEdit = useCallback((apoio: ApoioSaude) => {
+    setEditingItem(apoio)
+    setFormData({
+      nome: apoio.nome,
+      email: apoio.email,
+      telefone: maskPhoneNumber(apoio.telefone),
+      descricao: apoio.descricao,
     })
     setIsSheetOpen(true)
-  }
+  }, [])
 
-  const handleRetry = () => {
-    refetch()
-    toast.info('Tentando novamente...')
-  }
+  const handleNew = useCallback(() => {
+    resetForm()
+    setIsSheetOpen(true)
+  }, [resetForm])
 
-  const handlePageChange = (newPage: number) => {
+  const handleDelete = useCallback((id: number) => {
+    if (confirm('Tem certeza que deseja deletar este apoio à saúde?')) {
+      mutations.delete.mutate(id)
+    }
+  }, [mutations.delete])
+
+  const handleDeactivate = useCallback((id: number) => {
+    if (confirm('Tem certeza que deseja desativar este apoio à saúde?')) {
+      mutations.deactivate.mutate(id)
+    }
+  }, [mutations.deactivate])
+
+  const handlePageChange = useCallback((newPage: number) => {
     setCurrentPage(newPage)
-  }
+  }, [])
+
+  const isSubmitting = mutations.create.isPending || mutations.update.isPending
 
   return (
     <>
@@ -507,6 +191,7 @@ export default function ApoioSaudePage() {
               </div>
             )}
 
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
               <div className="flex items-center space-x-3">
                 <h1 className="text-3xl font-bold">Apoios à Saúde</h1>
@@ -525,7 +210,7 @@ export default function ApoioSaudePage() {
                   <SheetTrigger asChild>
                     <Button
                       className="bg-blue-500 hover:bg-blue-600"
-                      onClick={handleNewClick}
+                      onClick={handleNew}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Cadastrar Apoio à Saúde
@@ -534,71 +219,22 @@ export default function ApoioSaudePage() {
                   <SheetContent>
                     <SheetHeader>
                       <SheetTitle>
-                        {editApoioSaude
-                          ? 'Editar Apoio à Saúde'
-                          : 'Cadastrar Apoio à Saúde'}
+                        {editingItem ? 'Editar Apoio à Saúde' : 'Cadastrar Apoio à Saúde'}
                       </SheetTitle>
                     </SheetHeader>
-                    <form
-                      className="space-y-4 mt-4"
-                      onSubmit={
-                        editApoioSaude
-                          ? handleUpdateApoioSaude
-                          : handleCreateApoioSaude
-                      }
-                    >
-                      <Input
-                        placeholder="Nome"
-                        value={newApoioSaude.nome}
-                        onChange={(e) =>
-                          setNewApoioSaude({
-                            ...newApoioSaude,
-                            nome: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                      <Input
-                        placeholder="Email"
-                        type="email"
-                        value={newApoioSaude.email}
-                        onChange={(e) =>
-                          setNewApoioSaude({
-                            ...newApoioSaude,
-                            email: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                      <Input
-                        placeholder="Telefone"
-                        value={newApoioSaude.telefone}
-                        onChange={handlePhoneChange}
-                        maxLength={15}
-                        required
-                      />
-                      <Input
-                        placeholder="Descrição"
-                        value={newApoioSaude.descricao}
-                        onChange={(e) =>
-                          setNewApoioSaude({
-                            ...newApoioSaude,
-                            descricao: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                      <Button type="submit" className="w-full">
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar
-                      </Button>
-                    </form>
+                    <ApoioSaudeForm
+                      formData={formData}
+                      onFormDataChange={setFormData}
+                      onSubmit={editingItem ? handleUpdateSubmit : handleCreateSubmit}
+                      isSubmitting={isSubmitting}
+                      editMode={!!editingItem}
+                    />
                   </SheetContent>
                 </Sheet>
               </div>
             </div>
 
-            {/* Results summary */}
+            {/* Results Summary */}
             {!isLoading && !isError && (
               <div className="mb-4 flex justify-between items-center">
                 <p className="text-sm text-gray-600">
@@ -631,7 +267,7 @@ export default function ApoioSaudePage() {
               </div>
             )}
 
-            {/* Enhanced Error State with CORS guidance */}
+            {/* Error State */}
             {isError && (
               <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start space-x-3">
@@ -640,25 +276,13 @@ export default function ApoioSaudePage() {
                     <h3 className="text-lg font-semibold text-red-800 mb-2">
                       Problema de Conexão
                     </h3>
-                    <p className="text-red-700 mb-4">
-                      {getErrorMessage(error)}
-                    </p>
+                    <p className="text-red-700 mb-4">{error.message}</p>
                     
-                    {/* CORS-specific guidance */}
-                    {(error?.message?.includes('CORS') || error?.message?.includes('Failed to fetch')) && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
-                        <h4 className="font-semibold text-yellow-800 mb-2">Como resolver:</h4>
-                        <ol className="list-decimal list-inside text-sm text-yellow-700 space-y-1">
-                          <li>Verifique se o servidor backend está rodando na porta 8081</li>
-                          <li>Certifique-se de que o CORS está configurado no backend para aceitar requisições de http://localhost:3000</li>
-                          <li>Tente acessar diretamente: <a href="http://localhost:8081/apoioSaude/listar" target="_blank" className="underline">http://localhost:8081/apoioSaude/listar</a></li>
-                        </ol>
-                      </div>
-                    )}
+                    {getErrorGuidance(error)}
                     
-                    <div className="flex space-x-3">
+                    <div className="flex space-x-3 mt-4">
                       <Button 
-                        onClick={handleRetry}
+                        onClick={refetch}
                         variant="outline"
                         className="border-red-300 text-red-700 hover:bg-red-50"
                         disabled={isLoading}
@@ -688,8 +312,8 @@ export default function ApoioSaudePage() {
               </div>
             )}
 
-            {/* Empty State */}
-            {!isLoading && !isError && filteredApoios.length === 0 && !searchTerm && (
+            {/* Empty States */}
+            {!isLoading && !isError && filteredApoios.length === 0 && (
               <div className="text-center py-16">
                 <div className="max-w-md mx-auto">
                   <div className="mb-4">
@@ -698,42 +322,38 @@ export default function ApoioSaudePage() {
                     </div>
                   </div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                    Nenhum apoio à saúde cadastrado
+                    {searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum apoio à saúde cadastrado'}
                   </h2>
                   <p className="text-gray-600 mb-6">
-                    Comece cadastrando o primeiro apoio à saúde para aparecer aqui.
+                    {searchTerm ? (
+                      <>
+                        Tente buscar com outros termos ou{' '}
+                        <button 
+                          onClick={() => setSearchTerm('')}
+                          className="text-blue-600 hover:underline"
+                        >
+                          limpe o filtro
+                        </button>
+                        .
+                      </>
+                    ) : (
+                      'Comece cadastrando o primeiro apoio à saúde para aparecer aqui.'
+                    )}
                   </p>
-                  <Button 
-                    onClick={handleNewClick}
-                    className="bg-blue-500 hover:bg-blue-600"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Cadastrar Primeiro Apoio
-                  </Button>
+                  {!searchTerm && (
+                    <Button 
+                      onClick={handleNew}
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Cadastrar Primeiro Apoio
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* No search results */}
-            {!isLoading && !isError && filteredApoios.length === 0 && searchTerm && (
-              <div className="text-center py-16">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                  Nenhum resultado encontrado
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  Tente buscar com outros termos ou{' '}
-                  <button 
-                    onClick={() => setSearchTerm('')}
-                    className="text-blue-600 hover:underline"
-                  >
-                    limpe o filtro
-                  </button>
-                  .
-                </p>
-              </div>
-            )}
-
-            {/* Success State - Data Grid */}
+            {/* Data Grid */}
             {!isLoading && !isError && paginatedApoios.length > 0 && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -768,7 +388,7 @@ export default function ApoioSaudePage() {
                         <div className="flex flex-col space-y-2 mt-4">
                           <Button
                             variant="outline"
-                            onClick={() => handleEditClick(apoio)}
+                            onClick={() => handleEdit(apoio)}
                             size="sm"
                           >
                             <Edit className="h-4 w-4 mr-2" />
@@ -776,7 +396,7 @@ export default function ApoioSaudePage() {
                           </Button>
                           <Button
                             variant="destructive"
-                            onClick={() => handleDeleteClick(apoio.idApoioSaude)}
+                            onClick={() => handleDelete(apoio.idApoioSaude)}
                             size="sm"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -784,7 +404,7 @@ export default function ApoioSaudePage() {
                           </Button>
                           <Button
                             className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                            onClick={() => handleDeactivateClick(apoio.idApoioSaude)}
+                            onClick={() => handleDeactivate(apoio.idApoioSaude)}
                             size="sm"
                           >
                             <Power className="h-4 w-4 mr-2" />
@@ -796,7 +416,7 @@ export default function ApoioSaudePage() {
                   ))}
                 </div>
 
-                {/* Bottom Pagination */}
+                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center mt-8 space-x-2">
                     <Button
@@ -816,7 +436,6 @@ export default function ApoioSaudePage() {
                       Anterior
                     </Button>
                     
-                    {/* Page numbers */}
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       const pageNum = Math.max(0, Math.min(currentPage - 2 + i, totalPages - 5 + i))
                       return (
