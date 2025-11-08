@@ -1,4 +1,4 @@
-import { http } from "msw"
+import * as React from "react"
 
 export class ApiError extends Error {
   constructor(
@@ -47,18 +47,28 @@ export function handleApiError(error: unknown): ApiError {
 
   return new ApiError('Ocorreu um erro inesperado. Tente novamente.')
 }
-
 export function getErrorGuidance(error: ApiError): React.ReactNode | null {
   if (error.code === 'CONNECTION_ERROR') {
-    return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-        <h4 className="font-semibold text-yellow-800 mb-2">Como resolver:</h4>
-        <ol className="list-decimal list-inside text-sm text-yellow-700 space-y-1">
-          <li>Verifique se o servidor backend está rodando na porta 8081</li>
-          <li>Certifique-se de que o CORS está configurado no backend</li>
-          <li>Tente acessar diretamente: <a href="http://localhost:8081/apoioSaude/listar" target="_blank" className="underline">http://localhost:8081/apoioSaude/listar</a></li>
-        </ol>
-      </div>
+    return React.createElement(
+      'div',
+      { className: 'bg-yellow-50 border border-yellow-200 rounded-md p-4' },
+      React.createElement('h4', { className: 'font-semibold text-yellow-800 mb-2' }, 'Como resolver:'),
+      React.createElement(
+        'ol',
+        { className: 'list-decimal list-inside text-sm text-yellow-700 space-y-1' },
+        React.createElement('li', null, 'Verifique se o servidor backend está rodando na porta 8081'),
+        React.createElement('li', null, 'Certifique-se de que o CORS está configurado no backend'),
+        React.createElement(
+          'li',
+          null,
+          'Tente acessar diretamente: ',
+          React.createElement(
+            'a',
+            { href: 'http://localhost:8081/apoioSaude/listar', target: '_blank', rel: 'noopener noreferrer', className: 'underline' },
+            'http://localhost:8081/apoioSaude/listar'
+          )
+        )
+      )
     )
   }
   
