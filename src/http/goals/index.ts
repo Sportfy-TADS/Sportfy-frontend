@@ -1,5 +1,18 @@
 import axios from 'axios'
 
+interface MetaEsportiva {
+  idMetaEsportiva: number
+  titulo: string
+  descricao: string
+  progressoAtual: number
+  progressoMaximo: number
+  progressoItem: string
+  foto?: string | null
+  ativo?: boolean
+  idModalidadeEsportiva?: number
+  idAcademico: number
+}
+
 // Função para obter o dados do usuário
 export async function getUserData(username: string) {
   const token = localStorage.getItem('token')

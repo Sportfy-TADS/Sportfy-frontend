@@ -22,7 +22,7 @@ export function useAuth() {
         return false
       }
 
-      setUserId(authData.idAcademico)
+      setUserId(String(authData.idAcademico))
       return true
     }
 

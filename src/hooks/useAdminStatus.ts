@@ -1,12 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { jwtDecode } from 'jwt-decode'
+import { jwtDecode, JwtPayload } from 'jwt-decode'
 import { toast } from 'sonner'
 
+interface DecodedToken extends JwtPayload {
+  role: string
+  idUsuario: number
+  name: string
+  email: string
+  username: string
+}
+
+interface AdminInfo {
+  id: number
+  name: string
+  email: string
+  username: string
+}
+
 export default function useAdminStatus() {
-  const [currentAdmin, setCurrentAdmin] = useState(null)
+  const [currentAdmin, setCurrentAdmin] = useState<AdminInfo | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -16,7 +31,7 @@ export default function useAdminStatus() {
         router.push('/auth')
         return
       }
-      const decoded = jwtDecode(token)
+      const decoded = jwtDecode<DecodedToken>(token)
       if (decoded.role !== 'ADMINISTRADOR') {
         toast.error(
           'Acesso negado! Somente administradores podem acessar esta página.',

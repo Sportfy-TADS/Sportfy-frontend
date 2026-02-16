@@ -2,6 +2,8 @@ import axios from 'axios';
 // Import default
 import { jwtDecode } from 'jwt-decode'; // Changed from named to default import
 
+import { Post } from '@/interface/types';
+
 // Configure axios defaults for better performance
 axios.defaults.timeout = 10000; // 10 seconds default timeout
 axios.defaults.headers.common['Accept'] = 'application/json';
@@ -41,70 +43,65 @@ if (process.env.NODE_ENV === 'development' && process.env.DEBUG_AXIOS === 'true'
 
 const getToken = (): string | null => localStorage.getItem('token')
 
-export const fetchPosts = async (page: number = 0, size: number = 10) => {
+export interface PaginatedResponse<T> {
+  content: T[]
+  totalPages: number
+  totalElements: number
+  last: boolean
+  first: boolean
+  number: number // page number (0-based)
+  size: number
+  numberOfElements: number
+  empty: boolean
+}
+
+/**
+ * Busca posts paginados. Retorna a resposta paginada completa (Spring Page)
+ * para ser compatível com useInfiniteQuery do TanStack Query.
+ */
+export const fetchPostsPaginated = async (
+  page: number = 0,
+  size: number = 10,
+): Promise<PaginatedResponse<Post>> => {
   const token = getToken()
   const url = `${process.env.NEXT_PUBLIC_API_URL}/publicacao/1/publicacoes?page=${page}&size=${size}&sort=dataPublicacao,desc`
 
-  const cacheKey = `feed:${page}:${size}`
+  const response = await axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 
-  // In development return cached posts immediately if available and refresh in background
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    try {
-      const cached = localStorage.getItem(cacheKey)
-      if (cached) {
-        // Refresh in background
-        ;(async () => {
-          try {
-            const response = await axios.get(url, {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-            })
-            const content = response.data.content || []
-            localStorage.setItem(cacheKey, JSON.stringify(content))
-          } catch (e) {
-            // ignore background refresh errors
-          }
-        })()
-        return JSON.parse(cached)
-      }
-    } catch (e) {
-      // ignore storage errors
-    }
-  }
+  const data = response.data
 
-  try {
-    const response = await axios.get(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    const content = response.data.content || []
-    
-    // Log para verificar estrutura dos posts
-    if (content.length > 0) {
-      console.log('📋 Estrutura do primeiro post:', {
-        titulo: content[0].titulo,
-        listaComentario: content[0].listaComentario,
-        comentariosCount: content[0].listaComentario?.length || 0,
-      })
-    }
-    
-    // cache for dev to speed up subsequent loads
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(content))
-      } catch (e) {
-        // ignore storage errors
-      }
-    }
-    return content
-  } catch (error) {
-    console.error('Error fetching posts:', error)
-    throw error
+  // Normalizar posts para garantir arrays
+  const content = (data.content || []).map((post: Post) => ({
+    ...post,
+    listaComentario: post.listaComentario || [],
+    listaUsuarioCurtida: post.listaUsuarioCurtida || [],
+  }))
+
+  return {
+    content,
+    totalPages: data.totalPages ?? 0,
+    totalElements: data.totalElements ?? 0,
+    last: data.last ?? true,
+    first: data.first ?? true,
+    number: data.number ?? page,
+    size: data.size ?? size,
+    numberOfElements: data.numberOfElements ?? content.length,
+    empty: data.empty ?? content.length === 0,
   }
+}
+
+/**
+ * @deprecated Use fetchPostsPaginated para integração com TanStack Query.
+ * Mantido para compatibilidade com useFeed legado.
+ */
+export const fetchPosts = async (page: number = 0, size: number = 10) => {
+  const response = await fetchPostsPaginated(page, size)
+  return response.content
 }
 
 export const fetchLoggedUser = () => {

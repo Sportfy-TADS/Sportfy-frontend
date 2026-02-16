@@ -20,18 +20,23 @@ export function useStatistics() {
   const router = useRouter()
 
   useEffect(() => {
-    const id = getUserIdFromToken()
-    console.log('User ID from token:', id)
-    if (id !== null) {
-      setUserId(id)
-      const data = getUserData() as UserData
-      console.log('User data from localStorage:', data)
-      setUserData(data)
-    } else {
-      toast.error('Usuário não está logado.')
-      localStorage.clear() // Limpar localStorage se o usuário não estiver logado
-      router.push('/auth')
+    const loadUser = async () => {
+      const id = getUserIdFromToken()
+      console.log('User ID from token:', id)
+      if (id !== null) {
+        setUserId(id)
+        const data = await getUserData()
+        console.log('User data from localStorage:', data)
+        if (data) {
+          setUserData(data as unknown as UserData)
+        }
+      } else {
+        toast.error('Usuário não está logado.')
+        localStorage.clear()
+        router.push('/auth')
+      }
     }
+    loadUser()
   }, [router])
 
   const academicoId = userData?.idAcademico ?? userId ?? null
@@ -44,10 +49,6 @@ export function useStatistics() {
     queryKey: ['usoAcademico', academicoId],
     queryFn: () => fetchUsoAcademico(academicoId!),
     enabled: academicoId !== null,
-    onError: (error: unknown) => {
-      console.error('Erro ao buscar uso acadêmico:', error)
-      toast.error('Erro ao buscar uso acadêmico.')
-    },
   })
 
   return {

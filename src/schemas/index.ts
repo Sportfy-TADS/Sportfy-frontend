@@ -23,6 +23,8 @@ export const signUpSchema = z.object({
   dataNascimento: z.string(),
 })
 
+export type SignUpSchema = z.infer<typeof signUpSchema>
+
 export const createGoalSchema = z.object({
   titulo: z.string().min(1, 'Informe a atividade que deseja praticar'),
   objetivo: z.string().min(1, 'Informe o objetivo da meta'),

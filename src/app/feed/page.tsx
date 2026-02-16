@@ -1,391 +1,145 @@
 'use client'
 
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, Star } from 'lucide-react';
-import { Toaster, toast } from 'sonner'; // Adicionado 'toast'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { MessageCircle, Star } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
 
-import CommentsDialog from '@/components/CommentsDialog';
-import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+import CommentsDialog from '@/components/CommentsDialog'
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
-import { useFeed } from '@/hooks/useFeed';
-import { fetchComments } from '@/http/feed'; // Removed fetchPosts import as it's handled in useFeed
-import { Comentario, Post } from '@/interface/types';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Textarea } from '@/components/ui/textarea'
+import { useFeedInfinite } from '@/hooks/useFeedInfinite'
+import { fetchComments } from '@/http/feed'
+import { Comentario, Post } from '@/interface/types'
 
-export default function FeedPage() {
-  const {
-    posts,
-    loading,
-    newPostContent,
-    setNewPostContent,
-    handleLikePost,
-    handleNewPost,
-    handleEditPost,
-    handleDeletePost, // Add handleDeletePost
-    loggedUser,
-    newPostTitle,
-    setNewPostTitle,
-    loadMore, // Use loadMore
-    hasMore, // Use hasMore
-    handleDeleteComment, // Add handleDeleteComment
-    handleCreateComment, // Add handleCreateComment for syncing
-    setPosts, // Add setPosts to sync comments
-  } = useFeed()
-  const [editingPost, setEditingPost] = useState<Post | null>(null) // Alterado tipo de 'any' para 'Post | null'
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false)
-  const [selectedPostComments, setSelectedPostComments] = useState<
-    Comentario[]
-  >([])
-  const [commentsLoading, setCommentsLoading] = useState(false)
-  const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
-  const [likingPosts, setLikingPosts] = useState<Set<number>>(new Set()) // Track posts being liked
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
+// ─── Memoized Post Card ──────────────────────────────────────
 
-  // Debounced like handler to prevent spam clicks
-  const debouncedHandleLikePost = useCallback(
-    (() => {
-      let timeouts: { [key: number]: NodeJS.Timeout } = {}
-      
-      return (postId: number) => {
-        // Clear existing timeout for this post
-        if (timeouts[postId]) {
-          clearTimeout(timeouts[postId])
-        }
-        
-        // Set debounce timeout
-        timeouts[postId] = setTimeout(() => {
-          if (!likingPosts.has(postId)) {
-            setLikingPosts(prev => new Set(prev).add(postId))
-            handleLikePost(postId).finally(() => {
-              setLikingPosts(prev => {
-                const newSet = new Set(prev)
-                newSet.delete(postId)
-                return newSet
-              })
-            })
-          }
-          delete timeouts[postId]
-        }, 150) // 150ms debounce
-      }
-    })(),
-    [handleLikePost, likingPosts]
+const PostCard = memo(function PostCard({
+  post,
+  loggedUser,
+  startEditingPost,
+  handleLikePost,
+  openCommentsDialog,
+  confirmDeletePost,
+  formatDate,
+  isLiking,
+}: {
+  post: Post
+  loggedUser: { idUsuario: number; username: string; nome: string; permissao: string; idAcademico: number } | null
+  startEditingPost: (post: Post) => void
+  handleLikePost: (postId: number) => void
+  openCommentsDialog: (postId: number) => void
+  confirmDeletePost: (post: Post) => void
+  formatDate: (date: string | null | undefined) => string
+  isLiking: boolean
+}) {
+  const isUserLiked = post.listaUsuarioCurtida?.some(
+    (usuario) => usuario.idUsuario === loggedUser?.idUsuario,
   )
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      setInterval(() => {
-        document.querySelector('body > nextjs-portal')?.remove()
-      }, 10)
-    }
-  }, [])
-
-  const startEditingPost = (post: Post) => {
-    setEditingPost(post)
-    setNewPostTitle(post.titulo)
-    setNewPostContent(post.descricao)
-    setIsDialogOpen(true)
-  }
-
-  const saveEditedPost = async () => {
-    if (!editingPost) {
-      toast.error('Nenhum post selecionado para edição')
-      return
-    }
-
-    if (!newPostTitle.trim() || !newPostContent.trim()) {
-      toast.error('Título e descrição são obrigatórios')
-      return
-    }
-
-    try {
-      console.log('🔄 Iniciando edição do post:', {
-        postId: editingPost.idPublicacao,
-        titulo: newPostTitle,
-        descricao: newPostContent,
-      })
-
-      await handleEditPost(editingPost.idPublicacao)
-      
-      setEditingPost(null)
-      setNewPostTitle('')
-      setNewPostContent('')
-      setIsDialogOpen(false)
-      
-      console.log('✅ Post editado com sucesso')
-    } catch (error) {
-      console.error('❌ Erro ao editar post:', error)
-      // O toast de erro já é mostrado no handleEditPost
-    }
-  }
-
-  const openNewPostDialog = () => {
-    setEditingPost(null)
-    setNewPostTitle('')
-    setNewPostContent('')
-    setIsDialogOpen(true)
-  }
-
-  const confirmDeletePost = (post: Post) => {
-    setPostToDelete(post)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const executeDeletePost = async () => {
-    if (!postToDelete) return
-
-    try {
-      console.log('🗑️ Confirmando exclusão do post:', postToDelete.titulo)
-      await handleDeletePost(postToDelete.idPublicacao)
-      setIsDeleteDialogOpen(false)
-      setPostToDelete(null)
-    } catch (error) {
-      console.error('❌ Erro ao deletar post:', error)
-      // O toast de erro já é mostrado no handleDeletePost
-    }
-  }
-
-  const cancelDeletePost = () => {
-    setIsDeleteDialogOpen(false)
-    setPostToDelete(null)
-  }
-
-  const createNewPost = async () => {
-    console.log('Creating new post...') // Log start of function
-    
-    // Validação básica
-    if (!newPostTitle.trim() || !newPostContent.trim()) {
-      toast.error('Título e descrição são obrigatórios')
-      console.log('Failed: Title or content is empty') // Log validation failure
-      return
-    }
-
-    if (!loggedUser?.idUsuario) {
-      toast.error('Usuário não autenticado')
-      console.log('Failed: User not authenticated') // Log authentication failure
-      return
-    }
-
-    // Verificar se há token
-    const token = localStorage.getItem('token')
-    if (!token) {
-      toast.error('Token de autenticação não encontrado')
-      console.log('Failed: No authentication token') // Log token failure
-      return
-    }
-
-    const newPost: Partial<Post> = {
-      titulo: newPostTitle.trim(),
-      descricao: newPostContent.trim(),
-      idCanal: 1,
-      idModalidadeEsportiva: null,
-      Usuario: {
-        idUsuario: loggedUser.idUsuario,
-        username: loggedUser.username,
-        nome: loggedUser.nome,
-        foto: loggedUser.foto,
-        permissao: loggedUser.permissao,
-        idAcademico: loggedUser.idAcademico,
-      },
-    }
-
-    console.log('New post payload:', newPost) // Log post payload
-
-    try {
-      console.log('🔄 Enviando requisição para criar post...')
-      await handleNewPost(newPost as Post)
-      console.log('✅ Post criado com sucesso') // Log success
-      setIsDialogOpen(false)
-      setTimeout(() => {
-        toast.success('Publicação criada com sucesso!')
-      }, 100)
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Erro desconhecido'
-      console.error('❌ Falhou ao criar post:', {
-        error,
-        message: errorMessage,
-        payload: newPost,
-      })
-      setTimeout(() => {
-        toast.error(`Erro ao criar publicação: ${errorMessage}`)
-      }, 100)
-    }
-  }
-
-  const openCommentsDialog = async (postId: number) => {
-    setCommentsLoading(true)
-    setSelectedPostId(postId)
-    
-    try {
-      // Buscar o post atual para ver se já temos os comentários
-      const currentPost = posts.find(p => p.idPublicacao === postId)
-      
-      if (currentPost && currentPost.listaComentario.length > 0) {
-        // Se já temos comentários, usar os que já estão carregados
-        console.log('📋 Usando comentários já carregados:', currentPost.listaComentario.length)
-        setSelectedPostComments(currentPost.listaComentario)
-      } else {
-        // Se não temos comentários, buscar do servidor
-        console.log('🔄 Buscando comentários do servidor para post:', postId)
-        const response = await fetchComments(postId)
-        setSelectedPostComments(response)
-      }
-      
-      setIsCommentsDialogOpen(true)
-    } catch (error) {
-      console.error('Erro ao carregar comentários:', error)
-      toast.error('Erro ao carregar comentários')
-    } finally {
-      setCommentsLoading(false)
-    }
-  }
-
-  const closeCommentsDialog = () => {
-    setIsCommentsDialogOpen(false)
-    
-    // Sincronizar a contagem de comentários no post principal
-    if (selectedPostId !== null) {
-      console.log('🔄 Sincronizando comentários do post:', {
-        postId: selectedPostId,
-        comentarios: selectedPostComments.length
-      })
-      
-      // Atualizar o post com a contagem correta de comentários
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post.idPublicacao === selectedPostId 
-            ? { ...post, listaComentario: selectedPostComments }
-            : post
-        )
-      )
-    }
-    
-    setSelectedPostComments([])
-    setSelectedPostId(null)
-  }
-
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }
-    return new Date(dateString).toLocaleDateString('pt-BR', options)
-  }
-
-  // Memoized Post card to reduce re-renders
-  const PostCard = memo(function PostCard({
-    post,
-    loggedUser,
-    startEditingPost,
-    handleLikePost,
-    openCommentsDialog,
-    handleDeletePost,
-    formatDate,
-    isLiking,
-  }: any) {
-    const isUserLiked = post.listaUsuarioCurtida?.some(
-      (usuario: any) => usuario.idUsuario === loggedUser?.idUsuario,
-    )
-
-    return (
-      <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
-        <CardHeader className="pb-2">
-          <div className="flex items-start space-x-3">
-            <Avatar>
-              {post.Usuario.foto ? (
-                <AvatarImage
-                  src={post.Usuario.foto}
-                  alt={post.Usuario.nome || post.Usuario.username}
-                  loading="lazy"
-                  decoding="async"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10"
-                />
-              ) : (
-                <AvatarFallback className="w-10 h-10">
-                  {(
-                    post.Usuario.nome?.slice(0, 1) ||
-                    post.Usuario.username?.slice(0, 1) ||
-                    '?'
-                  ).toString().toUpperCase()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2">
-                <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-                  {post.Usuario.nome}
-                </span>
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5">
-                <span className="truncate">@{post.Usuario.username}</span>
-                <span>·</span>
-                <span className="whitespace-nowrap">{post.dataPublicacao ? formatDate(post.dataPublicacao) : 'Data não disponível'}</span>
-              </div>
+  return (
+    <Card className="p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 transition-colors duration-200">
+      <CardHeader className="pb-2">
+        <div className="flex items-start space-x-3">
+          <Avatar>
+            {post.Usuario.foto ? (
+              <AvatarImage
+                src={post.Usuario.foto}
+                alt={post.Usuario.nome || post.Usuario.username}
+                loading="lazy"
+                decoding="async"
+                width={40}
+                height={40}
+                className="w-10 h-10"
+              />
+            ) : (
+              <AvatarFallback className="w-10 h-10">
+                {(
+                  post.Usuario.nome?.slice(0, 1) ||
+                  post.Usuario.username?.slice(0, 1) ||
+                  '?'
+                )
+                  .toString()
+                  .toUpperCase()}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                {post.Usuario.nome}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5">
+              <span className="truncate">@{post.Usuario.username}</span>
+              <span>·</span>
+              <span className="whitespace-nowrap">
+                {post.dataPublicacao
+                  ? formatDate(post.dataPublicacao)
+                  : 'Data não disponível'}
+              </span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="mt-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-            {post.titulo}
-          </h2>
-          <p className="text-md text-gray-800 dark:text-gray-200 mb-2">{post.descricao}</p>
-          <div className="flex items-center justify-start space-x-6 text-gray-600 dark:text-gray-400 mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
-            <button
-              onClick={() => handleLikePost(post.idPublicacao)}
-              disabled={isLiking}
-              className={`flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-150 ${
-                isLiking ? 'opacity-60 cursor-not-allowed' : ''
-              } ${
-                isUserLiked ? 'transform scale-110' : ''
-              }`}
-            >
-              <Star
-                className={`w-5 h-5 transition-all duration-200 ${
-                  isUserLiked
-                    ? 'text-amber-400 fill-amber-400 drop-shadow-md'
-                    : 'text-gray-300 hover:text-amber-300'
-                } ${
-                  isLiking ? 'animate-pulse' : ''
-                }`}
-              />
-              <span className="font-medium">{post.listaUsuarioCurtida?.length || 0}</span>
-            </button>
-            <button
-              onClick={() => openCommentsDialog(post.idPublicacao)}
-              className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-150"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span className="font-medium">{post.listaComentario?.length || 0}</span>
-            </button>
-            {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' && post.Usuario.idUsuario === loggedUser.idUsuario && (
+        </div>
+      </CardHeader>
+      <CardContent className="mt-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          {post.titulo}
+        </h2>
+        <p className="text-md text-gray-800 dark:text-gray-200 mb-2">
+          {post.descricao}
+        </p>
+        <div className="flex items-center justify-start space-x-6 text-gray-600 dark:text-gray-400 mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
+          <button
+            onClick={() => handleLikePost(post.idPublicacao)}
+            disabled={isLiking}
+            className={`flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-150 ${
+              isLiking ? 'opacity-60 cursor-not-allowed' : ''
+            } ${isUserLiked ? 'transform scale-110' : ''}`}
+          >
+            <Star
+              className={`w-5 h-5 transition-all duration-200 ${
+                isUserLiked
+                  ? 'text-amber-400 fill-amber-400 drop-shadow-md'
+                  : 'text-gray-300 hover:text-amber-300'
+              } ${isLiking ? 'animate-pulse' : ''}`}
+            />
+            <span className="font-medium">
+              {post.listaUsuarioCurtida?.length || 0}
+            </span>
+          </button>
+          <button
+            onClick={() => openCommentsDialog(post.idPublicacao)}
+            className="flex items-center space-x-1 text-sm hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-150"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="font-medium">
+              {post.listaComentario?.length || 0}
+            </span>
+          </button>
+          {loggedUser?.permissao?.toUpperCase() === 'ACADEMICO' &&
+            post.Usuario.idUsuario === loggedUser.idUsuario && (
               <>
                 <button
                   onClick={() => startEditingPost(post)}
@@ -401,15 +155,211 @@ export default function FeedPage() {
                 </button>
               </>
             )}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  })
+        </div>
+      </CardContent>
+    </Card>
+  )
+})
+
+// ─── Feed Page ───────────────────────────────────────────────
+
+export default function FeedPage() {
+  const {
+    posts,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    loadMoreRef,
+    handleLikePost,
+    handleCreatePost,
+    isCreatingPost,
+    handleEditPost,
+    isEditingPost,
+    handleDeletePost,
+    isDeletingPost,
+    handleCreateComment,
+    handleDeleteComment,
+    syncCommentsInCache,
+    formatDate,
+    loggedUser,
+  } = useFeedInfinite()
+
+  // ── Local UI state ──────────────────────────────────────
+  const [newPostTitle, setNewPostTitle] = useState('')
+  const [newPostContent, setNewPostContent] = useState('')
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false)
+  const [selectedPostComments, setSelectedPostComments] = useState<Comentario[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
+
+  const [likingPosts, setLikingPosts] = useState<Set<number>>(new Set())
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
+
+  // ── Debounced like ──────────────────────────────────────
+  const debouncedHandleLikePost = useCallback(
+    (() => {
+      const timeouts: Record<number, NodeJS.Timeout> = {}
+
+      return (postId: number) => {
+        if (timeouts[postId]) clearTimeout(timeouts[postId])
+
+        timeouts[postId] = setTimeout(() => {
+          if (!likingPosts.has(postId)) {
+            setLikingPosts((prev) => new Set(prev).add(postId))
+            handleLikePost(postId, {
+              onSettled: () => {
+                setLikingPosts((prev) => {
+                  const s = new Set(prev)
+                  s.delete(postId)
+                  return s
+                })
+              },
+            })
+          }
+          delete timeouts[postId]
+        }, 150)
+      }
+    })(),
+    [handleLikePost, likingPosts],
+  )
+
+  // ── Remove Next.js dev overlay (dev only) ───────────────
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const id = setInterval(() => {
+        document.querySelector('body > nextjs-portal')?.remove()
+      }, 10)
+      return () => clearInterval(id)
+    }
+  }, [])
+
+  // ── Post CRUD handlers ─────────────────────────────────
+
+  const openNewPostDialog = () => {
+    setEditingPost(null)
+    setNewPostTitle('')
+    setNewPostContent('')
+    setIsDialogOpen(true)
+  }
+
+  const startEditingPost = (post: Post) => {
+    setEditingPost(post)
+    setNewPostTitle(post.titulo)
+    setNewPostContent(post.descricao)
+    setIsDialogOpen(true)
+  }
+
+  const createNewPost = async () => {
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      toast.error('Título e descrição são obrigatórios')
+      return
+    }
+    if (!loggedUser?.idUsuario) {
+      toast.error('Usuário não autenticado')
+      return
+    }
+
+    try {
+      await handleCreatePost({
+        titulo: newPostTitle,
+        descricao: newPostContent,
+      })
+      setIsDialogOpen(false)
+      setNewPostTitle('')
+      setNewPostContent('')
+    } catch {
+      // toast already shown in mutation
+    }
+  }
+
+  const saveEditedPost = async () => {
+    if (!editingPost) {
+      toast.error('Nenhum post selecionado para edição')
+      return
+    }
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      toast.error('Título e descrição são obrigatórios')
+      return
+    }
+
+    try {
+      await handleEditPost({
+        postId: editingPost.idPublicacao,
+        titulo: newPostTitle,
+        descricao: newPostContent,
+      })
+      setEditingPost(null)
+      setNewPostTitle('')
+      setNewPostContent('')
+      setIsDialogOpen(false)
+    } catch {
+      // toast already shown in mutation
+    }
+  }
+
+  const confirmDeletePost = (post: Post) => {
+    setPostToDelete(post)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const executeDeletePost = () => {
+    if (!postToDelete) return
+    handleDeletePost(postToDelete.idPublicacao)
+    setIsDeleteDialogOpen(false)
+    setPostToDelete(null)
+  }
+
+  const cancelDeletePost = () => {
+    setIsDeleteDialogOpen(false)
+    setPostToDelete(null)
+  }
+
+  // ── Comments dialog ────────────────────────────────────
+
+  const openCommentsDialog = async (postId: number) => {
+    setCommentsLoading(true)
+    setSelectedPostId(postId)
+
+    try {
+      const currentPost = posts.find((p) => p.idPublicacao === postId)
+
+      if (currentPost && currentPost.listaComentario.length > 0) {
+        setSelectedPostComments(currentPost.listaComentario)
+      } else {
+        const response = await fetchComments(postId)
+        setSelectedPostComments(response)
+      }
+
+      setIsCommentsDialogOpen(true)
+    } catch {
+      toast.error('Erro ao carregar comentários')
+    } finally {
+      setCommentsLoading(false)
+    }
+  }
+
+  const closeCommentsDialog = () => {
+    setIsCommentsDialogOpen(false)
+
+    // Sync comments back to the TanStack Query cache
+    if (selectedPostId !== null) {
+      syncCommentsInCache(selectedPostId, selectedPostComments)
+    }
+
+    setSelectedPostComments([])
+    setSelectedPostId(null)
+  }
+
+  // ── Render ─────────────────────────────────────────────
 
   return (
     <>
-      <Toaster /> {/* Adicionado Toaster */}
+      <Toaster />
       <Header />
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
         <Sidebar />
@@ -420,15 +370,21 @@ export default function FeedPage() {
                 Comunidade
               </h1>
             </div>
+
             <Button
               onClick={openNewPostDialog}
               className="mb-4 w-full py-2 text-xl font-semibold bg-blue-500 dark:bg-blue-600 text-white rounded-full hover:bg-blue-600 dark:hover:bg-blue-700 shadow-md"
-              disabled={!loggedUser}
+              disabled={!loggedUser || isCreatingPost}
             >
               {loggedUser ? 'Nova Publicação' : 'Faça login para publicar'}
             </Button>
+
+            {/* Create / Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogContent description="Criar ou editar publicação" className="dark:bg-gray-800">
+              <DialogContent
+                description="Criar ou editar publicação"
+                className="dark:bg-gray-800"
+              >
                 <DialogHeader>
                   <DialogTitle className="dark:text-white">
                     {editingPost
@@ -437,7 +393,8 @@ export default function FeedPage() {
                   </DialogTitle>
                   {editingPost && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Editando post de {editingPost.Usuario.nome} (@{editingPost.Usuario.username})
+                      Editando post de {editingPost.Usuario.nome} (@
+                      {editingPost.Usuario.username})
                     </p>
                   )}
                 </DialogHeader>
@@ -457,16 +414,28 @@ export default function FeedPage() {
                   <Button
                     onClick={editingPost ? saveEditedPost : createNewPost}
                     className="w-full bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full"
-                    disabled={!newPostTitle.trim() || !newPostContent.trim()}
+                    disabled={
+                      !newPostTitle.trim() ||
+                      !newPostContent.trim() ||
+                      isCreatingPost ||
+                      isEditingPost
+                    }
                   >
-                    {editingPost ? 'Salvar Alterações' : 'Publicar'}
+                    {editingPost
+                      ? isEditingPost
+                        ? 'Salvando...'
+                        : 'Salvar Alterações'
+                      : isCreatingPost
+                        ? 'Publicando...'
+                        : 'Publicar'}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
 
+            {/* Posts List */}
             <div className="space-y-4">
-              {loading ? (
+              {isLoading ? (
                 Array.from({ length: 6 }).map((_, idx) => (
                   <Skeleton
                     key={idx}
@@ -482,7 +451,7 @@ export default function FeedPage() {
                       startEditingPost={startEditingPost}
                       handleLikePost={debouncedHandleLikePost}
                       openCommentsDialog={openCommentsDialog}
-                      handleDeletePost={handleDeletePost}
+                      confirmDeletePost={confirmDeletePost}
                       formatDate={formatDate}
                       isLiking={likingPosts.has(post.idPublicacao)}
                     />
@@ -494,32 +463,49 @@ export default function FeedPage() {
                 </p>
               )}
             </div>
-            {hasMore && (
-              <Button onClick={loadMore} className="mt-4 w-full">
-                Carregar Mais
-              </Button>
-            )}
+
+            {/* Infinite Scroll Sentinel */}
+            <div ref={loadMoreRef} className="py-4 flex justify-center">
+              {isFetchingNextPage && (
+                <div className="flex items-center gap-2 text-gray-500">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+                  Carregando mais publicações...
+                </div>
+              )}
+              {!hasNextPage && posts.length > 0 && (
+                <p className="text-sm text-gray-400">
+                  Você viu todas as publicações.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Comments Dialog */}
       <CommentsDialog
         isOpen={isCommentsDialogOpen}
         onClose={closeCommentsDialog}
         comments={selectedPostComments}
-        setComments={setSelectedPostComments} // Corrigido: adiciona setComments
+        setComments={setSelectedPostComments}
         loading={commentsLoading}
-        postId={selectedPostId ?? 0} // Garantir que seja um número
-        loggedUser={loggedUser} // Certificar-se de passar loggedUser
+        postId={selectedPostId ?? 0}
+        loggedUser={loggedUser}
       />
-      
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent className="dark:bg-gray-800">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-600 dark:text-red-400">
               Confirmar Exclusão
             </AlertDialogTitle>
             <AlertDialogDescription className="dark:text-gray-300">
-              Tem certeza que deseja excluir a publicação "{postToDelete?.titulo}"?
+              Tem certeza que deseja excluir a publicação &quot;
+              {postToDelete?.titulo}&quot;?
               <br />
               <span className="text-sm text-gray-500 dark:text-gray-400 mt-2 block">
                 Esta ação não pode ser desfeita.
@@ -527,14 +513,18 @@ export default function FeedPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDeletePost} className="dark:border-gray-600">
+            <AlertDialogCancel
+              onClick={cancelDeletePost}
+              className="dark:border-gray-600"
+            >
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={executeDeletePost}
               className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isDeletingPost}
             >
-              Excluir
+              {isDeletingPost ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

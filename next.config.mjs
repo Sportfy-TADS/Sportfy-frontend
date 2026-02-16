@@ -9,7 +9,7 @@ const nextConfig = {
     //   { protocol: 'https', hostname: 'example.com' },
     // ],
   },
-  outputoutput: 'standalone',
+  output: 'standalone',
 }
 
 export default nextConfig

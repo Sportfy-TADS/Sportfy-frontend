@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { jwtDecode, JwtPayload } from 'jwt-decode'
 import { toast } from 'sonner'
 
 import {
-  getModalidades,
-  createModalidade,
-  updateModalidade,
-  desativarModalidade,
-  searchModalidade,
-  inscreverModalidade,
-  Modalidade,
+    createModalidade,
+    desativarModalidade,
+    getModalidades,
+    inscreverModalidade,
+    Modalidade,
+    searchModalidade,
+    updateModalidade,
 } from '@/http/modality'
 
 interface DecodedToken extends JwtPayload {
@@ -28,7 +28,6 @@ export function useAdminModalidades() {
   const [modalidadeForm, setModalidadeForm] = useState<Partial<Modalidade>>({
     nome: '',
     descricao: '',
-    status: true,
   })
   const [editMode, setEditMode] = useState<boolean>(false)
   const [searchTerm, setSearchTerm] = useState<string>('')
@@ -58,8 +57,6 @@ export function useAdminModalidades() {
     checkAdminStatus()
   }, [router])
 
-  const token = localStorage.getItem('token')
-
   const { data: modalidades = [], isLoading } = useQuery({
     queryKey: ['modalidades'],
     queryFn: getModalidades,
@@ -67,9 +64,9 @@ export function useAdminModalidades() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: Partial<Modalidade>) => createModalidade(data, token!),
+    mutationFn: (data: Partial<Modalidade>) => createModalidade(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       toast.success('Modalidade criada com sucesso!')
     },
     onError: () => {
@@ -78,9 +75,9 @@ export function useAdminModalidades() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: Modalidade) => updateModalidade(data, token!),
+    mutationFn: (data: Modalidade) => updateModalidade(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       toast.success('Modalidade editada com sucesso!')
       setEditMode(false)
     },
@@ -90,9 +87,9 @@ export function useAdminModalidades() {
   })
 
   const desativarMutation = useMutation({
-    mutationFn: (id: number) => desativarModalidade(id, token!),
+    mutationFn: (id: number) => desativarModalidade(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['modalidades'])
+      queryClient.invalidateQueries({ queryKey: ['modalidades'] })
       toast.success('Modalidade desativada com sucesso!')
     },
     onError: () => {
@@ -102,7 +99,7 @@ export function useAdminModalidades() {
 
   const inscreverMutation = useMutation({
     mutationFn: (idModalidadeEsportiva: number) =>
-      inscreverModalidade(userId!, idModalidadeEsportiva, token!),
+      inscreverModalidade(userId!, idModalidadeEsportiva),
     onSuccess: () => {
       toast.success('Inscrição realizada com sucesso!')
     },
@@ -143,7 +140,7 @@ export function useAdminModalidades() {
   const handleSearch = async () => {
     try {
       const data = await searchModalidade(searchTerm)
-      setModalidades([data])
+      queryClient.setQueryData(['modalidades'], [data])
     } catch (error) {
       toast.error('Modalidade não encontrada')
     }

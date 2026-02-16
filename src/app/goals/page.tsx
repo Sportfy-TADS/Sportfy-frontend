@@ -46,6 +46,13 @@ interface Goal {
   progressoMaximo: number;
   situacaoMetaDiaria: number;
   isSports?: boolean;
+  // Campos extras para metas esportivas
+  idMetaEsportiva?: number;
+  descricao?: string;
+  idAcademico?: number;
+  foto?: string | null;
+  ativo?: boolean;
+  idModalidadeEsportiva?: number;
 }
 
 // Define the CreateGoalData interface
@@ -131,8 +138,16 @@ export default function GoalsPage() {
       // Atualizar no servidor
       if (goal.isSports) {
         await updateMetaEsportivaMutation.mutateAsync({
-          ...goal,
+          idMetaEsportiva: goal.idMetaEsportiva!,
+          titulo: goal.titulo,
+          descricao: goal.descricao ?? '',
           progressoAtual: goal.progressoAtual,
+          progressoMaximo: goal.progressoMaximo,
+          progressoItem: goal.progressoItem,
+          idAcademico: goal.idAcademico!,
+          foto: goal.foto,
+          ativo: goal.ativo,
+          idModalidadeEsportiva: goal.idModalidadeEsportiva,
         })
       } else {
         await updateGoal({ ...goal, idAcademico: idAcademico! })
@@ -238,6 +253,13 @@ export default function GoalsPage() {
       progressoMaximo: meta.progressoMaximo,
       situacaoMetaDiaria: meta.ativo ? 1 : 0,
       isSports: true,
+      // Preservar campos necessários para updateMetaEsportiva
+      idMetaEsportiva: meta.idMetaEsportiva,
+      descricao: meta.descricao,
+      idAcademico: meta.idAcademico,
+      foto: meta.foto,
+      ativo: meta.ativo,
+      idModalidadeEsportiva: meta.idModalidadeEsportiva,
     }))
     .filter((goal: Goal) => !deletedGoalIds.has(goal.idMetaDiaria)) // Filtrar metas excluídas
     .filter((goal: Goal) => {

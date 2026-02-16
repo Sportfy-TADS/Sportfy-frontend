@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -8,36 +8,29 @@ import { toast } from 'sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  useModalidades,
-  createModalidade,
-  updateModalidade,
+    createModalidade,
+    Modalidade,
+    updateModalidade,
+    useModalidades,
 } from '@/http/modality'
 import { decodeToken } from '@/utils/apiUtils'
-
-export interface Modalidade {
-  id: string
-  idModalidadeEsportiva: number
-  nome: string
-  descricao: string
-  inscrito: boolean
-}
 
 export default function ModalidadeInscricaoPage() {
   const [isAdmin, setIsAdmin] = useState(false)

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-import { getGoals, createGoal, updateGoal, deleteGoal } from '@/http/goals'
+import { createGoal, deleteGoal, getGoals, updateGoal } from '@/http/goals'
 
 interface Goal {
   idMetaDiaria: number
@@ -81,13 +81,13 @@ export const useGoals = (idAcademico: number) => {
       const payload = {
         idMetaDiaria: goalData.idMetaDiaria!,
         titulo: goalData.titulo,
-        descricao: goalData.descricao,
+        objetivo: goalData.descricao,
         progressoAtual: Number(goalData.progressoAtual),
         progressoMaximo: Number(goalData.progressoMaximo),
         progressoItem:
           goalData.progressoItem === 'outro'
-            ? goalData.customProgressoItem
-            : goalData.progressoItem,
+            ? goalData.customProgressoItem!
+            : goalData.progressoItem!,
         situacaoMetaDiaria: Number(goalData.situacaoMetaDiaria),
         idAcademico,
       }

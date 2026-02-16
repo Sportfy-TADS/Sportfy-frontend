@@ -13,6 +13,7 @@ export interface UserData {
 }
 
 export interface Modalidade {
+  id: string
   idModalidadeEsportiva: number
   nome: string
   descricao: string
@@ -198,7 +199,7 @@ export async function createModalidade(data: Partial<Modalidade>) {
   return response
 }
 
-export async function updateModalidade(data: Modalidade) {
+export async function updateModalidade(data: Omit<Modalidade, 'id'>) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/modalidadeEsportiva`
   console.log('Enviando dados para atualizar modalidade:', data)
   const response = await fetchWithAuth(url, {
@@ -264,12 +265,6 @@ export const useModalidades = () => {
   return useQuery<Modalidade[], Error>({
     queryKey: ['modalidades'],
     queryFn: fetchModalidades,
-    onSuccess: (data: Modalidade[]) => {
-      console.log('Modalidades carregadas com sucesso:', data)
-    },
-    onError: (error: Error) => {
-      console.error('Erro ao carregar modalidades:', error)
-    },
   })
 }
 
